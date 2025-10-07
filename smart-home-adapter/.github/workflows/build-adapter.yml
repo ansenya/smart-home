@@ -1,0 +1,37 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Set Tag
+        id: vars
+        run: |
+          TAG=$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Docker Image
+        env:
+          CR_REGISTRY: crpeotdomuljuu8m735b
+          CR_REPOSITORY: adapter
+          IMAGE_TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          docker buildx build --push \
+           -t cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG \
+           -t cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:latest \
+          .
