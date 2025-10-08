@@ -64,4 +64,6 @@ services:
   web:
     build:
       context: ./web-app
+    ports:
+      - "8888:80"
     restart: unless-stopped
