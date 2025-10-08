@@ -4,6 +4,7 @@ import (
 	"devices-api/models"
 	"devices-api/repository"
 	"encoding/json"
+	"fmt"
 )
 
 type devicesService struct {
@@ -39,12 +40,12 @@ func (r devicesService) DeleteDevice(id string) error {
 	return r.devicesRepository.Delete(id)
 }
 
-func (r devicesService) UpdateCapabilityState(capID string, state json.RawMessage) error {
-	return nil
+func (r devicesService) UpdateCapabilityState(capType string, state json.RawMessage) error {
+	return r.capabilitiesRepository.UpdateState(capType, state)
 }
 
 func (r devicesService) UpdateCapabilitiesState(capID []string, state []any) error {
-	return nil
+	return fmt.Errorf("not implemented")
 }
 
 func NewDevicesService(devicesRepository repository.DevicesRepository, capabilitiesRepository repository.CapabilitiesRepository) DevicesService {

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"auth-server/db"
 	"auth-server/handlers"
 	"auth-server/service"
+	"auth-server/storage"
+	"auth-server/utils"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,24 @@ import (
 )
 
 var (
-	Port        = os.Getenv("PORT")
-	PostgresUrl = os.Getenv("POSTGRES_URL")
-	RedisUrl    = os.Getenv("REDIS_URL")
+	Port        = fmt.Sprintf(":%s", utils.GetEnv("PORT", "8080"))
+	PostgresUrl = utils.GetEnv("POSTGRES_URL", "host=localhost user=user password=password dbname=smart-home port=5432 sslmode=disable")
+	RedisUrl    = utils.GetEnv("REDIS_URL", "localhost:6379")
 )
 
 func main() {
-	router := gin.Default()
-	router.Use(cors.New(cors.Config{
+	database, err := storage.ConnectPostgres(PostgresUrl)
+	if err != nil {
+		log.Fatalf("failed to connect to postgres: %v", err)
+	}
+
+	redisClient, err := storage.NewRedisClient(RedisUrl)
+	if err != nil {
+		log.Fatalf("failed to connect to redis: %v", err)
+	}
+
+	engine := gin.Default()
+	engine.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"*"},
 		AllowHeaders:     []string{"*"},
@@ -28,18 +39,6 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-
-	// init psql
-	if PostgresUrl == "" {
-		PostgresUrl = "host=localhost user=user password=insecure dbname=smart-home port=5432 sslmode=disable"
-	}
-	database := db.Connect(PostgresUrl)
-
-	// init redis
-	if RedisUrl == "" {
-		RedisUrl = "localhost:6379"
-	}
-	redisClient := db.NewRedisClient(RedisUrl)
 
 	// init smtp
 	smtpConfig := service.SmtpConfig{
@@ -50,11 +49,9 @@ func main() {
 	}
 
 	// register routes
-	handlers.RegisterAuthRoutes(router, database, redisClient, smtpConfig)
+	handlers.RegisterAuthRoutes(engine, database, redisClient, smtpConfig)
 
-	if Port == "" {
-		Port = "8080"
+	if err := engine.Run(Port); err != nil {
+		log.Fatalf("failed to start server: %v", err)
 	}
-	log.Printf("Listening on port %s\n", Port)
-	log.Fatal(router.Run(fmt.Sprintf(":%s", Port)))
 }

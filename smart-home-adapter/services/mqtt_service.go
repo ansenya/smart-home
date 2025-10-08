@@ -15,20 +15,19 @@ const (
 	PropertyComponent   Component = "properties"
 )
 
-// <user-id>/<device-id≥/<component>/<capability>/<action>
-// <user-id>/<device-id>/<component>/<property>/<action>
+// <user-id>/<device-id≥/<component>/<capability>
+// <user-id>/<device-id>/<component>/<property>
 
 type mqttService struct {
 	mqttClient mqtt.Client
 }
 
-func (s *mqttService) GetTopicName(device *models.Device, component Component, componentName string, action string) string {
+func (s *mqttService) GetTopicName(userID string, device *models.Device, component Component, componentName string) string {
 	return strings.Join([]string{
-		device.UserID,
+		userID,
 		device.ID,
 		string(component),
 		componentName,
-		action,
 	}, "/")
 }
 

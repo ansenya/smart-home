@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"devices-api/handlers/middleware"
+	"devices-api/middleware"
 	"devices-api/models"
 	"devices-api/services"
 	"encoding/json"
@@ -10,16 +10,6 @@ import (
 	"log"
 	"net/http"
 )
-
-type response struct {
-	RequestID string  `json:"request_id"`
-	Payload   payload `json:"payload"`
-}
-
-type payload struct {
-	UserID  string `json:"user_id,omitempty"`
-	Devices []models.Device
-}
 
 type yandexHandler struct {
 	devicesService services.DevicesService
@@ -30,7 +20,7 @@ func (h *yandexHandler) RegisterRoutes(g *gin.RouterGroup) {
 	g.GET("", h.handleAliveStatus)
 
 	protected := g.Group("/")
-	protected.Use(middleware.YandexMiddleware()) // должен быть подтвержденный акк
+	protected.Use(middleware.YandexMiddleware())
 	protected.POST("/user/unlink", h.handleUnlink)
 	protected.GET("/user/devices", h.handleDevices)
 	protected.POST("/user/devices/query", h.handleDevicesQuery)
@@ -42,7 +32,7 @@ func (h *yandexHandler) handleAliveStatus(c *gin.Context) {
 }
 
 func (h *yandexHandler) handleUnlink(c *gin.Context) {
-
+	c.Status(http.StatusOK)
 }
 
 func (h *yandexHandler) handleDevices(c *gin.Context) {
@@ -57,27 +47,29 @@ func (h *yandexHandler) handleDevices(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, response{
+	resp := models.YandexResponse{
 		RequestID: requestID,
-		Payload: payload{
+		Payload: models.Payload{
 			UserID:  userID,
 			Devices: devices,
 		},
-	})
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 	requestID := getValueFromContext(c, "requestID")
 
-	var devicesQuery struct {
+	var req struct {
 		Devices []models.Device `json:"devices"`
 	}
-	if err := c.ShouldBindQuery(&devicesQuery); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 	}
 
 	var deviceIDs []string
-	for _, d := range devicesQuery.Devices {
+	for _, d := range req.Devices {
 		deviceIDs = append(deviceIDs, d.ID)
 	}
 
@@ -89,9 +81,9 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, response{
+	c.JSON(http.StatusOK, models.YandexResponse{
 		RequestID: requestID,
-		Payload: payload{
+		Payload: models.Payload{
 			Devices: devices,
 		},
 	})
@@ -99,11 +91,10 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 
 func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 	requestID := getValueFromContext(c, "requestID")
+	userID := getValueFromContext(c, "userID")
 
 	var req struct {
-		Payload struct {
-			Devices []models.Device `json:"devices"`
-		} `json:"payload"`
+		Payload models.Payload
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -112,21 +103,19 @@ func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 		return
 	}
 
-	resp := response{
-		RequestID: requestID,
-	}
-
 	for i := range req.Payload.Devices {
 		d := &req.Payload.Devices[i]
 		for j := range d.Capabilities {
 			cp := &d.Capabilities[j]
+			state := &cp.State
+			m, _ := json.Marshal(state)
 
-			var state models.State
-			if err := json.Unmarshal(cp.State, &state); err != nil {
-				log.Printf("cannot unmarshal state: %s", err.Error())
+			topic := h.mqttService.GetTopicName(userID, d, services.CapabilityComponent, cp.Type)
+			if err := h.mqttService.Publish(state, topic); err != nil {
+				log.Printf("cannot publish payload: %s", err.Error())
 			}
 
-			err := h.devicesService.UpdateCapabilityState(cp.ID, cp.State)
+			err := h.devicesService.UpdateCapabilityState(cp.Type, m)
 			if err != nil {
 				state.ActionResult = models.ActionResult{
 					Status:       "ERROR",
@@ -138,14 +127,16 @@ func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 					Status: "DONE",
 				}
 			}
-
-			m, _ := json.Marshal(state)
-			cp.State = m
+			cp.State.Value = nil
 		}
-		resp.Payload.Devices = append(resp.Payload.Devices, *d)
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, models.YandexResponse{
+		RequestID: requestID,
+		Payload: models.Payload{
+			Devices: req.Payload.Devices,
+		},
+	})
 }
 
 func newYandexHandler(devicesService services.DevicesService, mqttService services.MqttService) HandlerInterface {

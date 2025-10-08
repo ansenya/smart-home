@@ -30,9 +30,9 @@ func (r *capabilityRepo) GetByID(id string) (*models.Capability, error) {
 	return &capability, nil
 }
 
-func (r *capabilityRepo) UpdateState(id string, state any) error {
+func (r *capabilityRepo) UpdateState(capType string, state any) error {
 	if err := r.db.Model(&models.Capability{}).
-		Where("id = ?", id).
+		Where("type = ?", capType).
 		Update("state", state).Error; err != nil {
 		return fmt.Errorf("failed to update capability state: %w", err)
 	}

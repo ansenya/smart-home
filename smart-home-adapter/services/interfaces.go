@@ -14,11 +14,11 @@ type DevicesService interface {
 	UpsertDevice(device *models.Device) error
 	DeleteDevice(id string) error
 
-	UpdateCapabilityState(capID string, state json.RawMessage) error
+	UpdateCapabilityState(capType string, state json.RawMessage) error
 	UpdateCapabilitiesState(capID []string, state []any) error
 }
 
 type MqttService interface {
-	GetTopicName(device *models.Device, component Component, componentName string, action string) string
+	GetTopicName(userID string, device *models.Device, component Component, componentName string) string
 	Publish(message any, topic string) error
 }
