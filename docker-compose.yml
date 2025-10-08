@@ -16,7 +16,7 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  mqtt:
+  broker:
     image: eclipse-mosquitto:2.0.22
     ports:
       - "1883:1883"
@@ -48,6 +48,7 @@ services:
     environment:
       PORT: 8080
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
+      MQTT_URL: tcp://mqtt:1883
       GIN_MODE: ${GIN_MODE}
     volumes:
       - ./keys:/app/keys:ro
