@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"auth-server/db"
 	"auth-server/models"
+	"auth-server/storage"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,13 +16,13 @@ import (
 
 type UserRepo struct {
 	database *gorm.DB
-	loginDB  *db.NamespacedRedis
-	codeDB   *db.NamespacedRedis
+	loginDB  *storage.NamespacedRedis
+	codeDB   *storage.NamespacedRedis
 }
 
 func NewUserRepo(database *gorm.DB, client *redis.Client) *UserRepo {
-	loginDB := db.NewNamespacedRedis(client, "login")
-	codeDB := db.NewNamespacedRedis(client, "code")
+	loginDB := storage.NewNamespacedRedis(client, "login")
+	codeDB := storage.NewNamespacedRedis(client, "code")
 
 	return &UserRepo{
 		database: database,

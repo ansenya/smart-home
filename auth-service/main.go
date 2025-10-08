@@ -30,6 +30,14 @@ func main() {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
 
+	// init smtp
+	smtpConfig := service.SmtpConfig{
+		Host:     os.Getenv("SMTP_HOST"),
+		Port:     os.Getenv("SMTP_PORT"),
+		Password: os.Getenv("SMTP_PASSWORD"),
+		Username: os.Getenv("SMTP_USERNAME"),
+	}
+
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true,
@@ -40,13 +48,8 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// init smtp
-	smtpConfig := service.SmtpConfig{
-		Host:     os.Getenv("SMTP_HOST"),
-		Port:     os.Getenv("SMTP_PORT"),
-		Password: os.Getenv("SMTP_PASSWORD"),
-		Username: os.Getenv("SMTP_USERNAME"),
-	}
+	router := handlers.NewRouter()
+	router.RegisterRoutes(engine)
 
 	// register routes
 	handlers.RegisterAuthRoutes(engine, database, redisClient, smtpConfig)
