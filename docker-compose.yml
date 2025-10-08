@@ -29,8 +29,10 @@ services:
   auth:
     build:
       context: ./auth-service
+    ports:
+      - "8081:8081"
     environment:
-      PORT: 8080
+      PORT: 8081
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
       SMTP_HOST: ${SMTP_HOST}
@@ -45,11 +47,16 @@ services:
   adapter:
     build:
       context: ./smart-home-adapter
+    ports:
+      - "8082:8082"
     environment:
-      PORT: 8080
+      PORT: 8082
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
-      MQTT_URL: tcp://mqtt:1883
+      MQTT_URL: tcp://broker:1883
       GIN_MODE: ${GIN_MODE}
+    depends_on:
+      - broker
+      - postgres
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped
