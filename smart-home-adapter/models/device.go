@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 )
 
+// <user-id>/<device-id≥/capabilities/<capability>/<action>
+// <user-id>/<device-id>/properties/<property>/<action>
+
 type Device struct {
 	ID          string          `gorm:"type:uuid;primary_key" json:"id"`
 	MacAddress  string          `json:"mac_address"`
@@ -30,13 +33,13 @@ type DeviceInfo struct {
 }
 
 type Capability struct {
-	ID          string          `gorm:"type:uuid;primary_key" json:"id"`
+	ID          string          `gorm:"type:uuid;primary_key" json:"id,omitempty"`
 	DeviceID    string          `gorm:"column:device_id" json:"-"`
 	Type        string          `json:"type"`
-	Retrievable bool            `json:"retrievable"`
-	Reportable  bool            `json:"reportable"`
-	Parameters  json.RawMessage `json:"parameters"`
-	State       json.RawMessage `json:"state"`
+	Retrievable bool            `json:"retrievable,omitempty"`
+	Reportable  bool            `json:"reportable,omitempty"`
+	Parameters  json.RawMessage `json:"parameters,omitempty"`
+	State       json.RawMessage `json:"state,omitempty"`
 }
 
 type Property struct {

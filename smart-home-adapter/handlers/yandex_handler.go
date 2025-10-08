@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"devices-api/handlers/middleware"
 	"devices-api/models"
 	"devices-api/services"
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type response struct {
@@ -22,17 +23,18 @@ type payload struct {
 
 type yandexHandler struct {
 	devicesService services.DevicesService
+	mqttService    services.MqttService
 }
 
 func (h *yandexHandler) RegisterRoutes(g *gin.RouterGroup) {
 	g.GET("", h.handleAliveStatus)
 
 	protected := g.Group("/")
-	protected.Use() // должен быть подтвержденный акк
+	protected.Use(middleware.YandexMiddleware()) // должен быть подтвержденный акк
 	protected.POST("/user/unlink", h.handleUnlink)
 	protected.GET("/user/devices", h.handleDevices)
 	protected.POST("/user/devices/query", h.handleDevicesQuery)
-	protected.POST("/yandex/v1.0/user/devices/action", h.handleDevicesAction)
+	protected.POST("/user/devices/action", h.handleDevicesAction)
 }
 
 func (h *yandexHandler) handleAliveStatus(c *gin.Context) {
@@ -67,7 +69,9 @@ func (h *yandexHandler) handleDevices(c *gin.Context) {
 func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 	requestID := getValueFromContext(c, "requestID")
 
-	var devicesQuery models.DevicesQuery
+	var devicesQuery struct {
+		Devices []models.Device `json:"devices"`
+	}
 	if err := c.ShouldBindQuery(&devicesQuery); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 	}
@@ -94,11 +98,59 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 }
 
 func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
+	requestID := getValueFromContext(c, "requestID")
 
+	var req struct {
+		Payload struct {
+			Devices []models.Device `json:"devices"`
+		} `json:"payload"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid req body",
+		})
+		return
+	}
+
+	resp := response{
+		RequestID: requestID,
+	}
+
+	for i := range req.Payload.Devices {
+		d := &req.Payload.Devices[i]
+		for j := range d.Capabilities {
+			cp := &d.Capabilities[j]
+
+			var state models.State
+			if err := json.Unmarshal(cp.State, &state); err != nil {
+				log.Printf("cannot unmarshal state: %s", err.Error())
+			}
+
+			err := h.devicesService.UpdateCapabilityState(cp.ID, cp.State)
+			if err != nil {
+				state.ActionResult = models.ActionResult{
+					Status:       "ERROR",
+					ErrorCode:    "500",
+					ErrorMessage: fmt.Sprintf("cannot update state: %s", err.Error()),
+				}
+			} else {
+				state.ActionResult = models.ActionResult{
+					Status: "DONE",
+				}
+			}
+
+			m, _ := json.Marshal(state)
+			cp.State = m
+		}
+		resp.Payload.Devices = append(resp.Payload.Devices, *d)
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
-func newYandexHandler(devicesService services.DevicesService) HandlerInterface {
+func newYandexHandler(devicesService services.DevicesService, mqttService services.MqttService) HandlerInterface {
 	return &yandexHandler{
 		devicesService: devicesService,
+		mqttService:    mqttService,
 	}
 }

@@ -7,7 +7,7 @@ type DevicesActionRequest struct {
 }
 
 type DevicesActionResponse struct {
-	RequestId string                `json:"request_id"`
+	RequestID string                `json:"request_id"`
 	Payload   ActionPayloadResponse `json:"payload"`
 }
 

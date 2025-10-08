@@ -116,7 +116,7 @@ func (s *DevicesService) ActionDevices(c *gin.Context) {
 	}
 
 	var deviceActionResponse models.DevicesActionResponse
-	deviceActionResponse.RequestId = xRequestId
+	deviceActionResponse.RequestID = xRequestId
 
 	for idx := range devicesActionRequest.Payload.Devices {
 		device := &devicesActionRequest.Payload.Devices[idx]

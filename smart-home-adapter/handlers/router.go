@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"devices-api/services"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,10 +10,10 @@ type Router struct {
 	yandexV1Handler HandlerInterface
 }
 
-func NewRouter(devicesService services.DevicesService) *Router {
+func NewRouter(devicesService services.DevicesService, mqttService services.MqttService) *Router {
 	return &Router{
 		healthHandler:   newHealthHandler(),
-		yandexV1Handler: newYandexHandler(devicesService),
+		yandexV1Handler: newYandexHandler(devicesService, mqttService),
 	}
 }
 

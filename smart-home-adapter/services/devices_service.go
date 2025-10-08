@@ -3,10 +3,12 @@ package services
 import (
 	"devices-api/models"
 	"devices-api/repository"
+	"encoding/json"
 )
 
 type devicesService struct {
-	devicesRepository repository.DevicesRepository
+	devicesRepository      repository.DevicesRepository
+	capabilitiesRepository repository.CapabilitiesRepository
 }
 
 func (r devicesService) GetDevice(id string) (*models.Device, error) {
@@ -37,6 +39,17 @@ func (r devicesService) DeleteDevice(id string) error {
 	return r.devicesRepository.Delete(id)
 }
 
-func NewDevicesService(devicesRepository repository.DevicesRepository) DevicesService {
-	return &devicesService{devicesRepository: devicesRepository}
+func (r devicesService) UpdateCapabilityState(capID string, state json.RawMessage) error {
+	return nil
+}
+
+func (r devicesService) UpdateCapabilitiesState(capID []string, state []any) error {
+	return nil
+}
+
+func NewDevicesService(devicesRepository repository.DevicesRepository, capabilitiesRepository repository.CapabilitiesRepository) DevicesService {
+	return &devicesService{
+		devicesRepository:      devicesRepository,
+		capabilitiesRepository: capabilitiesRepository,
+	}
 }
