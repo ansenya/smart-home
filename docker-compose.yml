@@ -1,4 +1,12 @@
 services:
+  nginx:
+    image: nginx:1.29
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx
+    restart: unless-stopped
+
   postgres:
     image: postgres:17
     ports:
@@ -30,9 +38,9 @@ services:
     build:
       context: ./auth-service
     ports:
-      - "8081:8081"
+      - "8081:80"
     environment:
-      PORT: 8081
+      PORT: 80
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
       SMTP_HOST: ${SMTP_HOST}
@@ -48,9 +56,9 @@ services:
     build:
       context: ./smart-home-adapter
     ports:
-      - "8082:8082"
+      - "8082:80"
     environment:
-      PORT: 8082
+      PORT: 80
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       MQTT_URL: tcp://broker:1883
       GIN_MODE: ${GIN_MODE}
