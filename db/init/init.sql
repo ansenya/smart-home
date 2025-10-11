@@ -17,7 +17,7 @@ CREATE
 CREATE TABLE users
 (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email      VARCHAR(256) NOT NULL,
+    email      VARCHAR(256) NOT NULL UNIQUE,
     password   TEXT         NOT NULL,
     name       VARCHAR(100),
     confirmed  BOOL             DEFAULT FALSE,
@@ -39,6 +39,7 @@ CREATE TABLE devices
     custom_data JSONB,
     device_info JSONB,
     created_at  TIMESTAMP        DEFAULT NOW(),
+    updated_at  TIMESTAMP        DEFAULT NOW(),
     deleted_at  TIMESTAMP        DEFAULT NULL
 );
 
@@ -65,6 +66,18 @@ CREATE TABLE properties
     reportable  BOOL NOT NULL    DEFAULT False,
     parameters  JSONB,
     state       JSONB
+);
+
+CREATE TABLE oauth_clients
+(
+    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    client_secret TEXT,
+    name          TEXT,
+    enabled       BOOL             DEFAULT True,
+    redirect_uri  TEXT,
+    created_at    TIMESTAMP        DEFAULT NOW(),
+    updated_at    TIMESTAMP        DEFAULT NOW(),
+    deleted_at    TIMESTAMP        DEFAULT null
 );
 
 GRANT CONNECT ON DATABASE "smart-home" TO "user";

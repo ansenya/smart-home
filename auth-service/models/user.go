@@ -1,16 +1,11 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type User struct {
-	ID        string `gorm:"type:uuid;primaryKey" json:"id"`
+	ID        string `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"-"`
 	Email     string `gorm:"uniqueIndex;not null" json:"email"`
-	Password  string `gorm:"column:password;not null"`
-	Name      string `gorm:"column:name"`
-	Confirmed bool   `gorm:"column:confirmed"`
-	gorm.Model
+	Password  string `gorm:"column:password;not null" json:"-"`
+	Name      string `gorm:"column:name" json:"name,omitempty"`
+	Confirmed bool   `gorm:"column:confirmed" json:"-"`
 }
 
 type RegistrationUser struct {

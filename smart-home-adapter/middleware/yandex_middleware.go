@@ -16,7 +16,7 @@ func YandexMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set("requestID", xRequestId)
-		c.Set("userID", "b84ae96d-b311-49dd-b762-2ecec42c1bd4")
+		c.Set("userID", "e6be3446-21b7-4cbc-8932-18c508dc4ca1")
 
 		c.Next()
 	}

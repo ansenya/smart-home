@@ -81,6 +81,9 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 		})
 	}
 
+	m, _ := json.Marshal(devices)
+	log.Println(string(m))
+
 	c.JSON(http.StatusOK, models.YandexResponse{
 		RequestID: requestID,
 		Payload: models.Payload{

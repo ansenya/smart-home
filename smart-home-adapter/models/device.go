@@ -11,7 +11,7 @@ type YandexResponse struct {
 }
 
 type Payload struct {
-	UserID  string   `json:"userId,omitempty"`
+	UserID  string   `json:"user_id,omitempty"`
 	Devices []Device `json:"devices"`
 }
 

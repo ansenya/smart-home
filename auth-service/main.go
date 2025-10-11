@@ -2,14 +2,14 @@ package main
 
 import (
 	"auth-server/handlers"
-	"auth-server/service"
+	"auth-server/repository"
+	"auth-server/services"
 	"auth-server/storage"
 	"auth-server/utils"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
-	"os"
 	"time"
 )
 
@@ -30,13 +30,26 @@ func main() {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
 
-	// init smtp
-	smtpConfig := service.SmtpConfig{
-		Host:     os.Getenv("SMTP_HOST"),
-		Port:     os.Getenv("SMTP_PORT"),
-		Password: os.Getenv("SMTP_PASSWORD"),
-		Username: os.Getenv("SMTP_USERNAME"),
+	// repositories
+	userRepository := repository.NewUserRepository(database)
+	oauthClientsRepository := repository.NewOauthClientsRepository(database)
+
+	// services
+	userService := services.NewUserService(userRepository)
+	oauthClientsService := services.NewOauthClientsService(oauthClientsRepository)
+	oauthCodeService := services.NewOauthCodeService(redisClient)
+	jwtService, err := services.NewJwtService()
+	if err != nil {
+		log.Fatalf("failed to create jwt service: %v", err)
 	}
+
+	// init smtp
+	//smtpConfig := services.SmtpConfig{
+	//	Host:     os.Getenv("SMTP_HOST"),
+	//	Port:     os.Getenv("SMTP_PORT"),
+	//	Password: os.Getenv("SMTP_PASSWORD"),
+	//	Username: os.Getenv("SMTP_USERNAME"),
+	//}
 
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
@@ -48,11 +61,11 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	router := handlers.NewRouter()
+	router := handlers.NewRouter(userService, oauthClientsService, oauthCodeService, jwtService)
 	router.RegisterRoutes(engine)
 
 	// register routes
-	handlers.RegisterAuthRoutes(engine, database, redisClient, smtpConfig)
+	//handlers.RegisterAuthRoutes(engine, database, redisClient, smtpConfig)
 
 	if err := engine.Run(Port); err != nil {
 		log.Fatalf("failed to start server: %v", err)

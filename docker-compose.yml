@@ -7,7 +7,7 @@ services:
       - ./nginx:/etc/nginx
     restart: unless-stopped
 
-  postgres:
+  db:
     image: postgres:17
     ports:
       - "5432:5432"
@@ -16,6 +16,7 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/postgresql/data
     restart: unless-stopped
 
   redis:
@@ -64,7 +65,7 @@ services:
       GIN_MODE: ${GIN_MODE}
     depends_on:
       - broker
-      - postgres
+      - db
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped

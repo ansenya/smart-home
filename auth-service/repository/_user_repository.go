@@ -14,24 +14,24 @@ import (
 	"time"
 )
 
-type UserRepo struct {
+type UserRepository struct {
 	database *gorm.DB
 	loginDB  *storage.NamespacedRedis
 	codeDB   *storage.NamespacedRedis
 }
 
-func NewUserRepo(database *gorm.DB, client *redis.Client) *UserRepo {
+func NewUserRepository(database *gorm.DB, client *redis.Client) *UserRepository {
 	loginDB := storage.NewNamespacedRedis(client, "login")
 	codeDB := storage.NewNamespacedRedis(client, "code")
 
-	return &UserRepo{
+	return &UserRepository{
 		database: database,
 		loginDB:  loginDB,
 		codeDB:   codeDB,
 	}
 }
 
-func (r *UserRepo) CreateUser(req *models.RegistrationUser) (*models.User, error) {
+func (r *UserRepository) CreateUser(req *models.RegistrationUser) (*models.User, error) {
 	userUuid, err := uuid.NewRandom()
 	if err != nil {
 		return nil, fmt.Errorf("error generating userUuid: %w", err)
@@ -53,7 +53,7 @@ func (r *UserRepo) CreateUser(req *models.RegistrationUser) (*models.User, error
 	return user, nil
 }
 
-func (r *UserRepo) UpdateUserPassword(userID string, hashedPassword string) error {
+func (r *UserRepository) UpdateUserPassword(userID string, hashedPassword string) error {
 	result := r.database.Model(&models.User{}).
 		Where("id = ?", userID).
 		Update("Password", hashedPassword)
@@ -69,7 +69,7 @@ func (r *UserRepo) UpdateUserPassword(userID string, hashedPassword string) erro
 	return nil
 }
 
-func (r *UserRepo) GetUserByEmail(email string) (*models.User, error) {
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	result := r.database.Where("email = ?", email).First(&user)
 	if result.Error != nil {
@@ -78,7 +78,7 @@ func (r *UserRepo) GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepo) GetUserById(id string) (*models.User, error) {
+func (r *UserRepository) GetUserById(id string) (*models.User, error) {
 	var user models.User
 	result := r.database.Where("id = ?", id).First(&user)
 	if result.Error != nil {
@@ -87,7 +87,7 @@ func (r *UserRepo) GetUserById(id string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepo) SetLoginDataByCode(code string, clientId string, userId string, state string, scope string) error {
+func (r *UserRepository) SetLoginDataByCode(code string, clientId string, userId string, state string, scope string) error {
 	ctx := context.Background()
 
 	loginData := models.LoginData{
@@ -110,7 +110,7 @@ func (r *UserRepo) SetLoginDataByCode(code string, clientId string, userId strin
 	return nil
 }
 
-func (r *UserRepo) GetLoginDataByCode(code string) (*models.LoginData, error) {
+func (r *UserRepository) GetLoginDataByCode(code string) (*models.LoginData, error) {
 	ctx := context.Background()
 
 	data, err := r.loginDB.Get(ctx, code)
@@ -129,7 +129,7 @@ func (r *UserRepo) GetLoginDataByCode(code string) (*models.LoginData, error) {
 	return &loginData, nil
 }
 
-func (r *UserRepo) DeleteLoginDataByCode(code string) error {
+func (r *UserRepository) DeleteLoginDataByCode(code string) error {
 	ctx := context.Background()
 
 	err := r.loginDB.Del(ctx, code)
@@ -140,7 +140,7 @@ func (r *UserRepo) DeleteLoginDataByCode(code string) error {
 	return nil
 }
 
-func (r *UserRepo) SetEmailConfirmationCode(code string, email string, expiresAt time.Duration) error {
+func (r *UserRepository) SetEmailConfirmationCode(code string, email string, expiresAt time.Duration) error {
 	ctx := context.Background()
 
 	err := r.codeDB.Set(ctx, code, email, expiresAt)
@@ -151,7 +151,7 @@ func (r *UserRepo) SetEmailConfirmationCode(code string, email string, expiresAt
 	return nil
 }
 
-func (r *UserRepo) CheckCodeWithEmail(code string, email string) (bool, error) {
+func (r *UserRepository) CheckCodeWithEmail(code string, email string) (bool, error) {
 	ctx := context.Background()
 
 	emailInDb, err := r.codeDB.Get(ctx, code)
@@ -162,14 +162,14 @@ func (r *UserRepo) CheckCodeWithEmail(code string, email string) (bool, error) {
 	return emailInDb == email, nil
 }
 
-func (r *UserRepo) SetUserStatusConfirmed(email string) error {
+func (r *UserRepository) SetUserStatusConfirmed(email string) error {
 	return r.database.
 		Model(&models.User{}).
 		Where("email = ?", email).
 		Update("confirmed", true).Error
 }
 
-func (r *UserRepo) SetResetPasswordCode(code string, email string) error {
+func (r *UserRepository) SetResetPasswordCode(code string, email string) error {
 	ctx := context.Background()
 
 	err := r.codeDB.Set(ctx, code, email, time.Minute*15)
@@ -180,7 +180,7 @@ func (r *UserRepo) SetResetPasswordCode(code string, email string) error {
 	return nil
 }
 
-func (r *UserRepo) GetEmailByResetPasswordCode(code string) (string, error) {
+func (r *UserRepository) GetEmailByResetPasswordCode(code string) (string, error) {
 	ctx := context.Background()
 
 	email, err := r.codeDB.Get(ctx, code)
@@ -191,7 +191,7 @@ func (r *UserRepo) GetEmailByResetPasswordCode(code string) (string, error) {
 	return email, nil
 }
 
-func (r *UserRepo) DeleteResetPasswordCode(code string) error {
+func (r *UserRepository) DeleteResetPasswordCode(code string) error {
 	ctx := context.Background()
 
 	err := r.codeDB.Del(ctx, code)
