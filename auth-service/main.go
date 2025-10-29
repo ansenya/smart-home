@@ -8,7 +8,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
-	"time"
 )
 
 var (
@@ -30,12 +29,12 @@ func main() {
 
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"*"},
+		AllowOrigins:     []string{"https://smarthome.hipahopa.ru"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		MaxAge:           30 * 24 * time.Hour,
+		MaxAge:           86400,
 	}))
 
 	router, err := handlers.NewRouter(database, redisClient)

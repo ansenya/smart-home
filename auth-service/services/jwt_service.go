@@ -36,7 +36,7 @@ type Jwk struct {
 type jwtService struct {
 	accessPrivateKey, refreshPrivateKey *rsa.PrivateKey
 	accessPublicKey, refreshPublicKey   *rsa.PublicKey
-	refreshKID                          string
+	accessKID                           string
 	accessTokenDuration                 time.Duration
 	refreshTokenDuration                time.Duration
 }
@@ -54,6 +54,7 @@ func (s *jwtService) GenerateAccessToken(user *models.User) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["kid"] = s.accessKID
 	return token.SignedString(s.accessPrivateKey)
 }
 
@@ -69,7 +70,6 @@ func (s *jwtService) GenerateRefreshToken(user *models.User) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = s.refreshKID
 	return token.SignedString(s.refreshPrivateKey)
 }
 
@@ -126,15 +126,15 @@ func (s *jwtService) GetRefreshTokenDuration() time.Duration {
 }
 
 func (s *jwtService) GenerateJwks() Jwks {
-	n := base64.RawURLEncoding.EncodeToString(s.refreshPublicKey.N.Bytes())
-	e := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(s.refreshPublicKey.E)).Bytes())
+	n := base64.RawURLEncoding.EncodeToString(s.accessPublicKey.N.Bytes())
+	e := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(s.accessPublicKey.E)).Bytes())
 
 	return Jwks{
 		Keys: []Jwk{
 			{
 				Kty: "RSA",
 				Use: "sig",
-				Kid: s.refreshKID,
+				Kid: s.accessKID,
 				Alg: "RS256",
 				N:   n,
 				E:   e,
@@ -195,7 +195,7 @@ func NewJwtService() (JWTService, error) {
 		accessPublicKey:      accessPublicKey,
 		refreshPrivateKey:    refreshPrivateKey,
 		refreshPublicKey:     refreshPublicKey,
-		refreshKID:           computeKID(refreshPublicKey),
+		accessKID:            computeKID(accessPublicKey),
 		accessTokenDuration:  15 * time.Minute,
 		refreshTokenDuration: 30 * 24 * time.Hour,
 	}, nil

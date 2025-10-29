@@ -4,18 +4,16 @@ import (
 	"auth-server/models"
 	"auth-server/services"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"net/http"
 )
 
 type authHandler struct {
 	authService services.AuthService
-	userService services.UserService
 	jwtService  services.JWTService
 }
 
-func newAuthRouter(db *gorm.DB, redis *redis.Client) (*authHandler, error) {
+func newAuthRouter(db *gorm.DB) (*authHandler, error) {
 	authService, err := services.NewAuthService(db)
 	if err != nil {
 		return nil, err
@@ -26,7 +24,6 @@ func newAuthRouter(db *gorm.DB, redis *redis.Client) (*authHandler, error) {
 	}
 	return &authHandler{
 		authService: authService,
-		userService: services.NewUserService(db),
 		jwtService:  jwtService,
 	}, nil
 }

@@ -9,9 +9,6 @@ type UserService interface {
 	Create(user *models.User) error
 	GetByEmail(email string) (*models.User, error)
 	GetByID(id string) (*models.User, error)
-	IsPasswordValid(password string) bool
-	HashPassword(password string) (string, error)
-	IsPasswordCorrect(password string, hash string) error
 }
 
 type OauthService interface {

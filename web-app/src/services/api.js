@@ -3,13 +3,14 @@ import {baseUrl} from '@/composables/useAuth'
 export const authService = {
     async login(payload, params) {
         const url = params
-            ? `${baseUrl}/auth/login?${new URLSearchParams(params)}`
-            : `${baseUrl}/auth/login`
+            ? `${baseUrl}/auth/authorize?${new URLSearchParams(params)}`
+            : `${baseUrl}/auth/authorize`
 
         return fetch(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            credentials: 'include'
         })
     },
 

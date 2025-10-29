@@ -17,7 +17,7 @@ func NewRouter(
 	redis *redis.Client,
 ) (*Router, error) {
 
-	authHandler, err := newAuthRouter(db, redis)
+	authHandler, err := newAuthRouter(db)
 	if err != nil {
 		return nil, err
 	}
