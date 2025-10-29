@@ -6,14 +6,17 @@ import (
 )
 
 type Router struct {
-	healthHandler HandlerInterface
-	authHandler   HandlerInterface
+	healthHandler *healthHandler
+	authHandler   *authHandler
 }
 
-func NewRouter(userService services.UserService,
+func NewRouter(
+	userService services.UserService,
 	oauthClientsRepository services.OauthClientsService,
 	oauthCodesService services.TemporaryCodeService,
-	jwtService services.JWTService) *Router {
+	jwtService services.JWTService,
+) *Router {
+
 	return &Router{
 		healthHandler: newHealthHandler(),
 		authHandler:   newAuthRouter(userService, oauthClientsRepository, oauthCodesService, jwtService),
@@ -21,8 +24,10 @@ func NewRouter(userService services.UserService,
 }
 
 func (r *Router) RegisterRoutes(engine *gin.Engine) {
-	r.healthHandler.RegisterRoutes(engine.Group(""))
+	// health
+	r.healthHandler.RegisterRoutes(engine)
 
+	// auth
 	authGroup := engine.Group("/auth")
 	r.authHandler.RegisterRoutes(authGroup)
 }

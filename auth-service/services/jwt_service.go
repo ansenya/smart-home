@@ -3,8 +3,12 @@ package services
 import (
 	"auth-server/models"
 	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"math/big"
 	"os"
 	"time"
 )
@@ -16,11 +20,25 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type Jwks struct {
+	Keys []Jwk `json:"keys"`
+}
+
+type Jwk struct {
+	Kty string `json:"kty"`
+	Use string `json:"use"`
+	Kid string `json:"kid"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
 type jwtService struct {
-	privateKey           *rsa.PrivateKey
-	publicKey            *rsa.PublicKey
-	accessTokenDuration  time.Duration
-	refreshTokenDuration time.Duration
+	accessPrivateKey, refreshPrivateKey *rsa.PrivateKey
+	accessPublicKey, refreshPublicKey   *rsa.PublicKey
+	refreshKID                          string
+	accessTokenDuration                 time.Duration
+	refreshTokenDuration                time.Duration
 }
 
 func (s *jwtService) GenerateAccessToken(user *models.User) (string, error) {
@@ -32,10 +50,11 @@ func (s *jwtService) GenerateAccessToken(user *models.User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessTokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "auth-server",
+			Subject:   user.ID,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	return token.SignedString(s.privateKey)
+	return token.SignedString(s.accessPrivateKey)
 }
 
 func (s *jwtService) GenerateRefreshToken(user *models.User) (string, error) {
@@ -45,19 +64,44 @@ func (s *jwtService) GenerateRefreshToken(user *models.User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.refreshTokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "auth-server",
+			ID:        uuid.NewString(),
+			Subject:   user.ID,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	return token.SignedString(s.privateKey)
+	token.Header["kid"] = s.refreshKID
+	return token.SignedString(s.refreshPrivateKey)
 }
 
-func (s *jwtService) ValidateToken(token string) (*Claims, error) {
+func (s *jwtService) ValidateAccessToken(token string) (*Claims, error) {
 	claims := &Claims{}
 	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return s.publicKey, nil
+		return s.accessPublicKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !t.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	if claims.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("token is expired")
+	}
+
+	return claims, nil
+}
+
+func (s *jwtService) ValidateRefreshToken(token string) (*Claims, error) {
+	claims := &Claims{}
+	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return s.refreshPublicKey, nil
 	})
 	if err != nil {
 		return nil, err
@@ -81,21 +125,51 @@ func (s *jwtService) GetRefreshTokenDuration() time.Duration {
 	return s.refreshTokenDuration
 }
 
+func (s *jwtService) GenerateJwks() Jwks {
+	n := base64.RawURLEncoding.EncodeToString(s.refreshPublicKey.N.Bytes())
+	e := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(s.refreshPublicKey.E)).Bytes())
+
+	return Jwks{
+		Keys: []Jwk{
+			{
+				Kty: "RSA",
+				Use: "sig",
+				Kid: s.refreshKID,
+				Alg: "RS256",
+				N:   n,
+				E:   e,
+			},
+		},
+	}
+}
+
 func NewJwtService() (JWTService, error) {
-	privateKey, err := loadPrivateKey("keys/access_private.pem")
+	accessPrivateKey, err := loadPrivateKey("keys/access_private.pem")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load private key: %w", err)
 	}
-	publicKey, err := loadPublicKey("keys/access_public.pem")
+	accessPublicKey, err := loadPublicKey("keys/access_public.pem")
+	if err != nil {
+		return nil, fmt.Errorf("cannot load public key: %w", err)
+	}
+
+	refreshPrivateKey, err := loadPrivateKey("keys/refresh_private.pem")
+	if err != nil {
+		return nil, fmt.Errorf("cannot load private key: %w", err)
+	}
+	refreshPublicKey, err := loadPublicKey("keys/refresh_public.pem")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load public key: %w", err)
 	}
 
 	return &jwtService{
-		privateKey:           privateKey,
-		publicKey:            publicKey,
+		accessPrivateKey:     accessPrivateKey,
+		accessPublicKey:      accessPublicKey,
+		refreshPrivateKey:    refreshPrivateKey,
+		refreshPublicKey:     refreshPublicKey,
+		refreshKID:           computeKID(refreshPublicKey),
 		accessTokenDuration:  15 * time.Minute,
-		refreshTokenDuration: 7 * 24 * time.Hour,
+		refreshTokenDuration: 30 * 24 * time.Hour,
 	}, nil
 }
 
@@ -117,105 +191,12 @@ func loadPublicKey(filename string) (*rsa.PublicKey, error) {
 	return jwt.ParseRSAPublicKeyFromPEM(keyData)
 }
 
-//
-//func (s *AuthService) generateAccessToken(user *models.User) (string, error) {
-//	claims := &Claims{
-//		UserID:         user.ID,
-//		Email:          user.Email,
-//		EmailConfirmed: user.Confirmed,
-//		RegisteredClaims: jwt.RegisteredClaims{
-//			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessTokenDuration)),
-//			IssuedAt:  jwt.NewNumericDate(time.Now()),
-//			Issuer:    "auth-server",
-//		},
-//	}
-//	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-//	return token.SignedString(s.accessPrivateKey)
-//}
-//
-//func (s *AuthService) generateRefreshToken(user *models.User) (string, error) {
-//	claims := &Claims{
-//		UserID: user.ID,
-//		RegisteredClaims: jwt.RegisteredClaims{
-//			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.refreshTokenDuration)),
-//			IssuedAt:  jwt.NewNumericDate(time.Now()),
-//			Issuer:    "auth-server-refresh",
-//		},
-//	}
-//	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-//	return token.SignedString(s.refreshPrivateKey)
-//}
-//
-//func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
-//	claims := &Claims{}
-//	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-//		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-//			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-//		}
-//		return s.accessPublicKey, nil
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//	if !token.Valid {
-//		return nil, fmt.Errorf("invalid token")
-//	}
-//
-//	if claims.ExpiresAt.Before(time.Now()) {
-//		return nil, fmt.Errorf("token is expired")
-//	}
-//
-//	return claims, nil
-//}
-//
-//func (s *AuthService) JWTAuthMiddleware() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		authHeader := c.Request.Header.Get("Authorization")
-//		if authHeader == "" {
-//			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-//				"error": "No Authorization header found",
-//			})
-//			return
-//		}
-//
-//		parts := strings.SplitN(authHeader, " ", 2)
-//		if !(len(parts) == 2 && parts[0] == "Bearer") {
-//			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-//				"error": "Invalid Authorization header",
-//			})
-//			return
-//		}
-//
-//		tokenString := parts[1]
-//		claims, err := s.ValidateToken(tokenString)
-//		if err != nil {
-//			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-//				"error": "Invalid token",
-//			})
-//			return
-//		}
-//
-//		c.Set("userID", claims.UserID)
-//		c.Set("userEmail", claims.Email)
-//		c.Set("emailConfirmed", claims.EmailConfirmed)
-//
-//		c.Next()
-//	}
-//}
-//
-//func (s *AuthService) EmailConfirmedAuthMiddleware() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		s.JWTAuthMiddleware()(c)
-//
-//		if claims, exists := c.Get("claims"); exists {
-//			if cl, ok := claims.(*Claims); ok && cl.EmailConfirmed {
-//				c.Next()
-//				return
-//			}
-//		}
-//
-//		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-//			"error": "Email confirmation required for this endpoint",
-//		})
-//	}
-//}
+func computeKID(pubKey *rsa.PublicKey) string {
+	nBytes := pubKey.N.Bytes()
+	eBytes := big.NewInt(int64(pubKey.E)).Bytes()
+	data := append(nBytes, eBytes...)
+
+	hash := sha256.Sum256(data)
+	kid := base64.RawURLEncoding.EncodeToString(hash[:])
+	return kid
+}

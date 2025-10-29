@@ -9,11 +9,11 @@ import (
 type healthHandler struct {
 }
 
-func newHealthHandler() HandlerInterface {
+func newHealthHandler() *healthHandler {
 	return &healthHandler{}
 }
 
-func (h *healthHandler) RegisterRoutes(g *gin.RouterGroup) {
+func (h *healthHandler) RegisterRoutes(g *gin.Engine) {
 	g.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "pong")
 	})

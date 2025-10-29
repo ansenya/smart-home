@@ -30,18 +30,12 @@ func newAuthRouter(userService services.UserService, oauthClientsRepository serv
 	}
 }
 
-func (h *authHandler) RegisterRoutes(c *gin.RouterGroup) {
-	c.POST("/register", h.handleRegister)
-	c.POST("/login", h.handleLogin)
-	c.POST("/token", h.handleToken)
-	c.POST("/refresh", h.handleRefresh)
-
-	//c.POST("/reset-password")
-	//c.POST("/reset-password/change-password")
-
-	//codeRequestGroup := r.Group("/", svc.JWTAuthMiddleware())
-	//codeRequestGroup.POST("/auth/register/code/request", svc.CodeRequestHandler)
-	//codeRequestGroup.POST("/auth/register/code/confirm", svc.CodeConfirmationHandler)
+func (h *authHandler) RegisterRoutes(rg *gin.RouterGroup) {
+	rg.POST("/register", h.handleRegister)
+	rg.POST("/login", h.handleLogin)
+	rg.POST("/token", h.handleToken)
+	rg.POST("/refresh", h.handleRefresh)
+	rg.GET("/jwks", h.handleJwks)
 }
 
 func (h *authHandler) handleRegister(c *gin.Context) {
@@ -226,6 +220,10 @@ func (h *authHandler) handleToken(c *gin.Context) {
 		return
 	}
 
+	if err := h.oauthCodesService.Delete(req.Code); err != nil {
+		log.Printf("failed to delete code: %s", err)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":    "Bearer",
 		"access_token":  accessToken,
@@ -246,7 +244,7 @@ func (h *authHandler) handleRefresh(c *gin.Context) {
 		return
 	}
 
-	claims, err := h.jwtService.ValidateToken(req.RefreshToken)
+	claims, err := h.jwtService.ValidateAccessToken(req.RefreshToken)
 	if err != nil {
 		log.Printf("vv: %s", err)
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -282,4 +280,9 @@ func (h *authHandler) handleRefresh(c *gin.Context) {
 		"refresh_token": refreshTokenNew,
 		"expires_in":    h.jwtService.GetAccessTokenDuration().Seconds(),
 	})
+}
+
+func (h *authHandler) handleJwks(c *gin.Context) {
+	jwks := h.jwtService.GenerateJwks()
+	c.JSON(http.StatusOK, jwks)
 }

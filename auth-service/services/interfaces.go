@@ -27,9 +27,12 @@ type TemporaryCodeService interface {
 
 type JWTService interface {
 	GenerateAccessToken(user *models.User) (string, error)
+	ValidateAccessToken(token string) (*Claims, error)
 	GenerateRefreshToken(user *models.User) (string, error)
-	ValidateToken(token string) (*Claims, error)
+	ValidateRefreshToken(token string) (*Claims, error)
 
 	GetAccessTokenDuration() time.Duration
 	GetRefreshTokenDuration() time.Duration
+
+	GenerateJwks() Jwks
 }

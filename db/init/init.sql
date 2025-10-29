@@ -72,9 +72,10 @@ CREATE TABLE oauth_clients
 (
     id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_secret TEXT,
+    redirect_uri  TEXT,
+    scope         TEXT,
     name          TEXT,
     enabled       BOOL             DEFAULT True,
-    redirect_uri  TEXT,
     created_at    TIMESTAMP        DEFAULT NOW(),
     updated_at    TIMESTAMP        DEFAULT NOW(),
     deleted_at    TIMESTAMP        DEFAULT null
