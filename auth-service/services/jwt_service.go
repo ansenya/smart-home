@@ -143,6 +143,34 @@ func (s *jwtService) GenerateJwks() Jwks {
 	}
 }
 
+func loadPrivateKey(filename string) (*rsa.PrivateKey, error) {
+	keyData, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return jwt.ParseRSAPrivateKeyFromPEM(keyData)
+}
+
+func loadPublicKey(filename string) (*rsa.PublicKey, error) {
+	keyData, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return jwt.ParseRSAPublicKeyFromPEM(keyData)
+}
+
+func computeKID(pubKey *rsa.PublicKey) string {
+	nBytes := pubKey.N.Bytes()
+	eBytes := big.NewInt(int64(pubKey.E)).Bytes()
+	data := append(nBytes, eBytes...)
+
+	hash := sha256.Sum256(data)
+	kid := base64.RawURLEncoding.EncodeToString(hash[:])
+	return kid
+}
+
 func NewJwtService() (JWTService, error) {
 	accessPrivateKey, err := loadPrivateKey("keys/access_private.pem")
 	if err != nil {
@@ -171,32 +199,4 @@ func NewJwtService() (JWTService, error) {
 		accessTokenDuration:  15 * time.Minute,
 		refreshTokenDuration: 30 * 24 * time.Hour,
 	}, nil
-}
-
-func loadPrivateKey(filename string) (*rsa.PrivateKey, error) {
-	keyData, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return jwt.ParseRSAPrivateKeyFromPEM(keyData)
-}
-
-func loadPublicKey(filename string) (*rsa.PublicKey, error) {
-	keyData, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return jwt.ParseRSAPublicKeyFromPEM(keyData)
-}
-
-func computeKID(pubKey *rsa.PublicKey) string {
-	nBytes := pubKey.N.Bytes()
-	eBytes := big.NewInt(int64(pubKey.E)).Bytes()
-	data := append(nBytes, eBytes...)
-
-	hash := sha256.Sum256(data)
-	kid := base64.RawURLEncoding.EncodeToString(hash[:])
-	return kid
 }

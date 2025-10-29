@@ -3,55 +3,49 @@ package handlers
 import (
 	"auth-server/models"
 	"auth-server/services"
-	"auth-server/structs"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
 
-type authHandler struct {
-	authService            services.AuthService
+type oauthHandler struct {
 	userService            services.UserService
 	oauthClientsRepository services.OauthService
 	oauthCodesService      services.TemporaryCodeService
 	jwtService             services.JWTService
 }
 
-func newAuthRouter(db *gorm.DB, userService services.UserService, oauthClientsRepository services.OauthService, oauthCodesService services.TemporaryCodeService, jwtService services.JWTService) (*authHandler, error) {
-	authService, err := services.NewAuthService(db)
+func (h *oauthHandler) RegisterRoutes(rg *gin.RouterGroup) {
+	rg.POST("/authorize", h.Authorize)
+	rg.POST("/token", h.Token)
+	rg.POST("/refresh", h.Refresh)
+	rg.GET("/jwks", h.JWKs)
+}
+
+func newOAuthHandler(db *gorm.DB, redis *redis.Client) (*oauthHandler, error) {
+	jwtService, err := services.NewJwtService()
 	if err != nil {
 		return nil, err
 	}
-	return &authHandler{
-		authService:            authService,
-		userService:            userService,
-		oauthClientsRepository: oauthClientsRepository,
-		oauthCodesService:      oauthCodesService,
+	return &oauthHandler{
+		userService:            services.NewUserService(db),
+		oauthClientsRepository: services.NewOauthClientsService(db, redis),
+		oauthCodesService:      services.NewOauthCodeService(redis),
 		jwtService:             jwtService,
 	}, nil
 }
 
-func (h *authHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/register", h.handleRegister)
-	rg.POST("/login", h.handleLogin)
-
-	rg.POST("/authorize", h.Authorize)
-	rg.POST("/token", h.handleToken)
-	rg.POST("/refresh", h.handleRefresh)
-
-	rg.GET("/jwks", h.handleJwks)
-}
-
-func (h *authHandler) Authorize(c *gin.Context) {
+func (h *oauthHandler) Authorize(c *gin.Context) {
 	sid, err := c.Cookie("sid")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	var queries models.OauthRequest
+	var queries models.OAuthRequest
 	if err := c.ShouldBindQuery(&queries); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "queries are missing",
@@ -70,59 +64,7 @@ func (h *authHandler) Authorize(c *gin.Context) {
 	})
 }
 
-func (h *authHandler) handleRegister(c *gin.Context) {
-	var req struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad body"})
-		return
-	}
-
-	if !h.userService.IsPasswordValid(req.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad body"})
-		return
-	}
-
-	hash, err := h.userService.HashPassword(req.Password)
-	if err != nil {
-		log.Printf("error hashing password: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad body"})
-		return
-	}
-
-	user := models.User{
-		Email:    req.Email,
-		Password: hash,
-	}
-
-	if err := h.userService.Create(&user); err != nil {
-		log.Printf("error creating user: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad body"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, user)
-}
-
-func (h *authHandler) handleLogin(c *gin.Context) {
-	var request models.LoginRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	session, err := h.authService.Login(&request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong email/password"})
-		return
-	}
-	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "", false, false)
-	c.JSON(http.StatusOK, session)
-}
-
-func (h *authHandler) handleToken(c *gin.Context) {
+func (h *oauthHandler) Token(c *gin.Context) {
 	var req struct {
 		Code         string `form:"code" binding:"required"`
 		ClientSecret string `form:"client_secret" binding:"required"`
@@ -138,7 +80,7 @@ func (h *authHandler) handleToken(c *gin.Context) {
 		return
 	}
 
-	var oauthData structs.AuthData
+	var oauthData models.OAuthData
 	rawData, err := h.oauthCodesService.Get(req.Code)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -195,7 +137,7 @@ func (h *authHandler) handleToken(c *gin.Context) {
 	})
 }
 
-func (h *authHandler) handleRefresh(c *gin.Context) {
+func (h *oauthHandler) Refresh(c *gin.Context) {
 	var req struct {
 		GrantType    string `form:"grant_type" binding:"required"`
 		RefreshToken string `form:"refresh_token" binding:"required"`
@@ -245,7 +187,7 @@ func (h *authHandler) handleRefresh(c *gin.Context) {
 	})
 }
 
-func (h *authHandler) handleJwks(c *gin.Context) {
+func (h *oauthHandler) JWKs(c *gin.Context) {
 	jwks := h.jwtService.GenerateJwks()
 	c.JSON(http.StatusOK, jwks)
 }

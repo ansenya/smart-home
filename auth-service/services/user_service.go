@@ -4,6 +4,7 @@ import (
 	"auth-server/models"
 	"auth-server/repository"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type userService struct {
@@ -38,8 +39,8 @@ func (s *userService) IsPasswordCorrect(password string, hash string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-func NewUserService(userRepository repository.UserRepository) UserService {
+func NewUserService(db *gorm.DB) UserService {
 	return &userService{
-		userRepository: userRepository,
+		userRepository: repository.NewUserRepository(db),
 	}
 }

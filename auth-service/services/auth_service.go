@@ -5,6 +5,7 @@ import (
 	"auth-server/repository"
 	"fmt"
 	"gorm.io/gorm"
+	"log"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type authService struct {
 	jwtService        JWTService
 }
 
-func (s *authService) Login(request *models.LoginRequest) (*models.Session, error) {
+func (s *authService) Login(request *models.AuthRequest) (*models.Session, error) {
 	user, err := s.userRepository.GetByEmail(request.Email)
 	if err != nil {
 		return nil, err
@@ -37,6 +38,29 @@ func (s *authService) Login(request *models.LoginRequest) (*models.Session, erro
 		return nil, err
 	}
 	return &session, nil
+}
+
+func (s *authService) Register(request *models.AuthRequest) (*models.User, error) {
+	if !s.passwordService.IsPasswordValid(request.Password) {
+		return nil, fmt.Errorf("bad password")
+	}
+
+	hash, err := s.passwordService.HashPassword(request.Password)
+	if err != nil {
+		log.Printf("error hashing password: %v", err)
+		return nil, err
+	}
+
+	user := models.User{
+		Email:    request.Email,
+		Password: hash,
+	}
+
+	if err := s.userRepository.Create(&user); err != nil {
+		log.Printf("error creating user: %v", err)
+		return nil, err
+	}
+	return &user, nil
 }
 
 func NewAuthService(db *gorm.DB) (AuthService, error) {

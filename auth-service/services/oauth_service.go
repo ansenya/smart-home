@@ -3,7 +3,6 @@ package services
 import (
 	"auth-server/models"
 	"auth-server/repository"
-	"auth-server/structs"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -19,7 +18,7 @@ type oauthService struct {
 	oauthCodeService       TemporaryCodeService
 }
 
-func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (string, error) {
+func (s *oauthService) Authorize(queries models.OAuthRequest, sid string) (string, error) {
 	oauthClient, err := s.oauthClientsRepository.GetByID(queries.ClientID)
 	if err != nil || oauthClient == nil {
 		return "", err
@@ -37,7 +36,7 @@ func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (strin
 	}
 
 	code := uuid.New().String()
-	m, err := json.Marshal(structs.AuthData{
+	m, err := json.Marshal(models.OAuthData{
 		ClientID: oauthClient.ID,
 		UserID:   session.UserID,
 		Code:     code,

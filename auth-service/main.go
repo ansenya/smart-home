@@ -2,8 +2,6 @@ package main
 
 import (
 	"auth-server/handlers"
-	"auth-server/repository"
-	"auth-server/services"
 	"auth-server/storage"
 	"auth-server/utils"
 	"fmt"
@@ -30,18 +28,6 @@ func main() {
 		log.Fatalf("failed to connect to redis: %v", err)
 	}
 
-	// repositories
-	userRepository := repository.NewUserRepository(database)
-
-	// services
-	userService := services.NewUserService(userRepository)
-	oauthClientsService := services.NewOauthClientsService(database, redisClient)
-	oauthCodeService := services.NewOauthCodeService(redisClient)
-	jwtService, err := services.NewJwtService()
-	if err != nil {
-		log.Fatalf("failed to create jwt service: %v", err)
-	}
-
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true,
@@ -49,10 +35,10 @@ func main() {
 		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"*"},
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		MaxAge:           30 * 24 * time.Hour,
 	}))
 
-	router, err := handlers.NewRouter(database, userService, oauthClientsService, oauthCodeService, jwtService)
+	router, err := handlers.NewRouter(database, redisClient)
 	if err != nil {
 		log.Fatalf("failed to create router: %s", err)
 	}

@@ -15,13 +15,14 @@ type UserService interface {
 }
 
 type OauthService interface {
-	Authorize(queries models.OauthRequest, sid string) (string, error)
+	Authorize(queries models.OAuthRequest, sid string) (string, error)
 	GetByID(id string) (*models.OauthClient, error)
 	GetByName(name string) (*models.OauthClient, error)
 }
 
 type AuthService interface {
-	Login(request *models.LoginRequest) (*models.Session, error)
+	Login(request *models.AuthRequest) (*models.Session, error)
+	Register(request *models.AuthRequest) (*models.User, error)
 }
 
 type PasswordService interface {
