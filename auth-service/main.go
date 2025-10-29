@@ -32,11 +32,10 @@ func main() {
 
 	// repositories
 	userRepository := repository.NewUserRepository(database)
-	oauthClientsRepository := repository.NewOauthClientsRepository(database)
 
 	// services
 	userService := services.NewUserService(userRepository)
-	oauthClientsService := services.NewOauthClientsService(oauthClientsRepository)
+	oauthClientsService := services.NewOauthClientsService(database, redisClient)
 	oauthCodeService := services.NewOauthCodeService(redisClient)
 	jwtService, err := services.NewJwtService()
 	if err != nil {
@@ -53,7 +52,10 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	router := handlers.NewRouter(userService, oauthClientsService, oauthCodeService, jwtService)
+	router, err := handlers.NewRouter(database, userService, oauthClientsService, oauthCodeService, jwtService)
+	if err != nil {
+		log.Fatalf("failed to create router: %s", err)
+	}
 	router.RegisterRoutes(engine)
 
 	if err := engine.Run(Port); err != nil {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"auth-server/services"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Router struct {
@@ -11,16 +12,21 @@ type Router struct {
 }
 
 func NewRouter(
+	db *gorm.DB,
 	userService services.UserService,
-	oauthClientsRepository services.OauthClientsService,
+	oauthClientsRepository services.OauthService,
 	oauthCodesService services.TemporaryCodeService,
 	jwtService services.JWTService,
-) *Router {
+) (*Router, error) {
 
+	authHandler, err := newAuthRouter(db, userService, oauthClientsRepository, oauthCodesService, jwtService)
+	if err != nil {
+		return nil, err
+	}
 	return &Router{
 		healthHandler: newHealthHandler(),
-		authHandler:   newAuthRouter(userService, oauthClientsRepository, oauthCodesService, jwtService),
-	}
+		authHandler:   authHandler,
+	}, nil
 }
 
 func (r *Router) RegisterRoutes(engine *gin.Engine) {

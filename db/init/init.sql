@@ -16,14 +16,22 @@ CREATE
 
 CREATE TABLE users
 (
-    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id         UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
     email      VARCHAR(256) NOT NULL UNIQUE,
     password   TEXT         NOT NULL,
-    name       VARCHAR(100),
-    confirmed  BOOL             DEFAULT FALSE,
-    created_at DATE             DEFAULT now(),
-    updated_at DATE             DEFAULT now(),
-    deleted_at DATE             DEFAULT NULL
+    confirmed  BOOL                  DEFAULT FALSE,
+    created_at timestamptz  NOT NULL DEFAULT now(),
+    updated_at timestamptz  NOT NULL DEFAULT now(),
+    deleted_at timestamptz  NOT NULL DEFAULT NULL
+);
+
+CREATE TABLE sessions
+(
+    id          UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    user_id     UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    last_active timestamptz NOT NULL DEFAULT NOW(),
+    created_at  timestamptz NOT NULL DEFAULT NOW(),
+    expires_at  timestamptz          DEFAULT NULL
 );
 
 CREATE TABLE devices
@@ -38,9 +46,9 @@ CREATE TABLE devices
     status_info JSONB,
     custom_data JSONB,
     device_info JSONB,
-    created_at  TIMESTAMP        DEFAULT NOW(),
-    updated_at  TIMESTAMP        DEFAULT NOW(),
-    deleted_at  TIMESTAMP        DEFAULT NULL
+    created_at  timestamptz        DEFAULT NOW(),
+    updated_at  timestamptz        DEFAULT NOW(),
+    deleted_at  timestamptz        DEFAULT NULL
 );
 
 CREATE TABLE capabilities
@@ -76,9 +84,9 @@ CREATE TABLE oauth_clients
     scope         TEXT,
     name          TEXT,
     enabled       BOOL             DEFAULT True,
-    created_at    TIMESTAMP        DEFAULT NOW(),
-    updated_at    TIMESTAMP        DEFAULT NOW(),
-    deleted_at    TIMESTAMP        DEFAULT null
+    created_at    timestamptz        DEFAULT NOW(),
+    updated_at    timestamptz        DEFAULT NOW(),
+    deleted_at    timestamptz        DEFAULT null
 );
 
 GRANT CONNECT ON DATABASE "smart-home" TO "user";

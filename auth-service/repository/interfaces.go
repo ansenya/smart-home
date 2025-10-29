@@ -11,3 +11,8 @@ type UserRepository interface {
 type OauthClientsRepository interface {
 	GetByID(id string) (*models.OauthClient, error)
 }
+
+type SessionRepository interface {
+	Create(session *models.Session) error
+	GetByID(id string) (*models.Session, error)
+}

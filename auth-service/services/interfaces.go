@@ -14,9 +14,20 @@ type UserService interface {
 	IsPasswordCorrect(password string, hash string) error
 }
 
-type OauthClientsService interface {
+type OauthService interface {
+	Authorize(queries models.OauthRequest, sid string) (string, error)
 	GetByID(id string) (*models.OauthClient, error)
 	GetByName(name string) (*models.OauthClient, error)
+}
+
+type AuthService interface {
+	Login(request *models.LoginRequest) (*models.Session, error)
+}
+
+type PasswordService interface {
+	IsPasswordValid(password string) bool
+	HashPassword(password string) (string, error)
+	IsPasswordCorrect(password string, hash string) error
 }
 
 type TemporaryCodeService interface {

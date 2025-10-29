@@ -3,21 +3,75 @@ package services
 import (
 	"auth-server/models"
 	"auth-server/repository"
+	"auth-server/structs"
+	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"net/url"
+	"time"
 )
 
-type oauthClientsService struct {
+type oauthService struct {
 	oauthClientsRepository repository.OauthClientsRepository
+	sessionRepository      repository.SessionRepository
+	oauthCodeService       TemporaryCodeService
 }
 
-func (s *oauthClientsService) GetByID(id string) (*models.OauthClient, error) {
+func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (string, error) {
+	oauthClient, err := s.oauthClientsRepository.GetByID(queries.ClientID)
+	if err != nil || oauthClient == nil {
+		return "", err
+	}
+	if !oauthClient.Enabled {
+		return "", fmt.Errorf("client not enabled")
+	}
+
+	session, err := s.sessionRepository.GetByID(sid)
+	if err != nil {
+		return "", err
+	}
+	if session == nil {
+		return "", fmt.Errorf("session not found")
+	}
+
+	code := uuid.New().String()
+	m, err := json.Marshal(structs.AuthData{
+		ClientID: oauthClient.ID,
+		UserID:   session.UserID,
+		Code:     code,
+	})
+	if err != nil {
+		return "", err
+	}
+	if err := s.oauthCodeService.Save(code, string(m), time.Minute*15); err != nil {
+		return "", err
+	}
+
+	redirectURL := fmt.Sprintf(
+		"%s?code=%s&client_id=%s&state=%s&scope=%s",
+		oauthClient.RedirectURI,
+		url.QueryEscape(code),
+		url.QueryEscape(queries.ClientID),
+		url.QueryEscape(queries.State),
+		url.QueryEscape(queries.Scope),
+	)
+	return redirectURL, nil
+}
+
+func (s *oauthService) GetByID(id string) (*models.OauthClient, error) {
 	return s.oauthClientsRepository.GetByID(id)
 }
 
-func (s *oauthClientsService) GetByName(name string) (*models.OauthClient, error) {
+func (s *oauthService) GetByName(name string) (*models.OauthClient, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func NewOauthClientsService(oauthClientsRepository repository.OauthClientsRepository) OauthClientsService {
-	return &oauthClientsService{oauthClientsRepository: oauthClientsRepository}
+func NewOauthClientsService(db *gorm.DB, redis *redis.Client) OauthService {
+	return &oauthService{
+		oauthClientsRepository: repository.NewOauthClientsRepository(db),
+		sessionRepository:      repository.NewSessionRepository(db),
+		oauthCodeService:       NewOauthCodeService(redis),
+	}
 }
