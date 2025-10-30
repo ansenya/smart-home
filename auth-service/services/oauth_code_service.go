@@ -23,8 +23,8 @@ func (s *oauthCodeService) Delete(code string) error {
 	return s.redisClient.Del(context.TODO(), code)
 }
 
-func NewOauthCodeService(redisClient *redis.Client) TemporaryCodeService {
+func NewTemporaryCodeService(redisClient *redis.Client, prefix string) TemporaryCodeService {
 	return &oauthCodeService{
-		redisClient: storage.NewNamespacedRedis(redisClient, "oauth"),
+		redisClient: storage.NewNamespacedRedis(redisClient, prefix),
 	}
 }

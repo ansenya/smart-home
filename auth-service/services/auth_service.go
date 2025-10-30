@@ -16,6 +16,18 @@ type authService struct {
 	jwtService        JWTService
 }
 
+func (s *authService) Me(sid string) (*models.User, error) {
+	session, err := s.sessionRepository.GetByID(sid)
+	if err != nil || session == nil {
+		return nil, fmt.Errorf("invalid session id")
+	}
+	user, err := s.userRepository.GetByID(session.UserID)
+	if err != nil || user == nil {
+		return nil, fmt.Errorf("invalid session id")
+	}
+	return user, nil
+}
+
 func (s *authService) Login(request *models.AuthRequest) (*models.Session, error) {
 	user, err := s.userRepository.GetByEmail(request.Email)
 	if err != nil {
@@ -63,15 +75,11 @@ func (s *authService) Register(request *models.AuthRequest) (*models.User, error
 	return &user, nil
 }
 
-func NewAuthService(db *gorm.DB) (AuthService, error) {
-	jwtService, err := NewJwtService()
-	if err != nil {
-		return nil, fmt.Errorf("cannot initialize jwtService: %s", err)
-	}
+func NewAuthService(db *gorm.DB) AuthService {
 	return &authService{
 		userRepository:    repository.NewUserRepository(db),
 		sessionRepository: repository.NewSessionRepository(db),
 		passwordService:   NewPasswordService(),
-		jwtService:        jwtService,
-	}, nil
+		jwtService:        NewJwtService(),
+	}
 }

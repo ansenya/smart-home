@@ -20,8 +20,7 @@ func (h *yandexHandler) RegisterRoutes(g *gin.RouterGroup) {
 	g.GET("", h.handleAliveStatus)
 
 	protected := g.Group("/")
-	protected.Use(middleware.YandexMiddleware())
-	protected.Use(middleware.JWTMiddleware())
+	protected.Use(middleware.YandexMiddleware(), middleware.JWTMiddleware())
 	protected.POST("/user/unlink", h.handleUnlink)
 	protected.GET("/user/devices", h.handleDevices)
 	protected.POST("/user/devices/query", h.handleDevicesQuery)

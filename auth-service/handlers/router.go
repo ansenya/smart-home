@@ -12,24 +12,12 @@ type Router struct {
 	oauthHandler  *oauthHandler
 }
 
-func NewRouter(
-	db *gorm.DB,
-	redis *redis.Client,
-) (*Router, error) {
-
-	authHandler, err := newAuthRouter(db)
-	if err != nil {
-		return nil, err
-	}
-	oauthHandler, err := newOAuthHandler(db, redis)
-	if err != nil {
-		return nil, err
-	}
+func NewRouter(db *gorm.DB, redisClient *redis.Client) *Router {
 	return &Router{
 		healthHandler: newHealthHandler(),
-		authHandler:   authHandler,
-		oauthHandler:  oauthHandler,
-	}, nil
+		authHandler:   newAuthRouter(db),
+		oauthHandler:  newOauthHandler(db, redisClient),
+	}
 }
 
 func (r *Router) RegisterRoutes(engine *gin.Engine) {
@@ -39,5 +27,8 @@ func (r *Router) RegisterRoutes(engine *gin.Engine) {
 	// auth
 	authGroup := engine.Group("/auth")
 	r.authHandler.RegisterRoutes(authGroup)
-	r.oauthHandler.RegisterRoutes(authGroup)
+
+	// oauth
+	oauthGroup := engine.Group("/oauth")
+	r.oauthHandler.RegisterRoutes(oauthGroup)
 }

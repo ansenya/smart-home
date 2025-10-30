@@ -13,24 +13,33 @@ type authHandler struct {
 	jwtService  services.JWTService
 }
 
-func newAuthRouter(db *gorm.DB) (*authHandler, error) {
-	authService, err := services.NewAuthService(db)
-	if err != nil {
-		return nil, err
-	}
-	jwtService, err := services.NewJwtService()
-	if err != nil {
-		return nil, err
-	}
+func newAuthRouter(db *gorm.DB) *authHandler {
 	return &authHandler{
-		authService: authService,
-		jwtService:  jwtService,
-	}, nil
+		authService: services.NewAuthService(db),
+		jwtService:  services.NewJwtService(),
+	}
 }
 
 func (h *authHandler) RegisterRoutes(rg *gin.RouterGroup) {
+	rg.GET("/me", h.Me)
 	rg.POST("/login", h.Login)
+	rg.POST("/logout", h.Logout)
 	rg.POST("/register", h.Register)
+}
+
+func (h *authHandler) Me(c *gin.Context) {
+	sid, err := c.Cookie("sid")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
+		return
+	}
+	user, err := h.authService.Me(sid)
+	if err != nil {
+		c.SetCookie("sid", "", 0, "/", "", false, false)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *authHandler) Login(c *gin.Context) {
@@ -47,6 +56,11 @@ func (h *authHandler) Login(c *gin.Context) {
 	}
 	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "", false, false)
 	c.JSON(http.StatusOK, session)
+}
+
+func (h *authHandler) Logout(c *gin.Context) {
+	// todo :)
+	c.SetCookie("sid", "", 0, "/", "", false, false)
 }
 
 func (h *authHandler) Register(c *gin.Context) {

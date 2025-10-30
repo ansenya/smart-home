@@ -16,7 +16,6 @@ func YandexMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set("requestID", xRequestId)
-
 		c.Next()
 	}
 }

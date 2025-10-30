@@ -8,17 +8,11 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"log"
 	"math/big"
 	"os"
 	"time"
 )
-
-type Claims struct {
-	UserID         string `json:"user_id"`
-	Email          string `json:"email"`
-	EmailConfirmed bool   `json:"email_confirmed"`
-	jwt.RegisteredClaims
-}
 
 type Jwks struct {
 	Keys []Jwk `json:"keys"`
@@ -42,16 +36,11 @@ type jwtService struct {
 }
 
 func (s *jwtService) GenerateAccessToken(user *models.User) (string, error) {
-	claims := &Claims{
-		UserID:         user.ID,
-		Email:          user.Email,
-		EmailConfirmed: user.Confirmed,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessTokenDuration)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "auth-server",
-			Subject:   user.ID,
-		},
+	claims := &jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessTokenDuration)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Issuer:    "auth-server",
+		Subject:   user.ID,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = s.accessKID
@@ -59,22 +48,19 @@ func (s *jwtService) GenerateAccessToken(user *models.User) (string, error) {
 }
 
 func (s *jwtService) GenerateRefreshToken(user *models.User) (string, error) {
-	claims := &Claims{
-		UserID: user.ID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.refreshTokenDuration)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "auth-server",
-			ID:        uuid.NewString(),
-			Subject:   user.ID,
-		},
+	claims := &jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.refreshTokenDuration)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Issuer:    "auth-server",
+		ID:        uuid.NewString(),
+		Subject:   user.ID,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	return token.SignedString(s.refreshPrivateKey)
 }
 
-func (s *jwtService) ValidateAccessToken(token string) (*Claims, error) {
-	claims := &Claims{}
+func (s *jwtService) ValidateAccessToken(token string) (*jwt.RegisteredClaims, error) {
+	claims := &jwt.RegisteredClaims{}
 	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -95,8 +81,8 @@ func (s *jwtService) ValidateAccessToken(token string) (*Claims, error) {
 	return claims, nil
 }
 
-func (s *jwtService) ValidateRefreshToken(token string) (*Claims, error) {
-	claims := &Claims{}
+func (s *jwtService) ValidateRefreshToken(token string) (*jwt.RegisteredClaims, error) {
+	claims := &jwt.RegisteredClaims{}
 	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -171,23 +157,23 @@ func computeKID(pubKey *rsa.PublicKey) string {
 	return kid
 }
 
-func NewJwtService() (JWTService, error) {
+func NewJwtService() JWTService {
 	accessPrivateKey, err := loadPrivateKey("keys/access_private.pem")
 	if err != nil {
-		return nil, fmt.Errorf("cannot load private key: %w", err)
+		log.Fatalf("cannot load private key: %w", err)
 	}
 	accessPublicKey, err := loadPublicKey("keys/access_public.pem")
 	if err != nil {
-		return nil, fmt.Errorf("cannot load public key: %w", err)
+		log.Fatalf("cannot load public key: %w", err)
 	}
 
 	refreshPrivateKey, err := loadPrivateKey("keys/refresh_private.pem")
 	if err != nil {
-		return nil, fmt.Errorf("cannot load private key: %w", err)
+		log.Fatalf("cannot load private key: %w", err)
 	}
 	refreshPublicKey, err := loadPublicKey("keys/refresh_public.pem")
 	if err != nil {
-		return nil, fmt.Errorf("cannot load public key: %w", err)
+		log.Fatalf("cannot load public key: %w", err)
 	}
 
 	return &jwtService{
@@ -198,5 +184,5 @@ func NewJwtService() (JWTService, error) {
 		accessKID:            computeKID(accessPublicKey),
 		accessTokenDuration:  15 * time.Minute,
 		refreshTokenDuration: 30 * 24 * time.Hour,
-	}, nil
+	}
 }

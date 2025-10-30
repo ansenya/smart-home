@@ -70,9 +70,9 @@ services:
       - ./keys:/app/keys:ro
     restart: unless-stopped
 
-  web:
+  auth-web:
     build:
-      context: ./web-app
+      context: ./auth-web
     ports:
       - "8888:80"
     restart: unless-stopped

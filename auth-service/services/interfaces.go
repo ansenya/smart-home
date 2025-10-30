@@ -2,24 +2,32 @@ package services
 
 import (
 	"auth-server/models"
+	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
 
-type UserService interface {
-	Create(user *models.User) error
-	GetByEmail(email string) (*models.User, error)
-	GetByID(id string) (*models.User, error)
-}
-
 type OauthService interface {
-	Authorize(queries models.OAuthRequest, sid string) (string, error)
-	GetByID(id string) (*models.OauthClient, error)
-	GetByName(name string) (*models.OauthClient, error)
+	Authorize(queries models.OauthRequest, sid string) (string, error)
+	GenerateTokens(request models.AccessTokenRequest) (*models.TokenResponse, error)
+	RefreshTokens(request models.RefreshTokenRequest) (*models.TokenResponse, error)
 }
 
 type AuthService interface {
+	Me(sid string) (*models.User, error)
 	Login(request *models.AuthRequest) (*models.Session, error)
 	Register(request *models.AuthRequest) (*models.User, error)
+}
+
+type JWTService interface {
+	GenerateAccessToken(user *models.User) (string, error)
+	ValidateAccessToken(token string) (*jwt.RegisteredClaims, error)
+	GenerateRefreshToken(user *models.User) (string, error)
+	ValidateRefreshToken(token string) (*jwt.RegisteredClaims, error)
+
+	GetAccessTokenDuration() time.Duration
+	GetRefreshTokenDuration() time.Duration
+
+	GenerateJwks() Jwks
 }
 
 type PasswordService interface {
@@ -32,16 +40,4 @@ type TemporaryCodeService interface {
 	Save(code string, data string, expiresIn time.Duration) error
 	Get(code string) (string, error)
 	Delete(code string) error
-}
-
-type JWTService interface {
-	GenerateAccessToken(user *models.User) (string, error)
-	ValidateAccessToken(token string) (*Claims, error)
-	GenerateRefreshToken(user *models.User) (string, error)
-	ValidateRefreshToken(token string) (*Claims, error)
-
-	GetAccessTokenDuration() time.Duration
-	GetRefreshTokenDuration() time.Duration
-
-	GenerateJwks() Jwks
 }

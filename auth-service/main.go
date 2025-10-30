@@ -29,7 +29,7 @@ func main() {
 
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://smarthome.hipahopa.ru"},
+		AllowOrigins:     []string{"https://smarthome.hipahopa.ru", "http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -37,10 +37,7 @@ func main() {
 		MaxAge:           86400,
 	}))
 
-	router, err := handlers.NewRouter(database, redisClient)
-	if err != nil {
-		log.Fatalf("failed to create router: %s", err)
-	}
+	router := handlers.NewRouter(database, redisClient)
 	router.RegisterRoutes(engine)
 
 	if err := engine.Run(Port); err != nil {

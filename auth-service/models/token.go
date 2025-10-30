@@ -20,11 +20,3 @@ type LoginData struct {
 	State    string `json:"state"`
 	Scope    string `json:"scope"`
 }
-
-type TokenRequest struct {
-	Code         string `form:"code" binding:"required"`
-	ClientSecret string `form:"client_secret" binding:"required"`
-	GrantType    string `form:"grant_type" binding:"required"`
-	ClientID     string `form:"client_id" binding:"required"`
-	RedirectURI  string `form:"redirect_uri" binding:"required"`
-}

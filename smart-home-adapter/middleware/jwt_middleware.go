@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"crypto/rsa"
+	"devices-api/utils"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,6 +12,8 @@ import (
 	"math/big"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
 
 type JWKS struct {
@@ -26,6 +28,13 @@ type JSONWebKey struct {
 	N   string `json:"n"`
 	E   string `json:"e"`
 }
+
+var (
+	cachedJWKS   *JWKS
+	cachedJWKSAt time.Time
+	jwksTTL      = 5 * time.Minute
+	jwksMutex    sync.Mutex
+)
 
 func fetchJWKS(url string) (*JWKS, error) {
 	resp, err := http.Get(url)
@@ -42,7 +51,25 @@ func fetchJWKS(url string) (*JWKS, error) {
 	return &jwks, nil
 }
 
-// Конвертация base64url в *rsa.PublicKey
+func getCachedJWKS(url string) (*JWKS, error) {
+	jwksMutex.Lock()
+	defer jwksMutex.Unlock()
+
+	if cachedJWKS != nil && time.Since(cachedJWKSAt) < jwksTTL {
+		return cachedJWKS, nil
+	}
+
+	jwks, err := fetchJWKS(url)
+	if err != nil {
+		return nil, err
+	}
+
+	cachedJWKS = jwks
+	cachedJWKSAt = time.Now()
+	return jwks, nil
+}
+
+// --- Parse RSA public key from JWKS ---
 func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 	nBytes, err := base64.RawURLEncoding.DecodeString(nStr)
 	if err != nil {
@@ -53,12 +80,17 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	e := int(binary.BigEndian.Uint32(append(make([]byte, 4-len(eBytes)), eBytes...)))
-	n := new(big.Int).SetBytes(nBytes)
+	// безопасный способ преобразования e
+	e := 0
+	for _, b := range eBytes {
+		e = e<<8 + int(b)
+	}
 
+	n := new(big.Int).SetBytes(nBytes)
 	return &rsa.PublicKey{N: n, E: e}, nil
 }
 
+// --- Parse JWT using JWKS ---
 func parseJWT(tokenString string, jwks *JWKS) (*jwt.Token, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		kid, ok := token.Header["kid"].(string)
@@ -76,19 +108,45 @@ func parseJWT(tokenString string, jwks *JWKS) (*jwt.Token, error) {
 
 	return jwt.Parse(tokenString, keyFunc)
 }
+
 func JWTMiddleware() gin.HandlerFunc {
+	jwksURL := utils.GetEnv("AUTH_SERVICE_BASE_URL", "https://api.smarthome.hipahopa.ru/oauth/jwks")
 	return func(c *gin.Context) {
 		authorization := c.GetHeader("Authorization")
-		parts := strings.Split(authorization, " ")
-		accessToken := parts[1]
-		jwks, _ := fetchJWKS("https://api.smarthome.hipahopa.ru/auth/jwks")
-		token, err := parseJWT(accessToken, jwks)
-		if err != nil {
-			log.Println(err)
+		parts := strings.SplitN(authorization, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
+			return
 		}
-		userID, _ := token.Claims.GetSubject()
+		accessToken := parts[1]
 
-		c.Set("userID", userID)
+		jwks, err := getCachedJWKS(jwksURL)
+		if err != nil {
+			log.Println("Failed to fetch JWKS:", err)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unable to fetch JWKS"})
+			return
+		}
+
+		token, err := parseJWT(accessToken, jwks)
+		if err != nil || !token.Valid {
+			log.Println("Invalid token:", err)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
+			return
+		}
+
+		sub, ok := claims["sub"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing sub claim"})
+			return
+		}
+
+		c.Set("userID", sub)
 		c.Next()
 	}
 }
