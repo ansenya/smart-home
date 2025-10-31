@@ -160,20 +160,20 @@ func computeKID(pubKey *rsa.PublicKey) string {
 func NewJwtService() JWTService {
 	accessPrivateKey, err := loadPrivateKey("keys/access_private.pem")
 	if err != nil {
-		log.Fatalf("cannot load private key: %w", err)
+		log.Fatalf("cannot load private key: %s", err)
 	}
 	accessPublicKey, err := loadPublicKey("keys/access_public.pem")
 	if err != nil {
-		log.Fatalf("cannot load public key: %w", err)
+		log.Fatalf("cannot load public key: %s", err)
 	}
 
 	refreshPrivateKey, err := loadPrivateKey("keys/refresh_private.pem")
 	if err != nil {
-		log.Fatalf("cannot load private key: %w", err)
+		log.Fatalf("cannot load private key: %s", err)
 	}
 	refreshPublicKey, err := loadPublicKey("keys/refresh_public.pem")
 	if err != nil {
-		log.Fatalf("cannot load public key: %w", err)
+		log.Fatalf("cannot load public key: %s", err)
 	}
 
 	return &jwtService{

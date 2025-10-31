@@ -1,9 +1,14 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
-// <user-id>/<device-id≥/capabilities/<capability>
-// <user-id>/<device-id>/properties/<property>
+// <user-id>/<device-id≥/capabilities/<capability>/set
+// <user-id>/<device-id≥/capabilities/<capability>/state
+// <user-id>/<device-id>/properties/<property>/state
+// <user-id>/<device-id>/state
 
 type YandexResponse struct {
 	RequestID string  `json:"requestId"`
@@ -28,6 +33,8 @@ type Device struct {
 	DeviceInfo   DeviceInfo      `gorm:"type:jsonb;serializer:json;column:device_info" json:"device_info,omitempty"`
 	Capabilities []Capability    `gorm:"foreignKey:DeviceID" json:"capabilities,omitempty"`
 	Properties   []Property      `gorm:"foreignKey:DeviceID" json:"properties,omitempty"`
+
+	LastSeen time.Time `gorm:"column:last_seen" json:"-"`
 
 	ErrorCode    string `json:"error_code,omitempty"`
 	ErrorMessage string `json:"error_message,omitempty"`
@@ -67,7 +74,7 @@ type DeviceInfo struct {
 type State struct {
 	Instance     string          `json:"instance"`
 	Value        json.RawMessage `json:"value,omitempty"`
-	ActionResult ActionResult    `json:"action_result,omitempty"`
+	ActionResult *ActionResult   `json:"action_result,omitempty"`
 }
 
 type ActionResult struct {

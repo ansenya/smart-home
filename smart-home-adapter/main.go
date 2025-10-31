@@ -2,7 +2,6 @@ package main
 
 import (
 	"devices-api/handlers"
-	"devices-api/repository"
 	"devices-api/services"
 	"devices-api/storage"
 	"devices-api/utils"
@@ -31,18 +30,13 @@ func main() {
 		log.Fatalf("failed to connect to mqtt: %v", err)
 	}
 
-	// repositories
-	devicesRepository := repository.NewDevicesRepo(database)
-	capabilitiesRepo := repository.NewCapabilityRepo(database)
-
-	// services
-	devicesService := services.NewDevicesService(devicesRepository, capabilitiesRepo)
-	mqttService := services.NewMqttService(mqttClient)
-
 	engine := gin.Default()
 
-	router := handlers.NewRouter(devicesService, mqttService)
+	router := handlers.NewRouter(database, &mqttClient)
 	router.RegisterRoutes(engine)
+
+	statusListenerService := services.NewStatusListenerService(database, mqttClient)
+	go statusListenerService.StartListener()
 
 	if err := engine.Run(Port); err != nil {
 		log.Fatalf("failed to start server: %v", err)

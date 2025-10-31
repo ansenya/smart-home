@@ -46,9 +46,10 @@ CREATE TABLE devices
     status_info JSONB,
     custom_data JSONB,
     device_info JSONB,
-    created_at  timestamptz        DEFAULT NOW(),
-    updated_at  timestamptz        DEFAULT NOW(),
-    deleted_at  timestamptz        DEFAULT NULL
+    last_seen   timestamptz      DEFAULT NOW(),
+    created_at  timestamptz      DEFAULT NOW(),
+    updated_at  timestamptz      DEFAULT NOW(),
+    deleted_at  timestamptz      DEFAULT NULL
 );
 
 CREATE TABLE capabilities
@@ -84,9 +85,9 @@ CREATE TABLE oauth_clients
     scope         TEXT,
     name          TEXT,
     enabled       BOOL             DEFAULT True,
-    created_at    timestamptz        DEFAULT NOW(),
-    updated_at    timestamptz        DEFAULT NOW(),
-    deleted_at    timestamptz        DEFAULT null
+    created_at    timestamptz      DEFAULT NOW(),
+    updated_at    timestamptz      DEFAULT NOW(),
+    deleted_at    timestamptz      DEFAULT null
 );
 
 GRANT CONNECT ON DATABASE "smart-home" TO "user";

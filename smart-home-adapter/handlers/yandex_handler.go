@@ -4,11 +4,13 @@ import (
 	"devices-api/middleware"
 	"devices-api/models"
 	"devices-api/services"
-	"encoding/json"
 	"fmt"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"time"
 )
 
 type yandexHandler struct {
@@ -46,6 +48,9 @@ func (h *yandexHandler) handleDevices(c *gin.Context) {
 			"error": fmt.Errorf("cannot list devices: %v", err.Error()),
 		})
 	}
+	for _, device := range devices {
+		log.Println(device.LastSeen.String())
+	}
 
 	resp := models.YandexResponse{
 		RequestID: requestID,
@@ -65,7 +70,8 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 		Devices []models.Device `json:"devices"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
 	}
 
 	var deviceIDs []string
@@ -76,13 +82,18 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 	devices, err := h.devicesService.GetDevices(deviceIDs)
 	if err != nil {
 		log.Printf("cannot list devices: %s", err.Error())
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Errorf("cannot list devices: %v", err.Error()),
 		})
+		return
 	}
-
-	m, _ := json.Marshal(devices)
-	log.Println(string(m))
+	for i := range devices {
+		device := &devices[i]
+		if time.Since(device.LastSeen) > 90*time.Second {
+			device.ErrorCode = "DEVICE_UNREACHABLE"
+			device.ErrorMessage = "устройство недоступно"
+		}
+	}
 
 	c.JSON(http.StatusOK, models.YandexResponse{
 		RequestID: requestID,
@@ -106,31 +117,29 @@ func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 		return
 	}
 
+	// по девайсам из запроса
 	for i := range req.Payload.Devices {
-		d := &req.Payload.Devices[i]
-		for j := range d.Capabilities {
-			cp := &d.Capabilities[j]
-			state := &cp.State
-			m, _ := json.Marshal(state)
+		device := &req.Payload.Devices[i]
 
-			topic := h.mqttService.GetTopicName(userID, d, services.CapabilityComponent, cp.Type)
+		// по capabilities из запроса
+		for j := range device.Capabilities {
+			deviceCapability := &device.Capabilities[j]
+			state := &deviceCapability.State
+
+			topic := h.mqttService.GetTopicName(userID, device, deviceCapability.Type)
 			if err := h.mqttService.Publish(state, topic); err != nil {
 				log.Printf("cannot publish payload: %s", err.Error())
-			}
-
-			err := h.devicesService.UpdateCapabilityState(cp.Type, m)
-			if err != nil {
-				state.ActionResult = models.ActionResult{
+				state.ActionResult = &models.ActionResult{
 					Status:       "ERROR",
 					ErrorCode:    "500",
 					ErrorMessage: fmt.Sprintf("cannot update state: %s", err.Error()),
 				}
 			} else {
-				state.ActionResult = models.ActionResult{
+				state.ActionResult = &models.ActionResult{
 					Status: "DONE",
 				}
 			}
-			cp.State.Value = nil
+			deviceCapability.State.Value = nil
 		}
 	}
 
@@ -142,9 +151,9 @@ func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 	})
 }
 
-func newYandexHandler(devicesService services.DevicesService, mqttService services.MqttService) HandlerInterface {
+func newYandexHandler(db *gorm.DB, mqttClient *mqtt.Client) HandlerInterface {
 	return &yandexHandler{
-		devicesService: devicesService,
-		mqttService:    mqttService,
+		devicesService: services.NewDevicesService(db),
+		mqttService:    services.NewMqttService(*mqttClient),
 	}
 }

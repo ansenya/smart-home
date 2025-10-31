@@ -128,6 +128,13 @@ func (r *devicesRepo) Update(device *models.Device) error {
 	})
 }
 
+func (r *devicesRepo) UpdateLastSeen(id string) error {
+	return r.db.Model(&models.Device{}).
+		Where("id = ?", id).
+		Update("last_seen", gorm.Expr("NOW()")).
+		Error
+}
+
 func (r *devicesRepo) Upsert(device *models.Device) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Upsert main device

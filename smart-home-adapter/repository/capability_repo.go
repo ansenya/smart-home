@@ -2,6 +2,7 @@ package repository
 
 import (
 	"devices-api/models"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -30,11 +31,16 @@ func (r *capabilityRepo) GetByID(id string) (*models.Capability, error) {
 	return &capability, nil
 }
 
-func (r *capabilityRepo) UpdateState(capType string, state any) error {
-	if err := r.db.Model(&models.Capability{}).
-		Where("type = ?", capType).
-		Update("state", state).Error; err != nil {
-		return fmt.Errorf("failed to update capability state: %w", err)
+func (r *capabilityRepo) UpdateState(deviceID, capability string, state json.RawMessage) error {
+	res := r.db.Model(&models.Capability{}).
+		Where("device_id = ?", deviceID).
+		Where("type = ?", capability).
+		Update("state", state)
+	if res.Error != nil {
+		return fmt.Errorf("failed to update capability state: %w", res.Error)
+	}
+	if res.RowsAffected == 0 {
+		return fmt.Errorf("capability %s for device %s not found", capability, deviceID)
 	}
 	return nil
 }

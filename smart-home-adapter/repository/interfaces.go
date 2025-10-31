@@ -2,6 +2,7 @@ package repository
 
 import (
 	"devices-api/models"
+	"encoding/json"
 )
 
 type DevicesRepository interface {
@@ -10,6 +11,7 @@ type DevicesRepository interface {
 	GetByUserID(userID string) ([]models.Device, error)
 	Save(device *models.Device) error
 	Update(device *models.Device) error
+	UpdateLastSeen(id string) error
 	Upsert(device *models.Device) error
 	Delete(id string) error
 }
@@ -17,5 +19,9 @@ type DevicesRepository interface {
 type CapabilitiesRepository interface {
 	GetByDevice(deviceID string) ([]models.Capability, error)
 	GetByID(id string) (*models.Capability, error)
-	UpdateState(id string, state any) error
+	UpdateState(deviceID, capability string, state json.RawMessage) error
+}
+
+type PropertiesRepository interface {
+	UpdateState(deviceID, property string, state json.RawMessage) error
 }

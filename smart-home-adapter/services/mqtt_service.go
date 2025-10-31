@@ -10,24 +10,18 @@ import (
 
 type Component string
 
-const (
-	CapabilityComponent Component = "capabilities"
-	PropertyComponent   Component = "properties"
-)
-
-// <user-id>/<device-id≥/<component>/<capability>
-// <user-id>/<device-id>/<component>/<property>
-
 type mqttService struct {
 	mqttClient mqtt.Client
 }
 
-func (s *mqttService) GetTopicName(userID string, device *models.Device, component Component, componentName string) string {
+// GetTopicName <user-id>/<device-id≥/<component>/<capability>/set
+func (s *mqttService) GetTopicName(userID string, device *models.Device, componentName string) string {
 	return strings.Join([]string{
 		userID,
 		device.ID,
-		string(component),
+		"capabilities",
 		componentName,
+		"set",
 	}, "/")
 }
 
