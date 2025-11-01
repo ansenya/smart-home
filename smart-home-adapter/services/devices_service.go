@@ -4,6 +4,7 @@ import (
 	"devices-api/models"
 	"devices-api/repository"
 	"encoding/json"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +47,11 @@ func (r devicesService) UpdateCurrentState(deviceID, capability string, payload 
 }
 
 func (r devicesService) UpdateProperty(deviceID, property string, payload json.RawMessage) error {
-	return r.capabilitiesRepository.UpdateState(deviceID, property, payload)
+	var state models.PropertyState
+	if err := json.Unmarshal(payload, &state); err != nil {
+		return fmt.Errorf("failed to unmarshal payload")
+	}
+	return r.propertiesRepository.UpdateState(deviceID, property, &state)
 }
 
 func NewDevicesService(db *gorm.DB) DevicesService {

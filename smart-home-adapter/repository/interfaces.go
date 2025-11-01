@@ -23,5 +23,5 @@ type CapabilitiesRepository interface {
 }
 
 type PropertiesRepository interface {
-	UpdateState(deviceID, property string, state json.RawMessage) error
+	UpdateState(deviceID, property string, state *models.PropertyState) error
 }

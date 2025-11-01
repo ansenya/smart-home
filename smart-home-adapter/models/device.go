@@ -82,3 +82,8 @@ type ActionResult struct {
 	ErrorCode    string `json:"error_code,omitempty"`
 	ErrorMessage string `json:"error_message,omitempty"`
 }
+
+type PropertyState struct {
+	Instance string `json:"instance"`
+	Value    any    `json:"value"`
+}

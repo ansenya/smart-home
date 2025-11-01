@@ -14,7 +14,6 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: password
-      TZ: "Europe/Moscow"
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d
       - ./db/data:/var/lib/postgresql/data
