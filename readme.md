@@ -11,10 +11,16 @@ openssl rsa -in refresh_private.pem -pubout -out refresh_public.pem
 
 ### Add hosts to `/etc/hosts`
 
-- 127.0.0.1 ca.internal.hopahome.io
+- 127.0.0.1 api.smarthome.hipahopa.io
+- 127.0.0.1 smarthome.hipahopa.io
 
-### Apply migrations from [db](db) folder
+### RUN
+```
+docker compose up -d
+```
 
-Can be done with [migrate](https://github.com/golang-migrate/migrate.git)  tool
-___
-You can pull all repositories as I do with
+[//]: # (### Apply migrations from [db]&#40;db&#41; folder)
+
+[//]: # ()
+
+[//]: # (Can be done with [migrate]&#40;https://github.com/golang-migrate/migrate.git&#41;  tool)
