@@ -34,10 +34,18 @@ CREATE TABLE sessions
     expires_at  timestamptz          DEFAULT NULL
 );
 
+CREATE TABLE manufactured_devices
+(
+    id          UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    secret      TEXT        NOT NULL,
+    mac_address TEXT        NOT NULL UNIQUE,
+    registered  BOOLEAN              DEFAULT FALSE,
+    created_at  timestamptz NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE devices
 (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    mac_address TEXT NOT NULL,
+    id          UUID PRIMARY KEY REFERENCES manufactured_devices (id),
     user_id     UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     name        TEXT,
     description TEXT,
@@ -46,10 +54,10 @@ CREATE TABLE devices
     status_info JSONB,
     custom_data JSONB,
     device_info JSONB,
-    last_seen   timestamptz      DEFAULT NOW(),
-    created_at  timestamptz      DEFAULT NOW(),
-    updated_at  timestamptz      DEFAULT NOW(),
-    deleted_at  timestamptz      DEFAULT NULL
+    last_seen   timestamptz DEFAULT NOW(),
+    created_at  timestamptz DEFAULT NOW(),
+    updated_at  timestamptz DEFAULT NOW(),
+    deleted_at  timestamptz DEFAULT NULL
 );
 
 CREATE TABLE capabilities
