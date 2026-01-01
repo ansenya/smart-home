@@ -44,10 +44,7 @@ services:
   auth:
     build:
       context: ./auth-service
-    ports:
-      - "8081:80"
     environment:
-      PORT: 80
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
       SMTP_HOST: ${SMTP_HOST}
@@ -62,10 +59,7 @@ services:
   adapter:
     build:
       context: ./smart-home-adapter
-    ports:
-      - "8082:80"
     environment:
-      PORT: 80
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       MQTT_URL: tcp://broker:1883
       GIN_MODE: ${GIN_MODE}
@@ -79,6 +73,4 @@ services:
   auth-web:
     build:
       context: ./auth-web
-    ports:
-      - "8888:80"
     restart: unless-stopped
