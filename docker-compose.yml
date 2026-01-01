@@ -1,6 +1,10 @@
 services:
   nginx:
     image: nginx:1.29
+    depends_on:
+      - auth
+      - auth-web
+      - adapter
     ports:
       - "80:80"
     volumes:

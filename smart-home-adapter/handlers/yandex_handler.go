@@ -89,7 +89,7 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 	}
 	for i := range devices {
 		device := &devices[i]
-		if time.Since(device.LastSeen) > 90*time.Second {
+		if time.Since(device.LastSeen) > 60*time.Second {
 			device.ErrorCode = "DEVICE_UNREACHABLE"
 			device.ErrorMessage = "устройство недоступно"
 		}
