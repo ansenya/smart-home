@@ -33,6 +33,11 @@ services:
       context: ./auth-web
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web
+    restart: unless-stopped
+
   nginx:
     image: nginx:1.29
     depends_on:

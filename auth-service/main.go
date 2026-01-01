@@ -29,7 +29,7 @@ func main() {
 
 	engine := gin.Default()
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://smarthome.hipahopa.ru", "http://localhost:5173"},
+		AllowOrigins:     []string{"https://id.smarthome.hipahopa.ru", "http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
