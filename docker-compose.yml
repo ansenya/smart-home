@@ -40,7 +40,7 @@ services:
       - auth-web
       - adapter
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./nginx:/etc/nginx
     restart: unless-stopped
