@@ -36,6 +36,11 @@
                 class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
           Log In
         </button>
+        <div>
+          <router-link class="text-blue-500 underline" :to="`/reset-password${queryString}`">Forgot password?</router-link>
+          <br>
+          <router-link class="text-blue-500 underline" :to="`/register${queryString}`">Register</router-link>
+        </div>
         <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
       </form>
     </div>
@@ -43,10 +48,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { me, login, logout, authorize } from '../api/auth'
+import {ref, onMounted} from 'vue'
+import {me, login, logout, authorize} from '../api/auth'
 
-interface User { email: string }
+interface User {
+  email: string
+}
+
+const queryString = window.location.search
 
 const email = ref('')
 const password = ref('')
@@ -83,7 +92,9 @@ onMounted(() => {
 
   // Проверка текущей сессии
   me()
-      .then(res => { user.value = res.data })
+      .then(res => {
+        user.value = res.data
+      })
       .catch(err => {
         if (err.response?.status !== 401) console.error('Error checking auth:', err)
       })
@@ -96,7 +107,7 @@ function handleLogin() {
   if (!oauthQueries) return // защита от неправильного query
   error.value = ''
 
-  login({ email: email.value, password: password.value })
+  login({email: email.value, password: password.value})
       .then(() => me())
       .then(res => {
         user.value = res.data

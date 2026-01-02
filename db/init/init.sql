@@ -17,6 +17,7 @@ CREATE
 CREATE TABLE users
 (
     id         UUID PRIMARY KEY      DEFAULT uuid_generate_v4(),
+    name       VARCHAR(256),
     email      VARCHAR(256) NOT NULL UNIQUE,
     password   TEXT         NOT NULL,
     confirmed  BOOL                  DEFAULT FALSE,

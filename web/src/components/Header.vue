@@ -29,7 +29,6 @@ async function generateCodeChallenge(verifier: string) {
   return base64UrlEncode(hash);
 }
 
-// просто функция без `export`
 async function login() {
   const redirectUri = `${location.origin}/auth/callback`;
   const state = randStr(16);

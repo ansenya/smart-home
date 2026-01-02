@@ -1,6 +1,6 @@
 import {api} from './axios'
 
-interface LoginPayload {
+interface AuthPayload {
     email: string
     password: string
 }
@@ -9,7 +9,7 @@ export const me = () => {
     return api.get('/auth/me')
 }
 
-export const login = (payload: LoginPayload) => {
+export const login = (payload: AuthPayload) => {
     return api.post('/auth/login', payload)
 }
 
@@ -22,4 +22,8 @@ export const authorize = (queries: Record<string, string>) => {
     return api.post('/oauth/authorize', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
+}
+
+export const register = (payload: AuthPayload) => {
+    return api.post('/auth/register', payload)
 }

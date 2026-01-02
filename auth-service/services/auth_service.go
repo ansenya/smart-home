@@ -3,10 +3,15 @@ package services
 import (
 	"auth-server/models"
 	"auth-server/repository"
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"log"
 	"time"
+)
+
+var (
+	ErrorIncorrectPassword = errors.New("bad password")
 )
 
 type authService struct {
@@ -54,7 +59,7 @@ func (s *authService) Login(request *models.AuthRequest) (*models.Session, error
 
 func (s *authService) Register(request *models.AuthRequest) (*models.User, error) {
 	if !s.passwordService.IsPasswordValid(request.Password) {
-		return nil, fmt.Errorf("bad password")
+		return nil, ErrorIncorrectPassword
 	}
 
 	hash, err := s.passwordService.HashPassword(request.Password)

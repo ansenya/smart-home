@@ -3,6 +3,7 @@ package handlers
 import (
 	"auth-server/models"
 	"auth-server/services"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
@@ -72,7 +73,11 @@ func (h *authHandler) Register(c *gin.Context) {
 
 	user, err := h.authService.Register(&request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		if errors.Is(err, services.ErrorIncorrectPassword) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect password"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		}
 		return
 	}
 
