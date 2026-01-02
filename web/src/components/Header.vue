@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Button from "./Button.vue";
 
-const CLIENT_ID = "YOUR_CLIENT_ID";
+const CLIENT_ID = "c85e6304-7f65-49f9-8145-823bd71a5a83";
 const PROVIDER_AUTHORIZE = "https://id.smarthome.hipahopa.ru";
 
 function randStr(len = 43) {

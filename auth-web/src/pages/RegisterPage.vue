@@ -156,7 +156,7 @@ function handleRegister() {
     error.value = 'Password must be at least 8 characters'
     return
   }
-  
+
   if (!oauthQueries) return
   error.value = ''
 
