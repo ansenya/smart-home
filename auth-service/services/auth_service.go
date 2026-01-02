@@ -57,7 +57,7 @@ func (s *authService) Login(request *models.AuthRequest) (*models.Session, error
 	return &session, nil
 }
 
-func (s *authService) Register(request *models.AuthRequest) (*models.User, error) {
+func (s *authService) Register(request *models.AuthRequest) (*models.Session, error) {
 	if !s.passwordService.IsPasswordValid(request.Password) {
 		return nil, ErrorIncorrectPassword
 	}
@@ -77,7 +77,16 @@ func (s *authService) Register(request *models.AuthRequest) (*models.User, error
 		log.Printf("error creating user: %v", err)
 		return nil, err
 	}
-	return &user, nil
+
+	expiresAt := time.Now().Add(s.jwtService.GetRefreshTokenDuration())
+	session := models.Session{
+		UserID:    user.ID,
+		ExpiresAt: &expiresAt,
+	}
+	if err := s.sessionRepository.Create(&session); err != nil {
+		return nil, err
+	}
+	return &session, nil
 }
 
 func NewAuthService(db *gorm.DB) AuthService {

@@ -71,7 +71,7 @@ func (h *authHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(&request)
+	session, err := h.authService.Register(&request)
 	if err != nil {
 		if errors.Is(err, services.ErrorIncorrectPassword) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect password"})
@@ -81,5 +81,6 @@ func (h *authHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
+	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "", false, false)
+	c.JSON(http.StatusOK, session)
 }

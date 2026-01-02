@@ -15,7 +15,7 @@ type OauthService interface {
 type AuthService interface {
 	Me(sid string) (*models.User, error)
 	Login(request *models.AuthRequest) (*models.Session, error)
-	Register(request *models.AuthRequest) (*models.User, error)
+	Register(request *models.AuthRequest) (*models.Session, error)
 }
 
 type JWTService interface {
