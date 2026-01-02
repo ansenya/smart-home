@@ -28,6 +28,21 @@ services:
       - ./keys:/app/keys:ro
     restart: unless-stopped
 
+  panel-api:
+    build:
+      context: ./panel-api
+    environment:
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
+      REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      GIN_MODE: ${GIN_MODE}
+    volumes:
+      - ./keys:/app/keys:ro
+    restart: unless-stopped
+
   auth-web:
     build:
       context: ./auth-web

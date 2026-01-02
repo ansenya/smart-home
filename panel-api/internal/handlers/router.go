@@ -26,7 +26,7 @@ func NewRouter(container *config.Container) Router {
 
 func (r *Router) registerRoutes() {
 	r.healthHandler.RegisterRoutes(r.engine)
-	r.usersHandler.RegisterRoutes(r.engine.Group("/v1/users"))
+	r.usersHandler.RegisterRoutes(r.engine.Group("/panel/v1/users"))
 }
 
 func (r *Router) Run() error {
