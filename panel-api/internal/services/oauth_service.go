@@ -37,7 +37,6 @@ func (s *OauthService) ExchangeCode(ctx context.Context, codeExchange *models.Co
 	values.Set("code", codeExchange.Code)
 	values.Set("grant_type", "authorization_code")
 	values.Set("client_id", codeExchange.ClientID)
-	values.Set("redirect_uri", codeExchange.RedirectURI)
 
 	req, err := http.NewRequestWithContext(
 		ctx,

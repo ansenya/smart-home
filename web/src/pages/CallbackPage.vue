@@ -13,16 +13,15 @@ onMounted(async () => {
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
   const clientId = params.get('client_id')
-  const redirectUri = params.get('redirect_uri')
 
-  if (!code || !clientId || !redirectUri) {
+  if (!code || !clientId) {
     error.value = 'Invalid OAuth callback parameters'
     loading.value = false
     return
   }
 
   try {
-    await exchangeCode({code: code, redirect_uri: redirectUri, client_id: clientId})
+    await exchangeCode({code: code, client_id: clientId})
 
     // backend должен установить cookie / сессию
     await router.replace('/')
