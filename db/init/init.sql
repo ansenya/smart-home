@@ -23,7 +23,7 @@ CREATE TABLE users
     confirmed  BOOL                  DEFAULT FALSE,
     created_at timestamptz  NOT NULL DEFAULT now(),
     updated_at timestamptz  NOT NULL DEFAULT now(),
-    deleted_at timestamptz  NOT NULL DEFAULT NULL
+    deleted_at timestamptz DEFAULT NULL
 );
 
 CREATE TABLE sessions
