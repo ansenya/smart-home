@@ -9,6 +9,7 @@ const error = ref<string | null>(null)
 const loading = ref(true)
 
 onMounted(async () => {
+
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
   const clientId = params.get('client_id')
@@ -21,10 +22,10 @@ onMounted(async () => {
   }
 
   try {
-    await exchangeCode({code: code, redirect_uri: redirectUri, client_id: clientId}).
+    await exchangeCode({code: code, redirect_uri: redirectUri, client_id: clientId})
 
-        // backend должен установить cookie / сессию
-        router.replace('/')
+    // backend должен установить cookie / сессию
+    await router.replace('/')
   } catch (e: any) {
     error.value =
         e.response?.data?.message ||
