@@ -43,6 +43,7 @@ services:
     depends_on:
       - auth
       - auth-web
+      - web
       - adapter
     ports:
       - "8080:80"

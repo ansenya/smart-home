@@ -23,10 +23,10 @@ CREATE TABLE users
     confirmed  BOOL                  DEFAULT FALSE,
     created_at timestamptz  NOT NULL DEFAULT now(),
     updated_at timestamptz  NOT NULL DEFAULT now(),
-    deleted_at timestamptz DEFAULT NULL
+    deleted_at timestamptz           DEFAULT NULL
 );
 
-CREATE TABLE sessions
+CREATE TABLE oauth_sessions
 (
     id          UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
     user_id     UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
