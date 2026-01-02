@@ -1,4 +1,4 @@
-package panel_api
+package main
 
 import (
 	"fmt"
