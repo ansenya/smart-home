@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"panel-api/internal/models"
 	"panel-api/internal/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type usersHandler struct {
@@ -29,11 +30,11 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
-	_, err := h.oauthService.ExchangeCode(c, &request)
+	tokens, err := h.oauthService.ExchangeCode(c, &request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
-	// todo: create session and set sid
+	c.JSON(http.StatusOK, tokens)
 }
