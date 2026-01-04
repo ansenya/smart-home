@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"log/slog"
 	"panel-api/internal/config"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 type Router struct {
@@ -27,6 +28,7 @@ func NewRouter(container *config.Container) *Router {
 		log:           container.Log,
 	}
 	router.configureCors()
+	router.registerRoutes()
 	return &router
 }
 
