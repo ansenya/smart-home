@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
+	"panel-api/internal/config"
 	"panel-api/internal/models"
 	"panel-api/internal/services"
 
@@ -10,11 +13,14 @@ import (
 
 type usersHandler struct {
 	oauthService *services.OauthService
+
+	log *slog.Logger
 }
 
-func newUsersHandler() *usersHandler {
+func newUsersHandler(cfg *config.Container) *usersHandler {
 	return &usersHandler{
 		oauthService: services.NewOauthService(),
+		log:          cfg.Log,
 	}
 }
 
@@ -32,6 +38,7 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 
 	tokens, err := h.oauthService.ExchangeCode(c, &request)
 	if err != nil {
+		h.log.Error(fmt.Sprintf("failed to exchange code: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}

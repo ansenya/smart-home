@@ -41,7 +41,7 @@ func (s *OauthService) ExchangeCode(ctx context.Context, codeExchange *models.Co
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"POST",
-		s.baseUrl,
+		s.baseUrl+"/oauth/token",
 		strings.NewReader(values.Encode()),
 	)
 	if err != nil {
