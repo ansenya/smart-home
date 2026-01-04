@@ -28,7 +28,7 @@ func NewOauthService() *OauthService {
 				TLSHandshakeTimeout: 5 * time.Second,
 			},
 		},
-		baseUrl: "https://id.smarthome.hipahopa.ru",
+		baseUrl: "https://api.smarthome.hipahopa.ru",
 	}
 }
 
