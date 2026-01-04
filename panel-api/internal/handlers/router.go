@@ -24,7 +24,7 @@ func NewRouter(container *config.Container) *Router {
 		engine:        engine,
 		config:        container,
 		healthHandler: newHealthHandler(),
-		usersHandler:  newUsersHandler(),
+		usersHandler:  newUsersHandler(container),
 		log:           container.Log,
 	}
 	router.configureCors()
