@@ -36,7 +36,7 @@ func main() {
 	oauthService := services.NewOauthService(services.OauthConfig{
 		BaseURL:       "https://api.smarthome.hipahopa.ru",
 		TokenEndpoint: "/oauth/token",
-		UserEndpoint:  "oauth/userinfo",
+		UserEndpoint:  "/oauth/userinfo",
 		Timeout:       5 * time.Second,
 	}, nil)
 	usersService := services.NewUsersService(container.Log, sessionRepository)

@@ -2,14 +2,16 @@ package services
 
 import (
 	"auth-server/models"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type OauthService interface {
 	Authorize(queries models.OauthRequest, sid string) (string, error)
 	GenerateTokens(request models.AccessTokenRequest) (*models.TokenResponse, error)
 	RefreshTokens(request models.RefreshTokenRequest) (*models.TokenResponse, error)
+	GetUserinfo(accessToken string) (*models.User, error)
 }
 
 type AuthService interface {

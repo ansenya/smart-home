@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"log"
 	"net/url"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -136,6 +137,15 @@ func (s *oauthService) RefreshTokens(request models.RefreshTokenRequest) (*model
 		RefreshToken: refreshToken,
 		ExpiresIn:    s.jwtService.GetAccessTokenDuration().Seconds(),
 	}, nil
+}
+
+func (s *oauthService) GetUserinfo(accessToken string) (*models.User, error) {
+	claims, err := s.jwtService.ValidateAccessToken(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.userRepository.GetByID(claims.Subject)
 }
 
 func NewOauthClientsService(db *gorm.DB, redis *redis.Client) OauthService {

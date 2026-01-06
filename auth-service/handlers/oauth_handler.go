@@ -4,11 +4,13 @@ import (
 	"auth-server/models"
 	"auth-server/services"
 	"errors"
+	"log"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
-	"log"
-	"net/http"
 )
 
 type oauthHandler struct {
@@ -20,6 +22,7 @@ func (h *oauthHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/authorize", h.Authorize)
 	rg.POST("/token", h.Token)
 	rg.POST("/refresh", h.Refresh)
+	rg.POST("/userinfo", h.Userinfo)
 	rg.GET("/jwks", h.JWKs)
 }
 
@@ -103,6 +106,43 @@ func (h *oauthHandler) Refresh(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tokenResponse)
+}
+
+func (h *oauthHandler) Userinfo(c *gin.Context) {
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "authorization header required",
+		})
+		return
+	}
+
+	const bearerPrefix = "Bearer "
+	if !strings.HasPrefix(auth, bearerPrefix) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid authorization header",
+		})
+		return
+	}
+
+	accessToken := strings.TrimPrefix(auth, bearerPrefix)
+	if accessToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "access token required",
+		})
+		return
+	}
+
+	user, err := h.oauthService.GetUserinfo(accessToken)
+	if err != nil {
+		log.Printf("failed to get userinfo: %s", err)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid access token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *oauthHandler) JWKs(c *gin.Context) {
