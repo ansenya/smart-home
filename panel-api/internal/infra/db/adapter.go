@@ -13,7 +13,7 @@ import (
 )
 
 type Client struct {
-	cfg config.PostgresConfig
+	cfg *config.PostgresConfig
 	log *slog.Logger
 
 	DB *gorm.DB

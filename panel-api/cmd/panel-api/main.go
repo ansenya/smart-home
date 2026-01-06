@@ -10,6 +10,7 @@ import (
 	"panel-api/internal/infra/db"
 	"panel-api/internal/repositories"
 	"panel-api/internal/services"
+	"time"
 )
 
 func main() {
@@ -32,7 +33,12 @@ func main() {
 	sessionRepository := repositories.NewSessionRepository(dbClient.DB)
 
 	// services
-	oauthService := services.NewOauthService("https://api.smarthome.hipahopa.ru")
+	oauthService := services.NewOauthService(services.OauthConfig{
+		BaseURL:       "https://api.smarthome.hipahopa.ru",
+		TokenEndpoint: "/oauth/token",
+		UserEndpoint:  "oauth/userinfo",
+		Timeout:       5 * time.Second,
+	}, nil)
 	usersService := services.NewUsersService(container.Log, sessionRepository)
 
 	container.Services = &config.Services{
