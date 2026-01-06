@@ -1,22 +1,17 @@
-CREATE
-DATABASE "smart-home";
+CREATE DATABASE "smart-home";
 
 DO
 $$
 BEGIN
-        IF
-NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
-            CREATE
-USER "user" WITH PASSWORD 'password';
-END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
+            CREATE USER "user" WITH PASSWORD 'password';
+    END IF;
 END
 $$;
 
-\c
-"smart-home"
+\c "smart-home"
 
-CREATE
-EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users
 (
@@ -114,19 +109,12 @@ CREATE TABLE oauth_clients
     deleted_at    timestamptz      DEFAULT null
 );
 
-GRANT
-CONNECT
-ON DATABASE "smart-home" TO "user";
+GRANT CONNECT ON DATABASE "smart-home" TO "user";
 
-GRANT USAGE ON SCHEMA
-public TO "user";
+GRANT USAGE ON SCHEMA public TO "user";
 
-GRANT ALL PRIVILEGES ON ALL
-TABLES IN SCHEMA public TO "user";
-GRANT ALL PRIVILEGES ON ALL
-SEQUENCES IN SCHEMA public TO "user";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "user";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "user";
 
-ALTER
-DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "user";
-ALTER
-DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "user";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "user";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "user";
