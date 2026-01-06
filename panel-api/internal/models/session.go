@@ -7,8 +7,8 @@ import (
 )
 
 type Session struct {
-	ID           uuid.UUID `json:"id"`
-	UserID       uuid.UUID `json:"user_id"`
+	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	UserID       uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
 	TokenType    string    `json:"token_type"`
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
