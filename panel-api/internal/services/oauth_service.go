@@ -79,10 +79,11 @@ func (s *oauthService) ExchangeCode(
 	}
 
 	form := url.Values{
-		"grant_type":   {"authorization_code"},
-		"code":         {in.Code},
-		"client_id":    {in.ClientID},
-		"redirect_uri": {"in.RedirectURI"}, // todo
+		"grant_type":    {"authorization_code"},
+		"code":          {in.Code},
+		"client_id":     {in.ClientID},
+		"client_secret": {"in.ClientSecret"}, // todo
+		"redirect_uri":  {"in.RedirectURI"},  // todo
 	}
 
 	req, err := http.NewRequestWithContext(
