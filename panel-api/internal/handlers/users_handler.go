@@ -59,6 +59,6 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("sid", session.ID.String(), int(tokens.ExpiresIn), "/", "", true, true)
+	c.SetCookie("sid", session.ID.String(), int(tokens.ExpiresIn), "/", "smarthome.hipahopa.ru", true, true)
 	c.JSON(http.StatusOK, session)
 }
