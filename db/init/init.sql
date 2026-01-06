@@ -1,18 +1,22 @@
-CREATE DATABASE "smart-home";
+CREATE
+DATABASE "smart-home";
 
 DO
 $$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
-            CREATE USER "user" WITH PASSWORD 'password';
-        END IF;
-    END
+BEGIN
+        IF
+NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
+            CREATE
+USER "user" WITH PASSWORD 'password';
+END IF;
+END
 $$;
 
-\c "smart-home"
+\c
+"smart-home"
 
 CREATE
-    EXTENSION IF NOT EXISTS "uuid-ossp";
+EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users
 (
@@ -33,6 +37,17 @@ CREATE TABLE oauth_sessions
     last_active timestamptz NOT NULL DEFAULT NOW(),
     created_at  timestamptz NOT NULL DEFAULT NOW(),
     expires_at  timestamptz          DEFAULT NULL
+);
+
+CREATE TABLE panel_sessions
+(
+    id            UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    user_id       UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    token_type    VARCHAR(25),
+    access_token  TEXT        NOT NULL,
+    refresh_token TEXT        NOT NULL,
+    created_at    timestamptz NOT NULL DEFAULT NOW(),
+    expires_at    timestamptz          DEFAULT NULL
 );
 
 CREATE TABLE manufactured_devices
@@ -99,12 +114,19 @@ CREATE TABLE oauth_clients
     deleted_at    timestamptz      DEFAULT null
 );
 
-GRANT CONNECT ON DATABASE "smart-home" TO "user";
+GRANT
+CONNECT
+ON DATABASE "smart-home" TO "user";
 
-GRANT USAGE ON SCHEMA public TO "user";
+GRANT USAGE ON SCHEMA
+public TO "user";
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "user";
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "user";
+GRANT ALL PRIVILEGES ON ALL
+TABLES IN SCHEMA public TO "user";
+GRANT ALL PRIVILEGES ON ALL
+SEQUENCES IN SCHEMA public TO "user";
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "user";
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "user";
+ALTER
+DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "user";
+ALTER
+DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "user";

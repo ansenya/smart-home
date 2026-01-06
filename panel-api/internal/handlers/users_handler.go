@@ -12,14 +12,16 @@ import (
 )
 
 type usersHandler struct {
-	oauthService *services.OauthService
+	oauthService services.OauthService
+	usersService services.UsersService
 
 	log *slog.Logger
 }
 
 func newUsersHandler(cfg *config.Container) *usersHandler {
 	return &usersHandler{
-		oauthService: services.NewOauthService(),
+		oauthService: cfg.Services.OauthService,
+		usersService: cfg.Services.UsersService,
 		log:          cfg.Log,
 	}
 }
@@ -43,5 +45,20 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, tokens)
+	user, err := h.oauthService.GetIdentity(c, tokens.AccessToken)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("failed to get identity: %v", err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	session, err := h.usersService.CreateSession(user, tokens)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("failed to create session: %v", err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	c.SetCookie("sid", session.ID.String(), int(tokens.ExpiresIn), "/", "", true, true)
+	c.JSON(http.StatusOK, session)
 }

@@ -1,14 +1,19 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"log/slog"
+	"os"
 	"panel-api/internal/utils"
+	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Container struct {
-	Server Server
-	Log    *slog.Logger
+	Server         *Server
+	PostgresConfig *PostgresConfig
+	Services       *Services
+	Log            *slog.Logger
 }
 
 type Server struct {
@@ -24,8 +29,16 @@ func NewConfig() *Container {
 	}
 
 	return &Container{
-		Server: Server{
+		Server: &Server{
 			Port: ":" + utils.GetEnv("PORT", "8080"),
+		},
+		PostgresConfig: &PostgresConfig{
+			URL:              os.Getenv("POSTGRES_URL"),
+			MaxOpenConns:     25,
+			MaxIdleConns:     5,
+			ConnMaxLifetime:  30 * time.Minute,
+			StatementTimeout: 5 * time.Second,
+			LockTimeout:      1 * time.Second,
 		},
 		Log: logger,
 	}
