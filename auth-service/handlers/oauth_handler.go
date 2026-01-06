@@ -22,7 +22,7 @@ func (h *oauthHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/authorize", h.Authorize)
 	rg.POST("/token", h.Token)
 	rg.POST("/refresh", h.Refresh)
-	rg.POST("/userinfo", h.Userinfo)
+	rg.GET("/userinfo", h.Userinfo)
 	rg.GET("/jwks", h.JWKs)
 }
 
