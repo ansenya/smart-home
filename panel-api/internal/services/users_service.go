@@ -32,6 +32,7 @@ func (s *usersService) CreateSession(user *models.User, tokens *models.Tokens) (
 		TokenType:    tokens.TokenType,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
+		ExpiresAt:    time.Now().Add(time.Duration(tokens.ExpiresIn) * time.Second),
 	}
 	return &session, s.sessionRepo.Create(&session)
 }

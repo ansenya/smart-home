@@ -27,7 +27,7 @@ func (r *sessionRepository) Create(session *models.Session) error {
 
 func (r *sessionRepository) Get(sessionID string) (*models.Session, error) {
 	var session models.Session
-	return &session, r.db.Where("session_id = ?", sessionID).First(&session).Error
+	return &session, r.db.Where("id = ?", sessionID).First(&session).Error
 }
 
 func (r *sessionRepository) Update(session *models.Session) error {
