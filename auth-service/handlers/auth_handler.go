@@ -4,9 +4,10 @@ import (
 	"auth-server/models"
 	"auth-server/services"
 	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type authHandler struct {
@@ -36,7 +37,7 @@ func (h *authHandler) Me(c *gin.Context) {
 	}
 	user, err := h.authService.Me(sid)
 	if err != nil {
-		c.SetCookie("sid", "", 0, "/", "", false, false)
+		c.SetCookie("sid", "", 0, "/", "id.smarthome.hipahopa.ru", false, false)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
 		return
 	}
@@ -55,13 +56,13 @@ func (h *authHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong email/password"})
 		return
 	}
-	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "", false, false)
+	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "id.smarthome.hipahopa.ru", false, false)
 	c.JSON(http.StatusOK, session)
 }
 
 func (h *authHandler) Logout(c *gin.Context) {
 	// todo :)
-	c.SetCookie("sid", "", 0, "/", "", false, false)
+	c.SetCookie("sid", "", 0, "/", "id.smarthome.hipahopa.ru", false, false)
 }
 
 func (h *authHandler) Register(c *gin.Context) {
@@ -81,6 +82,6 @@ func (h *authHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "", false, false)
+	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "id.smarthome.hipahopa.ru", false, false)
 	c.JSON(http.StatusOK, session)
 }
