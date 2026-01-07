@@ -31,6 +31,7 @@ func main() {
 
 	// repositories
 	sessionRepository := repositories.NewSessionRepository(dbClient.DB)
+	usersRepository := repositories.NewUsersRepository(dbClient.DB)
 
 	// services
 	oauthService := services.NewOauthService(services.OauthConfig{
@@ -39,7 +40,7 @@ func main() {
 		UserEndpoint:  "/oauth/userinfo",
 		Timeout:       5 * time.Second,
 	}, nil)
-	usersService := services.NewUsersService(container.Log, sessionRepository)
+	usersService := services.NewUsersService(container.Log, sessionRepository, usersRepository)
 
 	container.Services = &config.Services{
 		OauthService: oauthService,
