@@ -35,7 +35,7 @@ func (h *usersHandler) RegisterRoutes(group *gin.RouterGroup) {
 }
 
 func (h *usersHandler) Me(c *gin.Context) {
-	sid, err := c.Cookie("sid")
+	sid, err := c.Cookie(SessionIDName)
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
 		return
@@ -56,7 +56,7 @@ func (h *usersHandler) Me(c *gin.Context) {
 }
 
 func (h *usersHandler) Logout(c *gin.Context) {
-	sid, err := c.Cookie("sid")
+	sid, err := c.Cookie(SessionIDName)
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
 		return
@@ -70,7 +70,7 @@ func (h *usersHandler) Logout(c *gin.Context) {
 
 	// todo: expire id.smarthome session
 
-	c.SetCookie("sid", "", 0, "/", "smarthome.hipahopa.ru", true, true)
+	c.SetCookie(SessionIDName, "", 0, "/", DomainName, true, true)
 	c.Status(http.StatusOK)
 }
 
@@ -102,6 +102,6 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("sid", session.ID.String(), int(tokens.ExpiresIn), "/", "smarthome.hipahopa.ru", true, true)
+	c.SetCookie(SessionIDName, session.ID.String(), int(tokens.ExpiresIn), "/", DomainName, true, true)
 	c.JSON(http.StatusOK, session)
 }

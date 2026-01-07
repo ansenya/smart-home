@@ -8,6 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// todo надо перейти на разные домены для разных кусков бэкенда
+
+const (
+	SessionIDName = "sid"
+	DomainName    = "api.smarthome.hipahopa.ru"
+)
+
 type Router struct {
 	engine *gin.Engine
 	config *config.Container
