@@ -6,21 +6,30 @@ import (
 	"gorm.io/gorm"
 )
 
-type SessionRepository struct {
+type SessionRepository interface {
+	Create(session *models.Session) error
+	Get(sessionID string) (*models.Session, error)
+	Update(session *models.Session) error
+}
+type sessionRepository struct {
 	db *gorm.DB
 }
 
-func NewSessionRepository(db *gorm.DB) *SessionRepository {
-	return &SessionRepository{
+func NewSessionRepository(db *gorm.DB) SessionRepository {
+	return &sessionRepository{
 		db: db,
 	}
 }
 
-func (r *SessionRepository) Create(session *models.Session) error {
+func (r *sessionRepository) Create(session *models.Session) error {
 	return r.db.Create(session).Error
 }
 
-func (r *SessionRepository) Get(sessionID string) (*models.Session, error) {
+func (r *sessionRepository) Get(sessionID string) (*models.Session, error) {
 	var session models.Session
 	return &session, r.db.Where("session_id = ?", sessionID).First(&session).Error
+}
+
+func (r *sessionRepository) Update(session *models.Session) error {
+	return r.db.Save(session).Error
 }

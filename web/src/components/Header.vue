@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import {ref, onMounted} from "vue"
 import Button from "./Button.vue";
-import {me} from "../api/auth";
+import {me, logout} from "../api/auth";
 
 const isAuthenticated = ref(false)
 const showMenu = ref(false)
@@ -60,8 +60,12 @@ function toggleMenu() {
   showMenu.value = !showMenu.value
 }
 
-function logout() {
-  // очистка токенов / куки — зависит от реализации
+function btnLogout() {
+  try {
+    logout();
+  } catch (e) {
+    console.log(e)
+  }
   isAuthenticated.value = false
   showMenu.value = false
 }
@@ -86,7 +90,7 @@ onMounted(async () => {
         </a>
         <div class="flex items-center lg:order-2">
           <Button v-if="!isAuthenticated"
-              :onclick="login"
+                  :onclick="login"
           >
             Login
           </Button>
@@ -106,7 +110,7 @@ onMounted(async () => {
                 Profile
               </a>
               <button
-                  @click="logout"
+                  @click="btnLogout"
                   class="w-full text-left px-4 py-2 hover:bg-gray-100">
                 Logout
               </button>

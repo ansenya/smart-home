@@ -27,7 +27,8 @@ func newUsersHandler(cfg *config.Container) *usersHandler {
 }
 
 func (h *usersHandler) RegisterRoutes(group *gin.RouterGroup) {
-	group.GET("/me")
+	group.GET("/me", h.Me)
+	group.POST("/logout", h.Logout)
 	group.POST("/exchange-code", h.ExchangeCode)
 }
 
@@ -46,6 +47,25 @@ func (h *usersHandler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *usersHandler) Logout(c *gin.Context) {
+	sid, err := c.Cookie("sid")
+	if err != nil {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.usersService.ExpireSession(sid); err != nil {
+		h.log.Error("could not expire session", "error", err)
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	// todo: expire id.smarthome session
+
+	c.SetCookie("sid", "", 0, "/", "smarthome.hipahopa.ru", true, true)
+	c.Status(http.StatusOK)
 }
 
 func (h *usersHandler) ExchangeCode(c *gin.Context) {

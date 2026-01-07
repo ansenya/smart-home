@@ -23,6 +23,7 @@ func (h *oauthHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/token", h.Token)
 	rg.POST("/refresh", h.Refresh)
 	rg.GET("/userinfo", h.Userinfo)
+	rg.POST("/endsession", h.EndSession)
 	rg.GET("/jwks", h.JWKs)
 }
 
@@ -143,6 +144,10 @@ func (h *oauthHandler) Userinfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *oauthHandler) EndSession(c *gin.Context) {
+	// todo
 }
 
 func (h *oauthHandler) JWKs(c *gin.Context) {

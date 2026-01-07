@@ -13,3 +13,7 @@ export const exchangeCode = (payload: CallbackPayload) => {
 export const me = () => {
     return api.get('/users/me')
 }
+
+export const logout = () => {
+    return api.post('/users/logout')
+}
