@@ -10,6 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// todo надо перейти на разные домены для разных кусков бэкенда
+
+const (
+	SessionIDName = "oauth-sid"
+	DomainName    = "api.smarthome.hipahopa.ru"
+)
+
 type authHandler struct {
 	authService services.AuthService
 	jwtService  services.JWTService
@@ -30,14 +37,14 @@ func (h *authHandler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func (h *authHandler) Me(c *gin.Context) {
-	sid, err := c.Cookie("sid")
+	sid, err := c.Cookie(SessionIDName)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
 		return
 	}
 	user, err := h.authService.Me(sid)
 	if err != nil {
-		c.SetCookie("sid", "", 0, "/", "id.smarthome.hipahopa.ru", false, false)
+		c.SetCookie(SessionIDName, "", 0, "/", DomainName, false, false)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
 		return
 	}
@@ -56,13 +63,13 @@ func (h *authHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong email/password"})
 		return
 	}
-	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "id.smarthome.hipahopa.ru", false, false)
+	c.SetCookie(SessionIDName, session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", DomainName, false, false)
 	c.JSON(http.StatusOK, session)
 }
 
 func (h *authHandler) Logout(c *gin.Context) {
 	// todo :)
-	c.SetCookie("sid", "", 0, "/", "id.smarthome.hipahopa.ru", false, false)
+	c.SetCookie(SessionIDName, "", 0, "/", DomainName, false, false)
 }
 
 func (h *authHandler) Register(c *gin.Context) {
@@ -82,6 +89,6 @@ func (h *authHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("sid", session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", "id.smarthome.hipahopa.ru", false, false)
+	c.SetCookie(SessionIDName, session.ID, int(h.jwtService.GetRefreshTokenDuration().Milliseconds()), "/", DomainName, false, false)
 	c.JSON(http.StatusOK, session)
 }
