@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log/slog"
 	"panel-api/internal/models"
 	"panel-api/internal/repositories"
@@ -40,10 +41,14 @@ func (s *usersService) CreateSession(user *models.User, tokens *models.Tokens) (
 func (s *usersService) GetUserBySessionID(sid string) (*models.User, error) {
 	session, err := s.sessionRepo.Get(sid)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get session: %w", err)
 	}
 
-	return s.usersRepo.GetByID(session.UserID)
+	user, err := s.usersRepo.GetByID(session.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	return user, nil
 }
 
 func (s *usersService) ExpireSession(sid string) error {

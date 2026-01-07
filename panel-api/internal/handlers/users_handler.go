@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"panel-api/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type usersHandler struct {
@@ -41,6 +43,10 @@ func (h *usersHandler) Me(c *gin.Context) {
 
 	user, err := h.usersService.GetUserBySessionID(sid)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.Status(http.StatusUnauthorized)
+			return
+		}
 		h.log.Error("could not get user by session id", "error", err)
 		c.Status(http.StatusUnauthorized)
 		return

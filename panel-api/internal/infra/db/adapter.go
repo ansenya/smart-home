@@ -31,7 +31,7 @@ func (c *Client) Connect(ctx context.Context) error {
 	defer cancel()
 
 	db, err := gorm.Open(postgres.Open(c.cfg.URL), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent)},
+		Logger: logger.Default.LogMode(logger.Info)},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to connect to DB: %v", err)
