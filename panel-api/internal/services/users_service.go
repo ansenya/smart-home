@@ -8,16 +8,19 @@ import (
 
 type UsersService interface {
 	CreateSession(user *models.User, tokens *models.Tokens) (*models.Session, error)
+	GetUserBySessionID(sid string) (*models.User, error)
 }
 type usersService struct {
-	repo *repositories.SessionRepository
-	log  *slog.Logger
+	sessionRepo *repositories.SessionRepository
+	usersRepo   repositories.UsersRepository
+	log         *slog.Logger
 }
 
-func NewUsersService(log *slog.Logger, repo *repositories.SessionRepository) UsersService {
+func NewUsersService(log *slog.Logger, sessionRepo *repositories.SessionRepository, usersRepo repositories.UsersRepository) UsersService {
 	return &usersService{
-		repo: repo,
-		log:  log,
+		sessionRepo: sessionRepo,
+		usersRepo:   usersRepo,
+		log:         log,
 	}
 }
 
@@ -28,5 +31,14 @@ func (s *usersService) CreateSession(user *models.User, tokens *models.Tokens) (
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}
-	return &session, s.repo.Create(&session)
+	return &session, s.sessionRepo.Create(&session)
+}
+
+func (s *usersService) GetUserBySessionID(sid string) (*models.User, error) {
+	session, err := s.sessionRepo.Get(sid)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.usersRepo.GetByID(session.UserID)
 }

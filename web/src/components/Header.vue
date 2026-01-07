@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { ref, onMounted } from "vue"
 import Button from "./Button.vue";
+import {me} from "../api/auth";
+
+const isAuthenticated = ref(false)
+const showMenu = ref(false)
 
 const CLIENT_ID = "c85e6304-7f65-49f9-8145-823bd71a5a83";
 const PROVIDER_AUTHORIZE = "https://id.smarthome.hipahopa.ru";
@@ -50,6 +55,25 @@ async function login() {
 
   window.location.href = `${PROVIDER_AUTHORIZE}?${params.toString()}`;
 }
+
+function toggleMenu() {
+  showMenu.value = !showMenu.value
+}
+
+function logout() {
+  // очистка токенов / куки — зависит от реализации
+  isAuthenticated.value = false
+  showMenu.value = false
+}
+
+onMounted(async () => {
+  try {
+    await me()
+    isAuthenticated.value = true
+  } catch {
+    isAuthenticated.value = false
+  }
+})
 </script>
 
 
@@ -61,11 +85,34 @@ async function login() {
           <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Hiphome</span>
         </a>
         <div class="flex items-center lg:order-2">
-          <Button
+          <Button v-if="!isAuthenticated"
               :onclick="login"
           >
             Login
           </Button>
+          <div v-else class="relative">
+            <button
+                @click="toggleMenu"
+                class="w-9 h-9 rounded-full bg-gray-600 flex items-center justify-center text-white">
+              👤
+            </button>
+
+            <div
+                v-if="showMenu"
+                class="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg">
+              <a
+                  href="/profile"
+                  class="block px-4 py-2 hover:bg-gray-100">
+                Profile
+              </a>
+              <button
+                  @click="logout"
+                  class="w-full text-left px-4 py-2 hover:bg-gray-100">
+                Logout
+              </button>
+            </div>
+          </div>
+
         </div>
         <div class="hidden justify-between items-center w-full lg:flex lg:w-auto lg:order-1" id="mobile-menu-2">
           <ul class="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
@@ -76,6 +123,7 @@ async function login() {
             </li>
           </ul>
         </div>
+
       </div>
     </nav>
   </header>

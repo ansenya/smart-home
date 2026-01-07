@@ -31,6 +31,23 @@ func (h *usersHandler) RegisterRoutes(group *gin.RouterGroup) {
 	group.POST("/exchange-code", h.ExchangeCode)
 }
 
+func (h *usersHandler) Me(c *gin.Context) {
+	sid, err := c.Cookie("sid")
+	if err != nil {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.usersService.GetUserBySessionID(sid)
+	if err != nil {
+		h.log.Error("could not get user by session id", "error", err)
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
 func (h *usersHandler) ExchangeCode(c *gin.Context) {
 	var request models.CodeExchange
 	if err := c.ShouldBindJSON(&request); err != nil {
