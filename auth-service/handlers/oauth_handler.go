@@ -35,7 +35,7 @@ func newOauthHandler(db *gorm.DB, redis *redis.Client) *oauthHandler {
 }
 
 func (h *oauthHandler) Authorize(c *gin.Context) {
-	sid, err := c.Cookie("sid")
+	sid, err := c.Cookie(SessionIDName)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return

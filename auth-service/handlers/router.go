@@ -6,6 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// todo надо перейти на разные домены для разных кусков бэкенда
+
+const (
+	SessionIDName = "oauth-sid"
+	DomainName    = "api.smarthome.hipahopa.ru"
+)
+
 type Router struct {
 	healthHandler *healthHandler
 	authHandler   *authHandler

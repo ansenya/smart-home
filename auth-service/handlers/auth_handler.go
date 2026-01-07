@@ -10,13 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// todo надо перейти на разные домены для разных кусков бэкенда
-
-const (
-	SessionIDName = "oauth-sid"
-	DomainName    = "api.smarthome.hipahopa.ru"
-)
-
 type authHandler struct {
 	authService services.AuthService
 	jwtService  services.JWTService
