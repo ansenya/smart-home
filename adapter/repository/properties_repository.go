@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"devices-api/models"
-	"gorm.io/gorm"
+	"adapter/models"
 	"log"
+
+	"gorm.io/gorm"
 )
 
 type propertiesRepository struct {

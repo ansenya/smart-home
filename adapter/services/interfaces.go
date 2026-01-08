@@ -1,7 +1,7 @@
 package services
 
 import (
-	"devices-api/models"
+	"adapter/models"
 	"encoding/json"
 )
 

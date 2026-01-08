@@ -1,11 +1,12 @@
 package services
 
 import (
-	"devices-api/models"
+	"adapter/models"
 	"encoding/json"
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"strings"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type Component string

@@ -1,16 +1,17 @@
 package handlers
 
 import (
-	"devices-api/middleware"
-	"devices-api/models"
-	"devices-api/services"
+	"adapter/middleware"
+	"adapter/models"
+	"adapter/services"
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type yandexHandler struct {

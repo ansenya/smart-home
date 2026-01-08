@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"devices-api/models"
+	"adapter/models"
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"gorm.io/gorm"
 )
 

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"devices-api/models"
+	"adapter/models"
 	"errors"
 	"fmt"
 

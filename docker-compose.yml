@@ -16,7 +16,7 @@ services:
 
   adapter:
     build:
-      context: ./smart-home-adapter
+      context: ./adapter
     environment:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       MQTT_URL: tcp://broker:1883
@@ -102,7 +102,7 @@ services:
     ports:
       - "1883:1883"
     volumes:
-      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/config:/mosquitto/config # user: user; password: superdifficultpassword
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     restart: unless-stopped

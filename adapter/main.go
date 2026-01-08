@@ -1,14 +1,15 @@
 package main
 
 import (
-	"devices-api/handlers"
-	"devices-api/services"
-	"devices-api/storage"
-	"devices-api/utils"
+	"adapter/handlers"
+	"adapter/services"
+	"adapter/storage"
+	"adapter/utils"
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,8 +47,8 @@ func main() {
 func createMQTTOptions() *mqtt.ClientOptions {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(MqttUrl)
-	opts.SetUsername("") // Optional
-	opts.SetPassword("") // Optional
+	opts.SetUsername("user")                   // Optional
+	opts.SetPassword("superdifficultpassword") // Optional
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
 	opts.OnConnect = func(c mqtt.Client) {

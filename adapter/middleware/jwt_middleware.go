@@ -1,19 +1,20 @@
 package middleware
 
 import (
+	"adapter/utils"
 	"crypto/rsa"
-	"devices-api/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"math/big"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWKS struct {

@@ -1,10 +1,11 @@
 package services
 
 import (
-	"devices-api/models"
-	"devices-api/repository"
+	"adapter/models"
+	"adapter/repository"
 	"encoding/json"
 	"fmt"
+
 	"gorm.io/gorm"
 )
 
