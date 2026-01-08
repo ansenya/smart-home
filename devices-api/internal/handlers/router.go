@@ -38,9 +38,10 @@ func NewRouter(container *config.Container, repo repositories.SessionRepository,
 func (r *Router) registerRoutes(repo repositories.SessionRepository) {
 	r.healthHandler.RegisterRoutes(r.engine)
 
-	pairingGroup := r.engine.Group("/pairing")
+	pairingGroup := r.engine.Group("/devices/pairing")
 	pairingGroup.Use(middleware.SessionAuth(repo))
-	r.pairingHandler.RegisterRoutes(r.engine.Group("/devices/pair"))
+	devicesGroup := r.engine.Group("/devices/pairing")
+	r.pairingHandler.RegisterRoutes(pairingGroup, devicesGroup)
 }
 
 func (r *Router) Run() error {

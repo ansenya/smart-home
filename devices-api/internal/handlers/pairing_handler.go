@@ -18,9 +18,9 @@ func newPairingHandler(service services.PairingService) *pairingHandler {
 	}
 }
 
-func (h *pairingHandler) RegisterRoutes(group *gin.RouterGroup) {
-	group.GET("/start", h.Start)
-	group.GET("/confirm", h.Confirm)
+func (h *pairingHandler) RegisterRoutes(usersGroup *gin.RouterGroup, devicesGroup *gin.RouterGroup) {
+	usersGroup.GET("/start", h.Start)
+	devicesGroup.GET("/confirm", h.Confirm)
 }
 
 func (h *pairingHandler) Start(c *gin.Context) {
