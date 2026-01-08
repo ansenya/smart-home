@@ -2,7 +2,7 @@ import axios from "axios";
 import type {AxiosInstance} from 'axios'
 
 export const api: AxiosInstance = axios.create({
-    baseURL: 'https://api.smarthome.hipahopa.ru',
+    baseURL: 'https://api.id.smarthome.hipahopa.ru',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
