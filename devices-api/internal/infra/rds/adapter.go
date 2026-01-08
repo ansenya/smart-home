@@ -17,6 +17,7 @@ type Client struct {
 }
 
 func NewClient(cfg *config.Container) *Client {
+	cfg.Log.Info(cfg.RedisConfig.URL)
 	return &Client{
 		cfg: cfg.RedisConfig,
 		log: cfg.Log,
@@ -27,16 +28,11 @@ func (c *Client) Connect(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, c.cfg.Timeout)
 	defer cancel()
 
-	opts, err := redis.ParseURL(c.cfg.URL)
-	if err != nil {
-		return fmt.Errorf("failed to parse redis url: %w", err)
+	opts := &redis.Options{
+		Addr:     c.cfg.URL,
+		DB:       c.cfg.DB,
+		Password: c.cfg.Password,
 	}
-
-	if c.cfg.Password != "" {
-		opts.Password = c.cfg.Password
-	}
-
-	opts.DB = c.cfg.DB
 
 	client := redis.NewClient(opts)
 
