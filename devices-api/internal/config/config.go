@@ -1,7 +1,7 @@
 package config
 
 import (
-	"device-service/internal/utils"
+	"devices-api/internal/utils"
 	"log/slog"
 	"os"
 	"time"

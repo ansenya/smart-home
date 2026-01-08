@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"device-service/internal/config"
+	"devices-api/internal/config"
 	"log/slog"
 
 	"github.com/gin-contrib/cors"

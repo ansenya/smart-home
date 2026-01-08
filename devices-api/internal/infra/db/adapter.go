@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"device-service/internal/config"
+	"devices-api/internal/config"
 	"fmt"
 	"log/slog"
 	"time"

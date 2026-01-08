@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"device-service/internal/config"
-	"device-service/internal/handlers"
-	"device-service/internal/infra/db"
-	"device-service/internal/infra/rds"
+	"devices-api/internal/config"
+	"devices-api/internal/handlers"
+	"devices-api/internal/infra/db"
+	"devices-api/internal/infra/rds"
 	"fmt"
 	"log/slog"
 	"os"
