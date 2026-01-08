@@ -27,7 +27,7 @@ func NewRouter(container *config.Container, repo repositories.SessionRepository,
 		engine:         engine,
 		config:         container,
 		healthHandler:  newHealthHandler(),
-		pairingHandler: newPairingHandler(),
+		pairingHandler: newPairingHandler(service),
 		log:            container.Log,
 	}
 	router.configureCors()

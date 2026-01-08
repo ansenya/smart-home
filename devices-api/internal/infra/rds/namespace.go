@@ -18,13 +18,6 @@ type namespacedRedis struct {
 	namespace string
 }
 
-func NewNamespacedRedis(client *redis.Client, namespace string) NamespacedRedis {
-	return &namespacedRedis{
-		client:    client,
-		namespace: namespace,
-	}
-}
-
 func (r *namespacedRedis) k(key string) string {
 	return r.namespace + ":" + key
 }
