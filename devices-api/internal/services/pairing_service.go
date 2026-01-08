@@ -1,6 +1,7 @@
 package services
 
 import (
+	"devices-api/internal/models"
 	"devices-api/internal/repositories"
 	"errors"
 	"math/rand"
@@ -11,7 +12,7 @@ import (
 
 type PairingService interface {
 	StartPairing(userID uuid.UUID) (code string, expires int, err error)
-	ConfirmPairing(code string, deviceUID string) error
+	ConfirmPairing(request *models.ConfirmPairingRequest) error
 }
 
 type pairingService struct {
@@ -38,27 +39,22 @@ func (p *pairingService) StartPairing(userID uuid.UUID) (string, int, error) {
 	return code, int(ttl.Seconds()), nil
 }
 
-func (p *pairingService) ConfirmPairing(code string, deviceUID string) error {
-	userID, err := p.cache.Get(code)
+func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) error {
+	userID, err := p.cache.Get(request.Code)
 	if err != nil {
 		return errors.New("invalid or expired code")
 	}
 
-	deviceUUID, err := uuid.Parse(deviceUID)
-	if err != nil {
-		return errors.New("invalid device uid")
-	}
-
-	manufactured, err := p.repo.FindManufacturedByMAC(deviceUID)
+	manufactured, err := p.repo.FindManufacturedByMAC(request.DeviceUID.String())
 	if err != nil || manufactured.Registered {
 		return errors.New("device not available")
 	}
 
-	if err := p.repo.RegisterDevice(deviceUUID, userID); err != nil {
+	if err := p.repo.RegisterDevice(request.DeviceUID, userID); err != nil {
 		return err
 	}
 
-	_ = p.cache.Delete(code)
+	_ = p.cache.Delete(request.Code)
 
 	return nil
 }

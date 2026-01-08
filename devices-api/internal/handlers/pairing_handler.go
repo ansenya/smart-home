@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"devices-api/internal/models"
 	"devices-api/internal/services"
 	"net/http"
 
@@ -38,15 +39,13 @@ func (h *pairingHandler) Start(c *gin.Context) {
 	})
 }
 func (h *pairingHandler) Confirm(c *gin.Context) {
-	code := c.Query("code")
-	deviceUID := c.Query("device_uid")
-
-	if code == "" || deviceUID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "code and device_uid required"})
+	var request models.ConfirmPairingRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.service.ConfirmPairing(code, deviceUID); err != nil {
+	if err := h.service.ConfirmPairing(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
