@@ -1,0 +1,57 @@
+package rds
+
+import (
+	"context"
+	"device-service/internal/config"
+	"fmt"
+	"log/slog"
+
+	"github.com/redis/go-redis/v9"
+)
+
+type Client struct {
+	cfg *config.RedisConfig
+	log *slog.Logger
+
+	Client *redis.Client
+}
+
+func NewClient(cfg *config.Container) *Client {
+	return &Client{
+		cfg: cfg.RedisConfig,
+		log: cfg.Log,
+	}
+}
+
+func (c *Client) Connect(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, c.cfg.Timeout)
+	defer cancel()
+
+	opts, err := redis.ParseURL(c.cfg.URL)
+	if err != nil {
+		return fmt.Errorf("failed to parse redis url: %w", err)
+	}
+
+	if c.cfg.Password != "" {
+		opts.Password = c.cfg.Password
+	}
+
+	opts.DB = c.cfg.DB
+
+	client := redis.NewClient(opts)
+
+	if err := client.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("failed to ping redis: %w", err)
+	}
+
+	c.Client = client
+
+	return nil
+}
+
+func (c *Client) Close() error {
+	if c.Client == nil {
+		return nil
+	}
+	return c.Client.Close()
+}
