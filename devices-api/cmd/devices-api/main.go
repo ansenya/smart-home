@@ -6,6 +6,8 @@ import (
 	"devices-api/internal/handlers"
 	"devices-api/internal/infra/db"
 	"devices-api/internal/infra/rds"
+	"devices-api/internal/repositories"
+	"devices-api/internal/services"
 	"fmt"
 	"log/slog"
 	"os"
@@ -34,7 +36,15 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	router := handlers.NewRouter(container)
+	// repositories
+	sessionRepository := repositories.NewSessionRepository(dbClient.DB)
+	pairingRepository := repositories.NewPairingRepository(dbClient.DB)
+	pairingCache := repositories.NewPairingCache(redisClient.NewNamespacedRedis("pairing-cache"))
+
+	// services
+	pairingService := services.NewPairingService(pairingRepository, pairingCache)
+
+	router := handlers.NewRouter(container, sessionRepository, pairingService)
 	if err := router.Run(); err != nil {
 		container.Log.Error(fmt.Sprintf("failed to start: %s", err))
 	}

@@ -45,6 +45,13 @@ func (c *Client) Connect(ctx context.Context) error {
 	return nil
 }
 
+func (c *Client) NewNamespacedRedis(namespace string) NamespacedRedis {
+	return &namespacedRedis{
+		client:    c.Client,
+		namespace: namespace,
+	}
+}
+
 func (c *Client) Close() error {
 	if c.Client == nil {
 		return nil

@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"devices-api/internal/config"
+	"devices-api/internal/middleware"
+	"devices-api/internal/repositories"
+	"devices-api/internal/services"
 	"log/slog"
 
 	"github.com/gin-contrib/cors"
@@ -18,7 +21,7 @@ type Router struct {
 	log *slog.Logger
 }
 
-func NewRouter(container *config.Container) *Router {
+func NewRouter(container *config.Container, repo repositories.SessionRepository, service services.PairingService) *Router {
 	engine := gin.Default()
 	router := Router{
 		engine:         engine,
@@ -28,12 +31,15 @@ func NewRouter(container *config.Container) *Router {
 		log:            container.Log,
 	}
 	router.configureCors()
-	router.registerRoutes()
+	router.registerRoutes(repo)
 	return &router
 }
 
-func (r *Router) registerRoutes() {
+func (r *Router) registerRoutes(repo repositories.SessionRepository) {
 	r.healthHandler.RegisterRoutes(r.engine)
+
+	pairingGroup := r.engine.Group("/pairing")
+	pairingGroup.Use(middleware.SessionAuth(repo))
 	r.pairingHandler.RegisterRoutes(r.engine.Group("/devices/pair"))
 }
 
