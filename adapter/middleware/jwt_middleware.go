@@ -111,7 +111,7 @@ func parseJWT(tokenString string, jwks *JWKS) (*jwt.Token, error) {
 }
 
 func JWTMiddleware() gin.HandlerFunc {
-	jwksURL := utils.GetEnv("AUTH_SERVICE_BASE_URL", "https://api.smarthome.hipahopa.ru/oauth/jwks")
+	jwksURL := utils.GetEnv("AUTH_SERVICE_BASE_URL", "https://api.id.smarthome.hipahopa.ru/oauth/jwks")
 	return func(c *gin.Context) {
 		authorization := c.GetHeader("Authorization")
 		parts := strings.SplitN(authorization, " ", 2)
