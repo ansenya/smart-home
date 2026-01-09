@@ -6,14 +6,14 @@ interface CallbackPayload {
 }
 
 export const exchangeCode = (payload: CallbackPayload) => {
-    return api.post('/users/exchange-code', payload)
+    return api.post('/panel/v1/users/exchange-code', payload)
 }
 
 
 export const me = () => {
-    return api.get('/users/me')
+    return api.get('/panel/v1/users/me')
 }
 
 export const logout = () => {
-    return api.post('/users/logout')
+    return api.post('/panel/v1/users/logout')
 }

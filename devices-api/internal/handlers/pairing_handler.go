@@ -20,7 +20,11 @@ func newPairingHandler(service services.PairingService) *pairingHandler {
 }
 
 func (h *pairingHandler) RegisterRoutes(usersGroup *gin.RouterGroup, devicesGroup *gin.RouterGroup) {
+	// users part
 	usersGroup.POST("/start", h.Start)
+	usersGroup.GET("/status", h.Status)
+
+	// device part
 	devicesGroup.POST("/confirm", h.Confirm)
 }
 
@@ -38,6 +42,23 @@ func (h *pairingHandler) Start(c *gin.Context) {
 		"expires_in": expires,
 	})
 }
+
+func (h *pairingHandler) Status(c *gin.Context) {
+	code := c.Query("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "code required"})
+		return
+	}
+
+	status, err := h.service.GetStatus(code)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": "expired"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": status})
+}
+
 func (h *pairingHandler) Confirm(c *gin.Context) {
 	var request models.ConfirmPairingRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

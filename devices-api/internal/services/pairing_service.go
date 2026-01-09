@@ -13,6 +13,7 @@ import (
 type PairingService interface {
 	StartPairing(userID uuid.UUID) (code string, expires int, err error)
 	ConfirmPairing(request *models.ConfirmPairingRequest) error
+	GetStatus(code string) (string, error)
 }
 
 type pairingService struct {
@@ -39,6 +40,17 @@ func (p *pairingService) StartPairing(userID uuid.UUID) (string, int, error) {
 	return code, int(ttl.Seconds()), nil
 }
 
+func (p *pairingService) GetStatus(code string) (string, error) {
+	_, err := p.cache.Get(code)
+	if err != nil {
+		return "", err
+	}
+	if _, err := p.cache.Get("done:" + code); err == nil {
+		return "done", nil
+	}
+	return "waiting", nil
+}
+
 func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) error {
 	userID, err := p.cache.Get(request.Code)
 	if err != nil {
@@ -54,6 +66,7 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) e
 		return err
 	}
 
+	_ = p.cache.Set("done:"+request.Code, uuid.Nil, time.Minute)
 	_ = p.cache.Delete(request.Code)
 
 	return nil
