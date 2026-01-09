@@ -113,6 +113,7 @@ func (s *deviceListenerService) handlePropertyState(deviceID, property string, p
 
 // <user>/<device>/<component>/<name>/<direction?>
 func parseTopicExt(topic string) (user, device, component, name, direction string, err error) {
+	log.Println("[MQTT] topic:", topic)
 	parts := strings.Split(topic, "/")
 	switch len(parts) {
 	case 3:
