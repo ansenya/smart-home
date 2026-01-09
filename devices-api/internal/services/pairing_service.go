@@ -57,12 +57,13 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) e
 		return errors.New("invalid or expired code")
 	}
 
-	manufactured, err := p.repo.FindManufacturedByMAC(request.DeviceUID.String())
+	manufactured, err := p.repo.FindManufacturedByMAC(request.DeviceUID)
 	if err != nil || manufactured.Registered {
 		return errors.New("device not available")
 	}
 
-	if err := p.repo.RegisterDevice(request.DeviceUID, userID); err != nil {
+	// todo
+	if err := p.repo.RegisterDevice(uuid.Nil, userID); err != nil {
 		return err
 	}
 
