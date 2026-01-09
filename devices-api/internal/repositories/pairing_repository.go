@@ -31,7 +31,7 @@ func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.Con
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		return tx.Exec(`
 			INSERT INTO devices (user_id, device_uid, mac_address, name, description, type)
-			VALUES (?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?)
 		`, userID, request.DeviceUID, request.MacAddress, request.Name, request.Description, request.Type).Error
 	})
 }

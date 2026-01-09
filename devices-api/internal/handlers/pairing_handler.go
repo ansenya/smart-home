@@ -69,10 +69,11 @@ func (h *pairingHandler) Confirm(c *gin.Context) {
 		request.Name = request.DeviceUID
 	}
 
-	if err := h.service.ConfirmPairing(&request); err != nil {
+	userID, err := h.service.ConfirmPairing(&request)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	c.JSON(http.StatusOK, gin.H{"user_id": userID.String(), "status": "ok"})
 }
