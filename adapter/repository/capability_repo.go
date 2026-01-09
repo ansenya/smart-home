@@ -49,7 +49,7 @@ func (r *capabilityRepo) UpdateState(deviceID, capability string, state json.Raw
 func (r *capabilityRepo) ReplaceByDevice(deviceID string, caps []models.Capability) error {
 	tx := r.db.Begin()
 
-	if err := tx.Where("id = ?", deviceID).Delete(&models.Capability{}).Error; err != nil {
+	if err := tx.Where("device_id = ?", deviceID).Delete(&models.Capability{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
