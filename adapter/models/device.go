@@ -45,7 +45,7 @@ type StatusInfo struct {
 }
 
 type Capability struct {
-	ID          string          `gorm:"type:uuid;primary_key" json:"-"`
+	ID          string          `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"-"`
 	DeviceID    string          `gorm:"column:device_id" json:"-"`
 	Type        string          `json:"type"`
 	Retrievable bool            `json:"retrievable"`
