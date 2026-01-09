@@ -12,7 +12,7 @@ import (
 
 type PairingService interface {
 	StartPairing(userID uuid.UUID) (code string, expires int, err error)
-	ConfirmPairing(request *models.ConfirmPairingRequest) (uuid.UUID, error)
+	ConfirmPairing(request *models.ConfirmPairingRequest) (uuid.UUID, uuid.UUID, error)
 	GetStatus(code string) (string, error)
 }
 
@@ -51,20 +51,21 @@ func (p *pairingService) GetStatus(code string) (string, error) {
 	return "waiting", nil
 }
 
-func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) (uuid.UUID, error) {
+func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) (uuid.UUID, uuid.UUID, error) {
 	userID, err := p.cache.Get(request.Code)
 	if err != nil {
-		return uuid.Nil, errors.New("invalid or expired code")
+		return uuid.Nil, uuid.Nil, errors.New("invalid or expired code")
 	}
 
-	if err := p.repo.RegisterDevice(userID, request); err != nil {
-		return uuid.Nil, err
+	deviceID, err := p.repo.RegisterDevice(userID, request)
+	if err != nil {
+		return uuid.Nil, uuid.Nil, err
 	}
 
 	_ = p.cache.Set("done:"+request.Code, uuid.Nil, time.Minute)
 	_ = p.cache.Delete(request.Code)
 
-	return userID, nil
+	return userID, deviceID, nil
 }
 
 func generateCode(n int) string {

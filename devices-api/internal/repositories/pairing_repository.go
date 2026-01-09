@@ -9,7 +9,7 @@ import (
 
 type PairingRepository interface {
 	FindManufacturedByMAC(mac string) (*models.ManufacturedDevice, error)
-	RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) error
+	RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) (uuid.UUID, error)
 }
 
 type pairingRepository struct {
@@ -27,11 +27,19 @@ func (p *pairingRepository) FindManufacturedByMAC(mac string) (*models.Manufactu
 	return &device, p.db.First(&device, "mac_address = ?", mac).Error
 }
 
-func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		return tx.Exec(`
-			INSERT INTO devices (user_id, device_uid, mac_address, name, description, type)
-			VALUES (?, ?, ?, ?, ?, ?)
-		`, userID, request.DeviceUID, request.MacAddress, request.Name, request.Description, request.Type).Error
-	})
+func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) (uuid.UUID, error) {
+	device := &models.Device{
+		UserID:      userID,
+		DeviceUID:   request.DeviceUID,
+		MacAddress:  request.MacAddress,
+		Name:        request.Name,
+		Description: request.Description,
+		Type:        request.Type,
+	}
+
+	if err := r.db.Create(device).Error; err != nil {
+		return uuid.Nil, err
+	}
+
+	return device.ID, nil
 }

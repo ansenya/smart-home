@@ -15,8 +15,11 @@ type ManufacturedDevice struct {
 }
 
 type Device struct {
-	ID         uuid.UUID `gorm:"primary_key"`
-	DeviceUID  string
-	MacAddress string
-	UserID     uuid.UUID
+	ID          uuid.UUID `gorm:"primary_key"`
+	DeviceUID   string
+	MacAddress  string
+	UserID      uuid.UUID
+	Name        string
+	Description string
+	Type        string
 }
