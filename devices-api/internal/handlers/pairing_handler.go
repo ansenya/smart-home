@@ -22,7 +22,7 @@ func newPairingHandler(service services.PairingService) *pairingHandler {
 func (h *pairingHandler) RegisterRoutes(usersGroup *gin.RouterGroup, devicesGroup *gin.RouterGroup) {
 	// users part
 	usersGroup.POST("/start", h.Start)
-	usersGroup.GET("/status", h.Status)
+	usersGroup.POST("/status", h.Status)
 
 	// device part
 	devicesGroup.POST("/confirm", h.Confirm)

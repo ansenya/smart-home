@@ -9,5 +9,7 @@ export const startPairing = () => {
 }
 
 export const pairingStatus = (payload: PairingPayload) => {
-    return api.post('/devices/pairing/status', payload)
+    return api.post('/devices/pairing/status', null, {
+        params: payload
+    })
 }
