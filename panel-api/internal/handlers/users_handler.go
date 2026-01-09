@@ -37,13 +37,14 @@ func (h *usersHandler) RegisterRoutes(group *gin.RouterGroup) {
 func (h *usersHandler) Me(c *gin.Context) {
 	sid, err := c.Cookie(SessionIDName)
 	if err != nil {
-		c.Status(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "session cookie not found"})
 		return
 	}
 
 	user, err := h.usersService.GetUserBySessionID(sid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			h.log.Info("user not found", sid)
 			c.Status(http.StatusUnauthorized)
 			return
 		}
