@@ -57,7 +57,7 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) e
 		return errors.New("invalid or expired code")
 	}
 
-	if err := p.repo.RegisterDevice(userID, request.DeviceUID, request.MacAddress); err != nil {
+	if err := p.repo.RegisterDevice(userID, request); err != nil {
 		return err
 	}
 

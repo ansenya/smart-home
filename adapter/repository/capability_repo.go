@@ -46,6 +46,25 @@ func (r *capabilityRepo) UpdateState(deviceID, capability string, state json.Raw
 	return nil
 }
 
+func (r *capabilityRepo) ReplaceByDevice(deviceID string, caps []models.Capability) error {
+	tx := r.db.Begin()
+
+	if err := tx.Where("device_id = ?", deviceID).Delete(&models.Capability{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, c := range caps {
+		c.DeviceID = deviceID
+		if err := tx.Create(&c).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
+}
+
 func NewCapabilityRepo(db *gorm.DB) CapabilitiesRepository {
 	return &capabilityRepo{
 		db: db,

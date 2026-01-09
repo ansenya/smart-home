@@ -17,6 +17,9 @@ type DevicesService interface {
 	UpsertDevice(device *models.Device) error
 	DeleteDevice(id string) error
 
+	ReplaceCapabilities(deviceID string, caps []models.Capability) error
+	ReplaceProperties(deviceID string, props []models.Property) error
+
 	UpdateLastSeen(deviceID string) error
 	UpdateCurrentState(deviceID, capability string, payload json.RawMessage) error
 	UpdateProperty(deviceID, property string, payload json.RawMessage) error

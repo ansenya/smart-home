@@ -1,17 +1,20 @@
 package services
 
 import (
+	"adapter/models"
 	"encoding/json"
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"gorm.io/gorm"
 	"log"
 	"strings"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"gorm.io/gorm"
 )
 
 // <user-id>/<device-id≥/capabilities/<capability>/set
 //<user-id>/<device-id≥/capabilities/<capability>/state
 //<user-id>/<device-id>/properties/<property>/state
+//<user>/<device-id>/describe
 //<user-id>/<device-id>/state
 
 type deviceListenerService struct {
@@ -23,6 +26,7 @@ func (s *deviceListenerService) StartListener() {
 	// Подписываемся на все нужные типы сообщений
 	topics := []string{
 		"+/+/state",                // общий статус устройства
+		"+/+/describe",             // описание capabilities и properties устройства
 		"+/+/capabilities/+/state", // состояния "умений"
 		"+/+/properties/+/state",   // свойства/сенсоры
 	}
@@ -42,10 +46,13 @@ func (s *deviceListenerService) handleMessage(client mqtt.Client, msg mqtt.Messa
 		return
 	}
 
+	log.Println("[MQTT] received message:", string(msg.Payload()))
+
 	switch component {
 	case "state":
-		// Топик <user>/<device>/state
 		s.handleDeviceState(deviceID, msg.Payload())
+	case "describe":
+		s.handleDescribe(deviceID, msg.Payload())
 	case "capabilities":
 		if direction == "state" {
 			s.handleCapabilityState(deviceID, name, msg.Payload())
@@ -68,6 +75,28 @@ func (s *deviceListenerService) handleDeviceState(deviceID string, payload []byt
 		return
 	}
 	_ = s.devicesService.UpdateLastSeen(deviceID)
+}
+
+func (s *deviceListenerService) handleDescribe(deviceID string, payload []byte) {
+	var p struct {
+		Capabilities []models.Capability `json:"capabilities"`
+		Properties   []models.Property   `json:"properties"`
+	}
+
+	if err := json.Unmarshal(payload, &p); err != nil {
+		log.Printf("bad describe payload: %v", err)
+		return
+	}
+
+	if err := s.devicesService.ReplaceCapabilities(deviceID, p.Capabilities); err != nil {
+		log.Printf("cannot save capabilities: %v", err)
+	}
+
+	if err := s.devicesService.ReplaceProperties(deviceID, p.Properties); err != nil {
+		log.Printf("cannot save properties: %v", err)
+	}
+
+	log.Printf("[MQTT] device %s described", deviceID)
 }
 
 func (s *deviceListenerService) handleCapabilityState(deviceID, capability string, payload []byte) {

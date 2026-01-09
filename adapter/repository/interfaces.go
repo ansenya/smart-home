@@ -20,8 +20,10 @@ type CapabilitiesRepository interface {
 	GetByDevice(deviceID string) ([]models.Capability, error)
 	GetByID(id string) (*models.Capability, error)
 	UpdateState(deviceID, capability string, state json.RawMessage) error
+	ReplaceByDevice(deviceID string, caps []models.Capability) error
 }
 
 type PropertiesRepository interface {
 	UpdateState(deviceID, property string, state *models.PropertyState) error
+	ReplaceByDevice(deviceID string, props []models.Property) error
 }

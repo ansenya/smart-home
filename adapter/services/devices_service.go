@@ -39,6 +39,14 @@ func (r devicesService) DeleteDevice(id string) error {
 	return r.devicesRepository.Delete(id)
 }
 
+func (r devicesService) ReplaceCapabilities(deviceID string, caps []models.Capability) error {
+	return r.capabilitiesRepository.ReplaceByDevice(deviceID, caps)
+}
+
+func (r devicesService) ReplaceProperties(deviceID string, props []models.Property) error {
+	return r.propertiesRepository.ReplaceByDevice(deviceID, props)
+}
+
 func (r devicesService) UpdateLastSeen(deviceID string) error {
 	return r.devicesRepository.UpdateLastSeen(deviceID)
 }
