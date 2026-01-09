@@ -2,11 +2,11 @@ CREATE DATABASE "smart-home";
 
 DO
 $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'user') THEN
             CREATE USER "user" WITH PASSWORD 'password';
-    END IF;
-END
+        END IF;
+    END
 $$;
 
 \c "smart-home"
@@ -57,6 +57,8 @@ CREATE TABLE manufactured_devices
 CREATE TABLE devices
 (
     id          UUID PRIMARY KEY REFERENCES manufactured_devices (id),
+    device_uid  TEXT NOT NULL,
+    mac_address TEXT NOT NULL,
     user_id     UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     name        TEXT,
     description TEXT,

@@ -31,7 +31,7 @@ func NewPairingService(repo repositories.PairingRepository, cache repositories.P
 func (p *pairingService) StartPairing(userID uuid.UUID) (string, int, error) {
 	code := generateCode(6)
 
-	ttl := 2 * time.Minute
+	ttl := 5 * time.Minute
 
 	if err := p.cache.Set(code, userID, ttl); err != nil {
 		return "", 0, err
@@ -57,13 +57,7 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) e
 		return errors.New("invalid or expired code")
 	}
 
-	manufactured, err := p.repo.FindManufacturedByMAC(request.DeviceUID)
-	if err != nil || manufactured.Registered {
-		return errors.New("device not available")
-	}
-
-	// todo
-	if err := p.repo.RegisterDevice(uuid.Nil, userID); err != nil {
+	if err := p.repo.RegisterDevice(userID, request.DeviceUID, request.MacAddress); err != nil {
 		return err
 	}
 

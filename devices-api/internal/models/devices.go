@@ -13,3 +13,10 @@ type ManufacturedDevice struct {
 	Registered bool
 	CreatedAt  time.Time
 }
+
+type Device struct {
+	ID         uuid.UUID `gorm:"primary_key"`
+	DeviceUID  string
+	MacAddress string
+	UserID     uuid.UUID
+}
