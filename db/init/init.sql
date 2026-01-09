@@ -56,7 +56,7 @@ CREATE TABLE manufactured_devices
 
 CREATE TABLE devices
 (
-    id          UUID PRIMARY KEY REFERENCES manufactured_devices (id) DEFAULT uuid_generate_v4(),
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     device_uid  TEXT NOT NULL,
     mac_address TEXT NOT NULL,
     user_id     UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -67,10 +67,10 @@ CREATE TABLE devices
     status_info JSONB,
     custom_data JSONB,
     device_info JSONB,
-    last_seen   timestamptz                                           DEFAULT NOW(),
-    created_at  timestamptz                                           DEFAULT NOW(),
-    updated_at  timestamptz                                           DEFAULT NOW(),
-    deleted_at  timestamptz                                           DEFAULT NULL
+    last_seen   timestamptz      DEFAULT NOW(),
+    created_at  timestamptz      DEFAULT NOW(),
+    updated_at  timestamptz      DEFAULT NOW(),
+    deleted_at  timestamptz      DEFAULT NULL
 );
 
 CREATE TABLE capabilities
