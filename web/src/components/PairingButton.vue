@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <button class="pair-btn" @click="$router.push('/devices/add')">+</button>
+  <button class="pair-btn" @click="$router.push('/devices/start-pairing')">+</button>
 </template>
 
 <style scoped>
