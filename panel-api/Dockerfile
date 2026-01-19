@@ -8,7 +8,7 @@ COPY . .
 RUN go build -o /app/build cmd/panel-api/main.go
 
 FROM alpine:latest
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl tzdata
 WORKDIR /app
 COPY --from=builder /app/build ./build
 CMD ["/app/build"]

@@ -10,7 +10,7 @@ RUN go build -o /build
 
 FROM alpine:latest
 
-RUN apk add curl
+RUN apk add --no-cache curl tzdata
 
 COPY --from=builder /build /app/build
 
