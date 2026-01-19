@@ -10,6 +10,7 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       GIN_MODE: ${GIN_MODE}
+      TZ: Europe/Moscow
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped
@@ -21,6 +22,7 @@ services:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       MQTT_URL: tcp://broker:1883
       GIN_MODE: ${GIN_MODE}
+      TZ: Europe/Moscow
     depends_on:
       - broker
       - db
@@ -39,6 +41,7 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       GIN_MODE: ${GIN_MODE}
+      TZ: Europe/Moscow
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped
@@ -50,6 +53,7 @@ services:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
       GIN_MODE: ${GIN_MODE}
+      TZ: Europe/Moscow
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped
@@ -84,6 +88,7 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: password
+      TZ: Europe/Moscow
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d
       - ./db/data:/var/lib/postgresql/data
@@ -99,6 +104,8 @@ services:
 
   broker:
     image: eclipse-mosquitto:2.0.22
+    environment:
+      TZ: Europe/Moscow
     ports:
       - "1883:1883"
     volumes:
