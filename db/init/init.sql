@@ -9,6 +9,10 @@ $$
     END
 $$;
 
+
+ALTER ROLE "user" SET timezone TO 'Europe/Moscow';
+ALTER ROLE root SET timezone TO 'Europe/Moscow';
+
 \c "smart-home"
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
