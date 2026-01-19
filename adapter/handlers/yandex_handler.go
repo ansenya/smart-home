@@ -4,6 +4,7 @@ import (
 	"adapter/middleware"
 	"adapter/models"
 	"adapter/services"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -61,6 +62,9 @@ func (h *yandexHandler) handleDevices(c *gin.Context) {
 		},
 	}
 
+	m, _ := json.Marshal(devices)
+	log.Println(string(m))
+
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -95,6 +99,9 @@ func (h *yandexHandler) handleDevicesQuery(c *gin.Context) {
 			device.ErrorMessage = "устройство недоступно"
 		}
 	}
+
+	m, _ := json.Marshal(devices)
+	log.Println(string(m))
 
 	c.JSON(http.StatusOK, models.YandexResponse{
 		RequestID: requestID,
@@ -143,6 +150,9 @@ func (h *yandexHandler) handleDevicesAction(c *gin.Context) {
 			deviceCapability.State.Value = nil
 		}
 	}
+
+	m, _ := json.Marshal(req.Payload.Devices)
+	log.Println(string(m))
 
 	c.JSON(http.StatusOK, models.YandexResponse{
 		RequestID: requestID,

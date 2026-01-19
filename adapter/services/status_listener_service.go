@@ -68,13 +68,15 @@ func (s *deviceListenerService) handleMessage(client mqtt.Client, msg mqtt.Messa
 
 func (s *deviceListenerService) handleDeviceState(deviceID string, payload []byte) {
 	var p struct {
-		Status string `json:"status"`
+		Status string `json:"status" binding:"required"`
 	}
 	if err := json.Unmarshal(payload, &p); err != nil {
 		log.Printf("bad /state payload for %s: %v", deviceID, err)
 		return
 	}
-	_ = s.devicesService.UpdateLastSeen(deviceID)
+	if err := s.devicesService.UpdateLastSeen(deviceID); err != nil {
+		log.Printf("cannot update last seen: %v", err)
+	}
 }
 
 func (s *deviceListenerService) handleDescribe(deviceID string, payload []byte) {
