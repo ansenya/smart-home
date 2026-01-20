@@ -1,4 +1,4 @@
-#include "ws2811_capability_onoff.h"
+#include "capability_ws2811_onoff.h"
 #include "fastled_manager.h"
 #include <ArduinoJson.h>
 

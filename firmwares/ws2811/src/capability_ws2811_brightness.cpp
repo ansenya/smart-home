@@ -1,4 +1,4 @@
-#include "ws2811_capability_brightness.h"
+#include "capability_ws2811_brightness.h"
 #include "fastled_manager.h"
 #include <ArduinoJson.h>
 
@@ -71,6 +71,35 @@ bool WS2811BrightnessCapability::handleSet(const String &payload) {
   }
 
   return changed;
+}
+
+void WS2811BrightnessCapability::setTargetBrightness(uint8_t target){
+  targetBrightness = target;
+  LOG("[WS_BRIGHTNESS] target brightness: %d", targetBrightness);
+}
+
+void WS2811BrightnessCapability::update(){
+  if(millis() - lastUpdate < updateInterval) return;
+  
+  if(brightness != targetBrightness){
+    if(brightness < targetBrightness){
+      brightness += fadeStep;
+      if(brightness > targetBrightness) brightness = targetBrightness;
+    } else {
+      if(brightness > fadeStep){
+          brightness -= fadeStep;
+      } else {
+          brightness = 0;
+      }
+      if(brightness < targetBrightness) brightness = targetBrightness;
+    }
+    
+    FastLED.setBrightness(brightness);
+    FastLED.show();
+    LOG("[WS_BRIGHTNESS] current: %d, target: %d", brightness, targetBrightness);
+  }
+  
+  lastUpdate = millis();
 }
 
 void WS2811BrightnessCapability::apply() {

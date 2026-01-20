@@ -24,7 +24,7 @@ void CapabilityManager::publishAllStates(PubSubClient &mqtt, const String &base)
   publishHeartbeatState(mqtt, base);
 
   for(auto c: caps){
-    StaticJsonDocument<512> d;
+    StaticJsonDocument<2048> d;
     JsonObject root = d.to<JsonObject>();
     c->state(root);
 

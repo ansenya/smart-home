@@ -35,7 +35,7 @@ bool ensureMqttConnected(){
 
   capman.subscribeAll(mqtt, topicBase());
 
-  StaticJsonDocument<512> d;
+  StaticJsonDocument<1024> d;
   JsonArray arr = d.createNestedArray("capabilities");
   capman.describeAll(arr);
 

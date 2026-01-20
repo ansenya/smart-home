@@ -7,7 +7,7 @@ void FastLEDManager::begin(uint8_t pin, uint16_t count) {
   _leds = (CRGB*)malloc(sizeof(CRGB) * _count);
   
   // Важно: FastLED требует константный пин на этапе компиляции
-  FastLED.addLeds<WS2811, STRIP_PIN, GRB>(_leds, _count);
+  FastLED.addLeds<WS2811, STRIP_PIN, BRG>(_leds, _count);
   
   FastLED.setBrightness(255);
   fill_solid(_leds, _count, CRGB::Black);
@@ -18,6 +18,6 @@ void FastLEDManager::begin(uint8_t pin, uint16_t count) {
 }
 
 void FastLEDManager::setAll(CRGB color) {
-  if (!_inited) return;
+   if (!_inited) return;
   fill_solid(_leds, _count, color);
 }

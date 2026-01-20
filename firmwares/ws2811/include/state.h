@@ -7,6 +7,9 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <Arduino.h>
+#include "capability_ws2811_onoff.h"
+#include "capability_ws2811_brightness.h"
+#include "capability_ws2811_hsv.h"
 
 #include "config.h"
 
@@ -30,5 +33,9 @@ String getDeviceUID();
 String getMac();
 String topicBase();
 void led(bool s);
+
+extern WS2811OnOffCapability* onOffCap;
+extern WS2811BrightnessCapability* brightnessCap;
+extern WS2811HSVCapability* hsvCap;
 
 #endif // STATE_H

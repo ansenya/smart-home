@@ -12,9 +12,15 @@ public:
   void describe(JsonObject &o) override;
   void state(JsonObject &o) override;
   bool handleSet(const String &payload) override;
+  void update(); // Для плавных переходов
+  void setTargetBrightness(uint8_t target);
 
 private:
   uint8_t brightness = 255; // 0-255, default max
+  uint8_t targetBrightness;
+  unsigned long lastUpdate;
+  const uint8_t fadeStep = 2; // Шаг изменения яркости
+  const uint8_t updateInterval = 20; // Интервал в мс
   void apply();
 };
 

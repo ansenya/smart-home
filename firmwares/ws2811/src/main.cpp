@@ -5,8 +5,9 @@
 #include "mqtt_manager.h"
 #include "reset.h"
 #include "fastled_manager.h"
-#include "ws2811_capability_onoff.h"
-#include "ws2811_capability_brightness.h"
+#include "capability_ws2811_onoff.h"
+#include "capability_ws2811_brightness.h"
+#include "capability_ws2811_hsv.h"
 
 void setup() {
   Serial.begin(115200);
@@ -27,9 +28,13 @@ void setup() {
   // Инициализируем менеджер ленты ОДИН РАЗ
   FastLEDManager::instance().begin(STRIP_PIN, STRIP_COUNT);
 
-  // Register onoff cap
-  capman.registerCapability(createOnOff());
-  capman.registerCapability(createBrightness());
+  // Register caps
+  onOffCap = new WS2811OnOffCapability();
+  brightnessCap = new WS2811BrightnessCapability();
+  hsvCap = new WS2811HSVCapability();
+  capman.registerCapability(onOffCap);
+  capman.registerCapability(brightnessCap);
+  capman.registerCapability(hsvCap);
 
   mqttInit();
 
@@ -63,5 +68,6 @@ void loop() {
     return;
   }
 
+  if(brightnessCap) brightnessCap->update();
   mqttLoop();
 }
