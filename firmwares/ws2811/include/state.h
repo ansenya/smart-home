@@ -34,8 +34,8 @@ String getMac();
 String topicBase();
 void led(bool s);
 
-extern WS2811OnOffCapability* onOffCap;
-extern WS2811BrightnessCapability* brightnessCap;
-extern WS2811HSVCapability* hsvCap;
+WS2811OnOffCapability* onOffCap;
+WS2811BrightnessCapability* brightnessCap;
+WS2811HSVCapability* hsvCap;
 
 #endif // STATE_H

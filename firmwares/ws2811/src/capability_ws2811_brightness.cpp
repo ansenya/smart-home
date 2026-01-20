@@ -1,9 +1,12 @@
 #include "capability_ws2811_brightness.h"
 #include "fastled_manager.h"
+#include "state.h"
 #include <ArduinoJson.h>
 
 WS2811BrightnessCapability::WS2811BrightnessCapability() {
-  // В конструкторе ничего не инициализируем — FastLEDManager управляет лентой
+  uint8_t saved = prefs.getUChar("brightness", 255);
+  this->targetBrightness = saved;
+  this->brightness = targetBrightness;
 }
 
 void WS2811BrightnessCapability::describe(JsonObject &o) {
@@ -18,17 +21,17 @@ void WS2811BrightnessCapability::describe(JsonObject &o) {
 
   JsonObject r = p.createNestedObject("range");
   r["max"] = 100;
-  r["min"] = 1;
+  r["min"] = 0;
   r["precision"] = 1;
 
   JsonObject st = o.createNestedObject("state");
   st["instance"] = "brightness";
-  st["value"] = map(brightness, 0, 255, 0, 100);;
+  st["value"] = map(targetBrightness, 0, 255, 0, 100);;
 }
 
 void WS2811BrightnessCapability::state(JsonObject &o) {
   o["instance"] = "brightness";
-  o["value"] = map(brightness, 0, 255, 0, 100); // 0-100%
+  o["value"] = map(targetBrightness, 0, 255, 0, 100); // 0-100%
 }
 
 bool WS2811BrightnessCapability::handleSet(const String &payload) {
@@ -60,13 +63,11 @@ bool WS2811BrightnessCapability::handleSet(const String &payload) {
   }
 
   if (changed) {
-    brightness = target;
-    apply();
+    targetBrightness = target;
     
     // Сохраняем в Preferences (опционально)
-    // prefs.putUChar("brightness", brightness);
-    
-    LOG("[WS_BRIGHT] Set brightness: %d (raw=%d)", 
+    prefs.putUChar("brightness", brightness);
+    LOG("[WS_BRIGHT] Set target brightness: %d (raw=%d)", 
         map(brightness, 0, 255, 0, 100), brightness);
   }
 
@@ -78,39 +79,28 @@ void WS2811BrightnessCapability::setTargetBrightness(uint8_t target){
   LOG("[WS_BRIGHTNESS] target brightness: %d", targetBrightness);
 }
 
-void WS2811BrightnessCapability::update(){
-  if(millis() - lastUpdate < updateInterval) return;
-  
-  if(brightness != targetBrightness){
-    if(brightness < targetBrightness){
-      brightness += fadeStep;
-      if(brightness > targetBrightness) brightness = targetBrightness;
-    } else {
-      if(brightness > fadeStep){
-          brightness -= fadeStep;
-      } else {
-          brightness = 0;
-      }
-      if(brightness < targetBrightness) brightness = targetBrightness;
-    }
-    
-    FastLED.setBrightness(brightness);
-    FastLED.show();
-    LOG("[WS_BRIGHTNESS] current: %d, target: %d", brightness, targetBrightness);
-  }
-  
-  lastUpdate = millis();
+uint8_t WS2811BrightnessCapability::getTargetBrightness(){
+  return targetBrightness;
 }
 
-void WS2811BrightnessCapability::apply() {
+void WS2811BrightnessCapability::update() {
   auto& ledmgr = FastLEDManager::instance();
   if (!ledmgr.initialized()) return;
   
-  ledmgr.setBrightness(brightness);
-  ledmgr.show();
-}
+  int diff = (int)brightness - (int)targetBrightness;
+  if (millis() - lastUpdate > updateInterval && diff != 0) {
+    if (abs(diff) <= fadeStep) {
+      brightness = targetBrightness;
+    } else if (diff > 0) {
+      brightness -= fadeStep;
+    } else {
+      brightness += fadeStep;
+    }
 
-// фабрика
-Capability* createBrightness(){
-  return new WS2811BrightnessCapability();
+    ledmgr.setBrightness(brightness);
+    ledmgr.show();
+
+    LOG("[WS_BRIGHTNESS] current: %d, target: %d", brightness, targetBrightness);
+    lastUpdate = millis();
+  }
 }

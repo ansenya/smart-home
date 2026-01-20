@@ -27,11 +27,11 @@ void setup() {
 
   // Инициализируем менеджер ленты ОДИН РАЗ
   FastLEDManager::instance().begin(STRIP_PIN, STRIP_COUNT);
+  brightnessCap = new WS2811BrightnessCapability();
+  onOffCap = new WS2811OnOffCapability(brightnessCap);
+  hsvCap = new WS2811HSVCapability();
 
   // Register caps
-  onOffCap = new WS2811OnOffCapability();
-  brightnessCap = new WS2811BrightnessCapability();
-  hsvCap = new WS2811HSVCapability();
   capman.registerCapability(onOffCap);
   capman.registerCapability(brightnessCap);
   capman.registerCapability(hsvCap);
@@ -69,5 +69,6 @@ void loop() {
   }
 
   if(brightnessCap) brightnessCap->update();
+  if(hsvCap) hsvCap->update();
   mqttLoop();
 }

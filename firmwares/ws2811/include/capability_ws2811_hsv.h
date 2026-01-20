@@ -13,11 +13,23 @@ public:
   bool handleSet(const String &payload) override;
 
   void apply();
-
+  void update();
 private:
-  float hue = 0.0f;        // 0..360
+  // target values (what user requested)
+  float hue = 0.0f;          // 0..360
   float saturation = 100.0f; // 0..100
-  float value = 100.0f;     // 0..100
+  float value = 100.0f;      // 0..100
+
+  // current (actual) values used to render LEDs (float for smooth steps)
+  float curHue = 0.0f;
+  float curSaturation = 100.0f;
+  float curValue = 100.0f;
+
+  // transition parameters
+  const float easing = 0.15f;             // k in cur += (target-cur)*k
+  const unsigned long updateInterval = 30; // ms
+  unsigned long lastUpdate = 0;
+  bool transitioning = false;
 
   void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b);
 };

@@ -6,7 +6,7 @@
 
 class WS2811OnOffCapability : public Capability {
 public:
-  WS2811OnOffCapability();
+  WS2811OnOffCapability(WS2811BrightnessCapability* brightnessCap);
   String type() override { return "devices.capabilities.on_off"; }
   
   void describe(JsonObject &o) override;
@@ -14,10 +14,8 @@ public:
   bool handleSet(const String &payload) override;
 
 private:
-  bool power = false;
-  void apply();
+  bool getCurrentPower();
+  WS2811BrightnessCapability* brightnessCap;
 };
-
-Capability* createOnOff();
 
 #endif // CAPABILITY_WS2811_ONOFF_H

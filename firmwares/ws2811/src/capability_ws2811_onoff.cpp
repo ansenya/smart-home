@@ -1,8 +1,9 @@
 #include "capability_ws2811_onoff.h"
 #include "fastled_manager.h"
+#include "state.h"
 #include <ArduinoJson.h>
 
-WS2811OnOffCapability::WS2811OnOffCapability() {
+WS2811OnOffCapability::WS2811OnOffCapability(WS2811BrightnessCapability* brightnessCap): brightnessCap(brightnessCap) {
   // В конструкторе ничего не инициализируем — FastLEDManager управляет лентой
 }
 
@@ -13,12 +14,12 @@ void WS2811OnOffCapability::describe(JsonObject &o) {
 
   JsonObject st = o.createNestedObject("state");
   st["instance"] = "on";
-  st["value"] = power;
+  st["value"] = getCurrentPower();
 }
 
 void WS2811OnOffCapability::state(JsonObject &o) {
   o["instance"] = "on";
-  o["value"] = power;
+  o["value"] = getCurrentPower();
 }
 
 bool WS2811OnOffCapability::handleSet(const String &payload) {
@@ -29,42 +30,30 @@ bool WS2811OnOffCapability::handleSet(const String &payload) {
     return false;
   }
 
-  bool targetState = power; // default to current state
+  bool targetState = getCurrentPower(); // default to current state
   bool changed = false;
 
   // Поддерживаем несколько форматов payload
   if (d.containsKey("value")) {
     targetState = d["value"].as<bool>();
-    changed = (targetState != power);
+    changed = (targetState != getCurrentPower());
   }
 
   if (changed) {
-    power = targetState;
-    apply();
-    LOG("[WS_ONOFF] Power %s", power ? "ON" : "OFF");
+    if (targetState) {
+      uint8_t saved = prefs.getUChar("brightness", 255);
+      brightnessCap->setTargetBrightness(saved);
+    } else {
+      prefs.putUChar("brightness", brightnessCap->getTargetBrightness());
+      brightnessCap->setTargetBrightness(0);
+    }
+    // apply();
+    LOG("[WS_ONOFF] Power %s", getCurrentPower() ? "ON" : "OFF");
   }
 
   return changed;
 }
 
-void WS2811OnOffCapability::apply() {
-  auto& ledmgr = FastLEDManager::instance();
-  if (!ledmgr.initialized()) {
-    LOG("[FASTLED] NOT INITIALIZED");
-    return;
-  };
-
-  if (power) {
-    // Базовый цвет при включении (можно заменить на сохранённый цвет/эффект)
-    ledmgr.setAll(CRGB::White); // или CRGB::Red для теста
-  } else {
-    ledmgr.setAll(CRGB::Black);
-  }
-  ledmgr.show();
-}
-
-// фабрика
-Capability* createOnOff(){
-  // используем LED_PIN по умолчанию; можно передавать другой пин при необходимости
-  return new WS2811OnOffCapability();
+bool WS2811OnOffCapability::getCurrentPower() {
+  return brightnessCap->getTargetBrightness() > 1;
 }
