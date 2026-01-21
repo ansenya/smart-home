@@ -10,6 +10,7 @@ import (
 type PairingRepository interface {
 	FindManufacturedByMAC(mac string) (*models.ManufacturedDevice, error)
 	RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) (uuid.UUID, error)
+	DisablePreviouslyRegisteredDevice(uid string) error
 }
 
 type pairingRepository struct {
@@ -22,9 +23,9 @@ func NewPairingRepository(db *gorm.DB) PairingRepository {
 	}
 }
 
-func (p *pairingRepository) FindManufacturedByMAC(mac string) (*models.ManufacturedDevice, error) {
+func (r *pairingRepository) FindManufacturedByMAC(mac string) (*models.ManufacturedDevice, error) {
 	var device models.ManufacturedDevice
-	return &device, p.db.First(&device, "mac_address = ?", mac).Error
+	return &device, r.db.First(&device, "mac_address = ?", mac).Error
 }
 
 func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.ConfirmPairingRequest) (uuid.UUID, error) {
@@ -42,4 +43,8 @@ func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.Con
 	}
 
 	return device.ID, nil
+}
+
+func (r *pairingRepository) DisablePreviouslyRegisteredDevice(uid string) error {
+	return r.db.Delete(&models.Device{}).Where("device_uid = ?", uid).Error
 }

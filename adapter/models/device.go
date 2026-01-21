@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // <user-id>/<device-id≥/capabilities/<capability>/set
@@ -38,6 +40,8 @@ type Device struct {
 
 	ErrorCode    string `json:"error_code,omitempty"`
 	ErrorMessage string `json:"error_message,omitempty"`
+
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type StatusInfo struct {

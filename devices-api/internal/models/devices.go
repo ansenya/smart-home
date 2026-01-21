@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type ManufacturedDevice struct {
@@ -22,4 +23,5 @@ type Device struct {
 	Name        string
 	Description string
 	Type        string
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }

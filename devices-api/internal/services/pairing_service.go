@@ -57,6 +57,10 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) (
 		return uuid.Nil, uuid.Nil, errors.New("invalid or expired code")
 	}
 
+	if err := p.repo.DisablePreviouslyRegisteredDevice(request.DeviceUID); err != nil {
+		return uuid.Nil, uuid.Nil, errors.New("failed to disable previously registered device")
+	}
+
 	deviceID, err := p.repo.RegisterDevice(userID, request)
 	if err != nil {
 		return uuid.Nil, uuid.Nil, err
