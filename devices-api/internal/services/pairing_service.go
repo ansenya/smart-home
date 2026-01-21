@@ -4,6 +4,7 @@ import (
 	"devices-api/internal/models"
 	"devices-api/internal/repositories"
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -58,7 +59,7 @@ func (p *pairingService) ConfirmPairing(request *models.ConfirmPairingRequest) (
 	}
 
 	if err := p.repo.DisablePreviouslyRegisteredDevice(request.DeviceUID); err != nil {
-		return uuid.Nil, uuid.Nil, errors.New("failed to disable previously registered device")
+		return uuid.Nil, uuid.Nil, fmt.Errorf("failed to disable previously registered device: %v", err)
 	}
 
 	deviceID, err := p.repo.RegisterDevice(userID, request)

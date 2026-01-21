@@ -46,5 +46,8 @@ func (r *pairingRepository) RegisterDevice(userID uuid.UUID, request *models.Con
 }
 
 func (r *pairingRepository) DisablePreviouslyRegisteredDevice(uid string) error {
-	return r.db.Delete(&models.Device{}).Where("device_uid = ?", uid).Error
+	return r.db.
+		Where("device_uid = ?", uid).
+		Delete(&models.Device{}).
+		Error
 }
