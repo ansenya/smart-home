@@ -4,6 +4,7 @@ import (
 	"adapter/models"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -31,6 +32,8 @@ func (s *mqttService) Publish(message any, topic string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
+
+	log.Println(string(payload))
 
 	token := s.mqttClient.Publish(topic, 0, true, payload)
 	token.Wait()

@@ -1,5 +1,4 @@
-#ifndef CAPABILITY_WS2811_HSV_H
-#define CAPABILITY_WS2811_HSV_H
+#pragma once
 #include "capability.h"
 #include <Arduino.h>
 
@@ -12,18 +11,24 @@ public:
   void state(JsonObject &o) override;
   bool handleSet(const String &payload) override;
 
-  void apply();
   void update();
 private:
-  // target values (what user requested)
-  float hue = 0.0f;          // 0..360
-  float saturation = 100.0f; // 0..100
-  float value = 100.0f;      // 0..100
+  // state
+  String curInstance;
 
-  // current (actual) values used to render LEDs (float for smooth steps)
+  // target values
+  float hue = 0.0f;
+  float saturation = 100.0f;
+  float value = 100.0f;
+  int temperatureK = 4500;
+  String scene = "";
+  
+  // current (actual) values
   float curHue = 0.0f;
   float curSaturation = 100.0f;
   float curValue = 100.0f;
+
+  int curTemperatureK = 4500;
 
   // transition parameters
   const float easing = 0.15f;             // k in cur += (target-cur)*k
@@ -32,6 +37,5 @@ private:
   bool transitioning = false;
 
   void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b);
+  void temperatureToHsv(int kelvin);  
 };
-
-#endif // CAPABILITY_WS2811_HSV_H

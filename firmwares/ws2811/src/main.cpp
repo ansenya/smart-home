@@ -7,7 +7,7 @@
 #include "fastled_manager.h"
 #include "capability_ws2811_onoff.h"
 #include "capability_ws2811_brightness.h"
-#include "capability_ws2811_hsv.h"
+#include "capability_ws2811_color.h"
 
 void setup() {
   Serial.begin(115200);

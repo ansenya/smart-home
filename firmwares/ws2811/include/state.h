@@ -9,7 +9,7 @@
 #include <Arduino.h>
 #include "capability_ws2811_onoff.h"
 #include "capability_ws2811_brightness.h"
-#include "capability_ws2811_hsv.h"
+#include "capability_ws2811_color.h"
 
 #include "config.h"
 
