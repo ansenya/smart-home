@@ -61,10 +61,11 @@ bool WS2811HSVCapability::handleSet(const String &payload) {
   }
 
   String instance = doc["instance"] | "hsv";
-  JsonObject val = doc["value"];
 
   this->curInstance = instance;
   if (instance == "hsv") {
+    JsonObject val = doc["value"];
+
     this->hue = val["h"] | hue;
     this->saturation = val["s"] | this->saturation;
     this->value = val["v"] | this->value;
@@ -76,8 +77,7 @@ bool WS2811HSVCapability::handleSet(const String &payload) {
 
     this->scene = "";
   } else if (instance == "scene") {
-    const char* sceneId = val["id"] | "";
-    this->scene = String(sceneId);
+    this->scene = doc["value"] | "";
   }
 
   return true;
@@ -149,64 +149,93 @@ void WS2811HSVCapability::temperatureToHsv(int kelvin) {
     if (this->hue < 0) this->hue += 360.0f;
 }
 
-
 void WS2811HSVCapability::update() {
-  auto &ledmgr = FastLEDManager::instance();
-  if (!ledmgr.initialized()) return;
+  auto &led = FastLEDManager::instance();
+  if (!led.initialized()) return;
+
   unsigned long now = millis();
-  if (this->curInstance == "hsv" || this->curInstance == "temperature_k") {
-    if (now - lastUpdate < updateInterval) return;
 
-    if (this->curHue == this->hue && this->curSaturation == this->saturation && this->curValue == this->value) {
-      return;
-    }
-
-    // Нормализуем разницу hue в диапазон (-180, 180]
-    float dh = fmodf((hue - curHue) + 540.0f, 360.0f) - 180.0f;
-    float ds = saturation - curSaturation;
-    float dv = value - curValue;
-
-    // Интерполяция (exponential easing)
-    float stepH = dh * easing;
-    float stepS = ds * easing;
-    float stepV = dv * easing;
-
-    curHue += stepH;
-    curSaturation += stepS;
-    curValue += stepV;
-
-    // Если близко к цели — сразу ставим ровно
-    const float H_EPS = 0.5f;   // градусы
-    const float SV_EPS = 0.25f; // процентов
-
-    // recompute residuals to check exact closeness
-    float remH = fmodf((hue - curHue) + 540.0f, 360.0f) - 180.0f;
-    float remS = saturation - curSaturation;
-    float remV = value - curValue;
-
-    if (fabsf(remH) < H_EPS) curHue = hue;
-    if (fabsf(remS) < SV_EPS) curSaturation = saturation;
-    if (fabsf(remV) < SV_EPS) curValue = value;
-
-    // нормализуем curHue в 0..360
-    while (curHue < 0.0f) curHue += 360.0f;
-    while (curHue >= 360.0f) curHue -= 360.0f;
-
-    // Преобразование для CHSV: 0..255
-    uint8_t h8 = (uint8_t)roundf(curHue * 255.0f / 360.0f);
-    uint8_t s8 = (uint8_t)roundf(curSaturation * 255.0f / 100.0f);
-    uint8_t v8 = (uint8_t)roundf(curValue * 255.0f / 100.0f);
-
-    CRGB color = CHSV(h8, s8, v8);
-    ledmgr.setAll(color);
-    ledmgr.show();
-
-    // Завершаем переход, когда всё выставлено точно
-    if (curHue == hue && curSaturation == saturation && curValue == value) {
-      transitioning = false;
-      LOG("[WS_HSV] Transition complete H=%.0f S=%.0f V=%.0f", round(curHue), round(curSaturation), round(curValue));
-    }
+  if (curInstance == "scene") {
+    updateScene(now);
+    return;
   }
 
-  this->lastUpdate = now;
+  if (curInstance == "hsv" || curInstance == "temperature_k") {
+    updateHSV(now);
+  }
+}
+
+static inline CHSV hsvToCHSV(float h, float s, float v) {
+  uint8_t h8 = h * 255 / 360;
+  uint8_t s8 = s * 255 / 100;
+  uint8_t v8 = v * 255 / 100;
+  return CHSV(h8, s8, v8);
+}
+
+void WS2811HSVCapability::applyHSV(float h, float s, float v) {
+  auto &led = FastLEDManager::instance();
+  led.setAll(hsvToCHSV(h, s, v));
+  led.show();
+}
+
+
+void WS2811HSVCapability::updateScene(unsigned long now) {
+  auto &led = FastLEDManager::instance();
+
+  if (scene == "reading") {
+    temperatureToHsv(3000);
+    applyHSV(hue, saturation, value);
+    return;
+  }
+
+  if (scene == "fantasy") {
+    if (now - lastUpdate < 25) return;
+
+    sceneHue += 0.7f;
+    if (sceneHue >= 360) sceneHue -= 360;
+
+    led.setAll(CHSV(sceneHue * 255 / 360, 255, 255));
+    led.show();
+
+    lastUpdate = now;
+    return;
+  }
+
+  // party — зарезервировано
+}
+
+void WS2811HSVCapability::updateHSV(unsigned long now) {
+  if (now - lastUpdate < updateInterval) return;
+
+  if (curHue == hue &&
+      curSaturation == saturation &&
+      curValue == value) return;
+
+  float dh = fmodf((hue-curHue)+540,360)-180;
+  float ds = saturation-curSaturation;
+  float dv = value-curValue;
+
+  curHue        += dh * easing;
+  curSaturation += ds * easing;
+  curValue      += dv * easing;
+
+  const float H_EPS = 0.5f;
+  const float SV_EPS = 0.25f;
+
+  if (fabsf(dh) < H_EPS) curHue = hue;
+  if (fabsf(ds) < SV_EPS) curSaturation = saturation;
+  if (fabsf(dv) < SV_EPS) curValue = value;
+
+  while (curHue < 0) curHue += 360;
+  while (curHue >= 360) curHue -= 360;
+
+  applyHSV(curHue, curSaturation, curValue);
+
+  lastUpdate = now;
+
+  if (curHue == hue &&
+      curSaturation == saturation &&
+      curValue == value) {
+    transitioning = false;
+  }
 }

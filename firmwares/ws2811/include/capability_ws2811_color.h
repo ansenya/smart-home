@@ -20,8 +20,10 @@ private:
   float hue = 0.0f;
   float saturation = 100.0f;
   float value = 100.0f;
-  int temperatureK = 4500;
+  int temperatureK = 4500;\
+  
   String scene = "";
+  float sceneHue;
   
   // current (actual) values
   float curHue = 0.0f;
@@ -38,4 +40,8 @@ private:
 
   void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b);
   void temperatureToHsv(int kelvin);  
+
+  void applyHSV(float h, float s, float v);
+  void updateScene(unsigned long now);
+  void updateHSV(unsigned long now);
 };
