@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"panel-api/internal/config"
@@ -98,7 +97,6 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 	}
 
 	session, err := h.usersService.CreateSession(user, tokens)
-	log.Println(session)
 	if err != nil {
 		h.log.Error(fmt.Sprintf("failed to create session: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})

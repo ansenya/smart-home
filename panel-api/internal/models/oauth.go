@@ -1,8 +1,9 @@
 package models
 
 type CodeExchange struct {
-	Code     string `json:"code" binding:"required"`
-	ClientID string `json:"client_id" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+	ClientID    string `json:"client_id" binding:"required"`
+	RedirectURI string `json:"redirect_uri" binding:"required"`
 }
 
 type AccessTokenRequest struct {

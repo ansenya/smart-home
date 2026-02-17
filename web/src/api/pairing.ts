@@ -1,15 +1,15 @@
-import {api} from './axios'
+import { api } from '@/api/client'
 
 interface PairingPayload {
-    code: string
+  code: string
 }
 
 export const startPairing = () => {
-    return api.post('/devices/pairing/start')
+  return api.post('/devices/pairing/start')
 }
 
 export const pairingStatus = (payload: PairingPayload) => {
-    return api.post('/devices/pairing/status', null, {
-        params: payload
-    })
+  return api.post('/devices/pairing/status', null, {
+    params: payload,
+  })
 }

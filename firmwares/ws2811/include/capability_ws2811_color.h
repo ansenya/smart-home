@@ -23,7 +23,7 @@ private:
   int temperatureK = 4500;\
   
   String scene = "";
-  float sceneHue;
+  
   
   // current (actual) values
   float curHue = 0.0f;
@@ -31,6 +31,9 @@ private:
   float curValue = 100.0f;
 
   int curTemperatureK = 4500;
+
+  float sceneHue;
+  uint16_t sceneStep = 0;
 
   // transition parameters
   const float easing = 0.15f;             // k in cur += (target-cur)*k
