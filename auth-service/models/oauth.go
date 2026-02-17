@@ -1,9 +1,10 @@
 package models
 
 type OauthRequest struct {
-	ClientID string `form:"client_id" binding:"required"`
-	State    string `form:"state" binding:"required"`
-	Scope    string `form:"scope"`
+	ClientID    string `form:"client_id" binding:"required"`
+	State       string `form:"state" binding:"required"`
+	Scope       string `form:"scope"`
+	RedirectURI string `form:"redirect_uri"`
 }
 
 type RefreshTokenRequest struct {

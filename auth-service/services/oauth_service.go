@@ -60,9 +60,13 @@ func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (strin
 		return "", fmt.Errorf("failed to save oauth data")
 	}
 
+	if queries.RedirectURI == "" {
+		queries.RedirectURI = oauthClient.RedirectURI
+	}
+
 	redirectURL := fmt.Sprintf(
 		"%s?code=%s&client_id=%s&state=%s&scope=%s",
-		oauthClient.RedirectURI,
+		queries.RedirectURI,
 		url.QueryEscape(code),
 		url.QueryEscape(queries.ClientID),
 		url.QueryEscape(queries.State),
