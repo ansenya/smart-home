@@ -7,18 +7,14 @@ const textarea = ref<HTMLTextAreaElement | null>(null)
 
 const autoResize = () => {
   if (textarea.value) {
-    // Сначала сбрасываем высоту, чтобы корректно рассчитать новую
     textarea.value.style.height = 'auto'
-    // Устанавливаем высоту по содержимому
     textarea.value.style.height = textarea.value.scrollHeight + 'px'
   }
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
-  // Отправка по Ctrl+Enter или Cmd+Enter
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
     event.preventDefault()
-    // TODO: вызов функции отправки
   }
 }
 </script>
@@ -76,7 +72,6 @@ const handleKeydown = (event: KeyboardEvent) => {
   padding: 12px 48px 12px 16px;
   font-size: 14px;
   resize: none;
-  /* max-height для ~20 строк (20 * 24px line-height) */
   max-height: 480px;
   line-height: 1.5;
   font-family: inherit;
@@ -91,7 +86,6 @@ const handleKeydown = (event: KeyboardEvent) => {
   color: #888;
 }
 
-/* Скроллбар для длинного текста */
 .input-wrapper textarea::-webkit-scrollbar {
   width: 6px;
 }

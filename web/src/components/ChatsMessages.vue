@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import ChatInput from '@/components/ChatInput.vue'
-import ChatMessage from '@/components/ChatMessage.vue'
 </script>
 
 <template>
   <main class="chat-area">
     <div class="messages-container">
-      <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
+<!--      <ChatMessage v-for="message in messages" :key="message.id" :message="message" />-->
     </div>
 
     <ChatInput />

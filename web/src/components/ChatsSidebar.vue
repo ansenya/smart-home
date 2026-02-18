@@ -11,7 +11,7 @@ import SquarePlusIcon from '@/assets/icons/SquarePlusIcon.vue'
     /></BaseButton>
 
     <div class="chat-list">
-      <ChatListItem v-for="chat in chats" :key="chat.id" :chat="chat" />
+<!--      <ChatListItem v-for="chat in chats" :key="chat.id" :chat="chat" />-->
     </div>
   </aside>
 </template>
