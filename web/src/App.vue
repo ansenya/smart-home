@@ -12,14 +12,38 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <Header></Header>
+  <div class="app-layout">
+    <Header />
     <Notivue v-slot="item">
       <Notification :item="item" />
     </Notivue>
+    <main class="main-content">
+      <router-view />
+    </main>
   </div>
-  <router-view></router-view>
 </template>
 
-<style scoped>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+}
 </style>

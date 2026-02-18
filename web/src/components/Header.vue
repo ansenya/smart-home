@@ -1,19 +1,33 @@
 <script setup lang="ts">
 import UserAuth from '@/components/UserAuth.vue'
+import { useAuthStore } from '@/stores/auth.ts'
+import { ref } from 'vue'
+
+const authStore = useAuthStore()
 </script>
 
 <template>
   <header class="header">
-      <router-link to="/" class="logo">Hiphome</router-link>
+    <router-link to="/" class="logo">Hiphome</router-link>
 
     <nav class="nav">
       <router-link to="/" class="nav-link" exact-active-class="exact-active-nav-link">
         Home
       </router-link>
-      <router-link to="/devices" class="nav-link" exact-active-class="exact-active-nav-link">
+      <router-link
+        to="/devices"
+        class="nav-link"
+        exact-active-class="exact-active-nav-link"
+        :class="{ 'nav-link--disabled': !authStore.isAuthenticated }"
+      >
         My Devices
       </router-link>
-      <router-link to="/chats" class="nav-link" exact-active-class="exact-active-nav-link">
+      <router-link
+        to="/chats"
+        class="nav-link"
+        exact-active-class="exact-active-nav-link"
+        :class="{ 'nav-link--disabled': !authStore.isAuthenticated }"
+      >
         Chats
       </router-link>
     </nav>
@@ -65,12 +79,22 @@ import UserAuth from '@/components/UserAuth.vue'
   white-space: nowrap;
 }
 
+.nav-link--disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.nav-link--disabled:hover {
+  background-color: transparent;
+  color: #999;
+}
+
 .exact-active-nav-link {
   color: darkblue;
   outline-color: darkblue;
 }
 
-.nav-link:hover {
+.nav-link:not(.nav-link--disabled):hover {
   background-color: #f0f0f0;
   color: #000;
 }

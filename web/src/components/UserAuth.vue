@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import UserIcon from '@/assets/icons/UserIcon.vue'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import BaseButton from '@/components/BaseButton.vue'
 import { push } from 'notivue'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const isMenuOpen = ref(false)
 const menuContainer = ref<HTMLElement | null>(null)
+
+const shouldHighlight = computed(() => authStore.highlightLogin)
 
 const handleSignUp = async () => {
   push.error('Sorry, not implemented yet')
@@ -19,6 +23,7 @@ const handleLogin = async () => {
 
 const handleLogout = async () => {
   await authStore.logout()
+  await router.replace('/')
 }
 
 const toggleMenu = () => {
@@ -68,7 +73,14 @@ onUnmounted(() => {
     <template v-else>
       <div class="buttons-container">
         <BaseButton variant="secondary" size="md" @click="handleSignUp">SignUp</BaseButton>
-        <BaseButton variant="primary" size="md" @click="handleLogin">Login</BaseButton>
+        <BaseButton
+          variant="primary"
+          size="md"
+          @click="handleLogin"
+          :highlight="authStore.highlightLogin"
+        >
+          Login
+        </BaseButton>
       </div>
     </template>
   </div>

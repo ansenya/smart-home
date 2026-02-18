@@ -5,6 +5,7 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   loading?: boolean
+  highlight?: boolean // ← Новый проп
 }
 
 withDefaults(defineProps<Props>(), {
@@ -13,6 +14,7 @@ withDefaults(defineProps<Props>(), {
   type: 'button',
   disabled: false,
   loading: false,
+  highlight: false, // ← По умолчанию false
 })
 </script>
 
@@ -21,7 +23,7 @@ withDefaults(defineProps<Props>(), {
     :type="type"
     :disabled="disabled || loading"
     class="btn"
-    :class="[`btn--${variant}`, `btn--${size}`]"
+    :class="[`btn--${variant}`, `btn--${size}`, { 'btn--highlight': highlight }]"
   >
     <span v-if="loading" class="btn__loader">⟳</span>
     <slot />
@@ -108,6 +110,31 @@ withDefaults(defineProps<Props>(), {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.btn--highlight {
+  background-color: darkred;
+  animation: shake 1s ease-in-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
   }
 }
 </style>

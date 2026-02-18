@@ -11,8 +11,16 @@ interface User {
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const isLoading = ref(true)
+  const highlightLogin = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)
+
+  const triggerLoginHighlight = () => {
+    highlightLogin.value = true
+    setTimeout(() => {
+      highlightLogin.value = false
+    }, 2000)
+  }
 
   async function fetchUser() {
     isLoading.value = true
@@ -56,5 +64,15 @@ export const useAuthStore = defineStore('auth', () => {
     push.warning('You are logged out')
   }
 
-  return { user, isAuthenticated, isLoading, fetchUser, login, finishLogin, logout }
+  return {
+    user,
+    isAuthenticated,
+    isLoading,
+    highlightLogin,
+    triggerLoginHighlight,
+    fetchUser,
+    login,
+    finishLogin,
+    logout,
+  }
 })
