@@ -115,6 +115,63 @@ CREATE TABLE oauth_clients
     deleted_at    timestamptz      DEFAULT null
 );
 
+CREATE TYPE llm_message_status AS ENUM ('pending', 'completed', 'failed');
+CREATE TABLE llm_chats
+(
+    id         UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    user_id    UUID             NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    model      VARCHAR(64)      NOT NULL,
+    title      TEXT             NOT NULL DEFAULT '',
+    created_at timestamptz      NOT NULL DEFAULT NOW(),
+    deleted_at timestamptz               DEFAULT NULL
+);
+
+CREATE TABLE llm_chat_message
+(
+    id            UUID PRIMARY KEY   NOT NULL DEFAULT uuid_generate_v4(),
+    chat_id       UUID               NOT NULL REFERENCES llm_chats (id) ON DELETE CASCADE,
+    role          TEXT               NOT NULL CHECK (role IN ('user', 'assistant', 'system', 'tool')),
+    model_name    VARCHAR(64)        NOT NULL,
+
+    input_tokens  INTEGER                     DEFAULT 0,
+    output_tokens INTEGER                     DEFAULT 0,
+    content       TEXT                        DEFAULT '',
+
+    tool_call_id  VARCHAR(255)                DEFAULT NULL,
+    tool_name     VARCHAR(255)                DEFAULT NULL,
+    tool_args     JSONB                       DEFAULT NULL,
+    tool_result   JSONB                       DEFAULT NULL,
+
+    status        llm_message_status NOT NULL DEFAULT 'completed',
+    created_at    timestamptz        NOT NULL DEFAULT NOW(),
+    updated_at    timestamptz        NOT NULL DEFAULT NOW(),
+    deleted_at    timestamptz                 DEFAULT NULL
+);
+CREATE TABLE user_settings
+(
+    id            UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    user_id       UUID UNIQUE NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    language      VARCHAR(10)          DEFAULT 'ru',
+    timezone      VARCHAR(64)          DEFAULT 'Europe/Moscow',
+    llm_config    JSONB                DEFAULT '{}'::jsonb,
+    notifications JSONB                DEFAULT '{}'::jsonb,
+    preferences   JSONB                DEFAULT '{}'::jsonb,
+    created_at    timestamptz NOT NULL DEFAULT NOW(),
+    updated_at    timestamptz NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE user_llm_keys
+(
+    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id       UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    provider      TEXT NOT NULL,
+    key_encrypted TEXT NOT NULL,
+    is_active     BOOLEAN          DEFAULT TRUE,
+    last_used_at  timestamptz,
+    created_at    timestamptz      DEFAULT NOW(),
+    UNIQUE (user_id, provider)
+);
+
 GRANT CONNECT ON DATABASE "smart-home" TO "user";
 
 GRANT USAGE ON SCHEMA public TO "user";
