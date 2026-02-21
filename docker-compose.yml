@@ -52,6 +52,8 @@ services:
     environment:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       GIN_MODE: ${GIN_MODE}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PROXY_URL: ${PROXY_URL}
       TZ: Europe/Moscow
     restart: unless-stopped
 
@@ -84,6 +86,7 @@ services:
       - auth-web
       - web
       - adapter
+      - llm-service
     ports:
       - "8080:80"
     volumes:
