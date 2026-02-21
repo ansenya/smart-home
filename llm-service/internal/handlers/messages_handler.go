@@ -121,7 +121,7 @@ func (h *messagesHandler) SendMessage(c *gin.Context) {
 		CreatedAt:    msg.CreatedAt,
 	})
 }
-func (h *chatHandler) sendMessageStream(c *gin.Context, chatID, userID uuid.UUID, content string) {
+func (h *messagesHandler) sendMessageStream(c *gin.Context, chatID, userID uuid.UUID, content string) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")

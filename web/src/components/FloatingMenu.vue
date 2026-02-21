@@ -5,8 +5,10 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import PairingModal from '@/components/modals/PairingModal.vue'
 import { push } from 'notivue'
 import { useAuthStore } from '@/stores/auth.ts'
+import { useFloatingButtonDevicesButtonStore } from '@/stores/floatingButtonDevicesButtonStore.ts'
 
 const authStore = useAuthStore()
+const floatingButtonStore = useFloatingButtonDevicesButtonStore()
 
 const isOpen = ref(false)
 const isPairingOpen = ref(false)
@@ -14,6 +16,7 @@ const menuRef = ref<HTMLElement | null>(null)
 const isShaking = ref(false)
 
 const toggleMenu = () => {
+  floatingButtonStore.incr()
   if (!authStore.isAuthenticated) {
     isShaking.value = true
     setTimeout(() => {
@@ -88,7 +91,10 @@ onUnmounted(() => {
       class="floating-btn"
       :class="{ shake: isShaking }"
     >
-      <WrenchIcon class="icon" :class="{ 'rotate-icon': isOpen }" />
+      <WrenchIcon
+        class="icon"
+        :class="{ 'rotate-icon': isOpen, 'fan-spin': floatingButtonStore.isFan }"
+      />
     </BaseButton>
 
     <PairingModal v-model="isPairingOpen" @success="handlePairingSuccess" />
@@ -158,6 +164,23 @@ onUnmounted(() => {
   font-size: 24px;
   line-height: 1;
 }
+@keyframes fan-spin {
+  from {
+    transform: rotate(0deg);
+    bottom: 0;
+    right: 0;
+  }
+  to {
+    transform: rotate(360deg);
+    bottom: 24px;
+    right: 25px;
+  }
+}
+
+.fan-spin {
+  animation: fan-spin 0.1s linear infinite;
+}
+
 .floating-menu {
   background: white;
   border-radius: 12px;

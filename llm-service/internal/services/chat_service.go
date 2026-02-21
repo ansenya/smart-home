@@ -360,10 +360,10 @@ func (s *chatService) callLLM(ctx context.Context, chatID, userID uuid.UUID, mes
 	return response, nil
 }
 
-func NewChatService(repos *repositories.Container, registry *ToolRegistry) ChatService {
+func NewChatService(repos *repositories.Container, registry *ToolRegistry, openaiClient clients.LLMClient) ChatService {
 	return &chatService{
 		chatRepository: repos.ChatRepository,
 		toolRegistry:   registry,
-		llmClient:      clients.NewOpenAIClient(),
+		llmClient:      openaiClient,
 	}
 }

@@ -29,7 +29,10 @@ func main() {
 
 	// services
 	repos := repositories.NewContainer(dbClient)
-	svcs := services.NewContainer(repos)
+	svcs, err := services.NewContainer(cfg, repos)
+	if err != nil {
+		panic(err)
+	}
 
 	// router
 	router := handlers.NewRouter(cfg, svcs, repos)

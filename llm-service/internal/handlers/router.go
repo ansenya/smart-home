@@ -65,8 +65,8 @@ func NewRouter(cfg *config.Container, svcs *services.Container, repos *repositor
 		cfg:    cfg,
 
 		HealthHandler:   NewHealthHandler(),
-		ChatHandler:     NewChatHandler(),
-		MessagesHandler: NewMessagesHandler(),
+		ChatHandler:     NewChatHandler(svcs),
+		MessagesHandler: NewMessagesHandler(svcs),
 	}
 
 	router.configureCors()

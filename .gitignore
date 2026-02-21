@@ -1,3 +1,5 @@
 *.idea
 keys
 db/data
+.env
+docs.yaml

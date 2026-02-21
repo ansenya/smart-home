@@ -18,6 +18,6 @@ func NewContainer(cfg *config.Container, repos *repositories.Container) (*Contai
 		return nil, fmt.Errorf("failed to create open ai client: %w", err)
 	}
 	return &Container{
-		ChatService: NewChatService(repos, toolRegistry),
+		ChatService: NewChatService(repos, toolRegistry, openaiClient),
 	}, nil
 }
