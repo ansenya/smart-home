@@ -10,16 +10,16 @@ import (
 
 func SessionAuth(repo repositories.SessionRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sessionID, err := c.Cookie("session_id")
+		sessionID, err := c.Cookie("sid")
 
 		if err != nil || sessionID == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "session_id required"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "sid required"})
 			return
 		}
 
 		uid, err := uuid.Parse(sessionID)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid session_id"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid sid"})
 			return
 		}
 
