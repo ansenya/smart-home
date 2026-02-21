@@ -27,7 +27,6 @@ const (
 
 type Chat struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	UserID    uuid.UUID      `gorm:"type:uuid;not null;index" json:"-"`
 	Model     string         `gorm:"size:64;not null" json:"model"`
 	Title     string         `gorm:"not null;default:'New Chat'" json:"title"`
 	CreatedAt time.Time      `json:"created_at"`

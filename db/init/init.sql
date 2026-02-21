@@ -123,6 +123,7 @@ CREATE TABLE llm_chats
     model      VARCHAR(64)      NOT NULL,
     title      TEXT             NOT NULL DEFAULT '',
     created_at timestamptz      NOT NULL DEFAULT NOW(),
+    updated_at timestamptz      NOT NULL DEFAULT NOW(),
     deleted_at timestamptz               DEFAULT NULL
 );
 
