@@ -37,6 +37,10 @@ type Chat struct {
 	Messages []Message `gorm:"foreignKey:ChatID" json:"-"`
 }
 
+func (Chat) TableName() string {
+	return "llm_chats"
+}
+
 type Message struct {
 	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	ChatID uuid.UUID `gorm:"type:uuid;not null;index" json:"-"`
@@ -60,4 +64,8 @@ type Message struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (Message) TableName() string {
+	return "llm_chat_message"
 }
