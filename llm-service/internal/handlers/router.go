@@ -43,6 +43,7 @@ func (r *Router) configureCors() {
 
 	r.engine.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
+			"http://localhost:5173",
 			"https://smarthome.hipahopa.ru",
 		},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
