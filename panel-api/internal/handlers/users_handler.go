@@ -103,6 +103,7 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(SessionIDName, session.ID.String(), int(tokens.ExpiresIn), "/", DomainName, true, true)
 	c.JSON(http.StatusOK, session)
 }
