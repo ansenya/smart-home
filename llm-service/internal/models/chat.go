@@ -27,6 +27,7 @@ const (
 
 type Chat struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	UserID    uuid.UUID      `gorm:"type:uuid;not null;index" json:"-"`
 	Model     string         `gorm:"size:64;not null" json:"model"`
 	Title     string         `gorm:"not null;default:'New Chat'" json:"title"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -43,7 +44,6 @@ func (Chat) TableName() string {
 type Message struct {
 	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	ChatID uuid.UUID `gorm:"type:uuid;not null;index" json:"-"`
-	UserID uuid.UUID `gorm:"type:uuid;not null" json:"-"`
 
 	Role      MessageRole `gorm:"type:varchar(20);not null" json:"role"`
 	ModelName string      `gorm:"size:64;not null" json:"model_name"`

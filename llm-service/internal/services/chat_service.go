@@ -140,7 +140,6 @@ func (s *chatService) SendMessage(ctx context.Context, chatID uuid.UUID, userID 
 	userMsg := &models.Message{
 		ID:        uuid.New(),
 		ChatID:    chatID,
-		UserID:    userID,
 		Role:      models.RoleUser,
 		ModelName: "user",
 		Content:   content,
@@ -181,7 +180,6 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 	userMsg := &models.Message{
 		ID:        uuid.New(),
 		ChatID:    chatID,
-		UserID:    userID,
 		Role:      models.RoleUser,
 		ModelName: "user",
 		Content:   content,
@@ -235,7 +233,6 @@ func (s *chatService) runLLMWithTools(ctx context.Context, chat *models.Chat, us
 			toolMsg := &models.Message{
 				ID:         uuid.New(),
 				ChatID:     chat.ID,
-				UserID:     userID,
 				Role:       models.RoleAssistant,
 				ModelName:  chat.Model,
 				Content:    "",
@@ -263,7 +260,6 @@ func (s *chatService) runLLMWithTools(ctx context.Context, chat *models.Chat, us
 			resultMsg := &models.Message{
 				ID:         uuid.New(),
 				ChatID:     chat.ID,
-				UserID:     userID,
 				Role:       models.RoleTool,
 				ModelName:  chat.Model,
 				Content:    result,
@@ -295,7 +291,6 @@ func (s *chatService) runLLMWithTools(ctx context.Context, chat *models.Chat, us
 		assistantMsg := &models.Message{
 			ID:           uuid.New(),
 			ChatID:       chat.ID,
-			UserID:       userID,
 			Role:         models.RoleAssistant,
 			ModelName:    chat.Model,
 			Content:      lastResponse.Content,

@@ -19,7 +19,7 @@ type OpenaiClient struct {
 
 func (c *OpenaiClient) GenerateStream(ctx context.Context, messages []Message, specs []tools.ToolSpec, tokenChan chan<- string) (*LLMResponse, error) {
 	req := openai.ChatCompletionRequest{
-		Model:               "gpt-4o",
+		Model:               "gpt-5.2",
 		Temperature:         0.3,
 		MaxCompletionTokens: 1500,
 		Stream:              true, // Включаем стриминг
@@ -164,8 +164,7 @@ func NewOpenAIClient(apiKey string, proxyURL string) (LLMClient, error) {
 
 func (c *OpenaiClient) Generate(ctx context.Context, messages []Message, specs []tools.ToolSpec) (*LLMResponse, error) {
 	req := openai.ChatCompletionRequest{
-		Model:               "gpt-4o",
-		Temperature:         0.3,
+		Model:               "gpt-5.2",
 		MaxCompletionTokens: 1500,
 		Messages: func() []openai.ChatCompletionMessage {
 			out := make([]openai.ChatCompletionMessage, len(messages))
