@@ -12,7 +12,7 @@ import (
 
 const (
 	SessionIDName = "sid"
-	DomainName    = "api.smarthome.hipahopa.ru"
+	DomainName    = ".smarthome.hipahopa.ru"
 )
 
 type Router struct {
