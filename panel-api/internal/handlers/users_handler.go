@@ -104,6 +104,6 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie(SessionIDName, session.ID.String(), int(tokens.ExpiresIn), "/", DomainName, true, true)
+	c.SetCookie(SessionIDName, session.ID.String(), int(tokens.ExpiresIn), "/", "", true, true)
 	c.JSON(http.StatusOK, session)
 }
