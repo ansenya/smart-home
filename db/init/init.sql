@@ -140,8 +140,8 @@ CREATE TABLE llm_chat_message
 
     tool_call_id  VARCHAR(255)                DEFAULT NULL,
     tool_name     VARCHAR(255)                DEFAULT NULL,
-    tool_args     JSONB                       DEFAULT NULL,
-    tool_result   JSONB                       DEFAULT NULL,
+    tool_args     JSONB                       DEFAULT '{}'::jsonb,
+    tool_result   JSONB                       DEFAULT '{}'::jsonb,
 
     status        llm_message_status NOT NULL DEFAULT 'completed',
     created_at    timestamptz        NOT NULL DEFAULT NOW(),
@@ -172,6 +172,10 @@ CREATE TABLE user_llm_keys
     created_at    timestamptz      DEFAULT NOW(),
     UNIQUE (user_id, provider)
 );
+
+INSERT INTO oauth_clients (id, name, redirect_uri, enabled)
+VALUES ('c85e6304-7f65-49f9-8145-823bd71a5a83', 'smart-home-web', 'https://smarthome.hipahopa.ru/auth/callback', true)
+ON CONFLICT (id) DO NOTHING;
 
 GRANT CONNECT ON DATABASE "smart-home" TO "user";
 

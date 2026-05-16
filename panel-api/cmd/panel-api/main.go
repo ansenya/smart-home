@@ -10,6 +10,7 @@ import (
 	"panel-api/internal/infra/db"
 	"panel-api/internal/repositories"
 	"panel-api/internal/services"
+	"panel-api/internal/utils"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func main() {
 
 	// services
 	oauthService := services.NewOauthService(services.OauthConfig{
-		BaseURL:       "https://api.id.smarthome.hipahopa.ru",
+		BaseURL:       utils.GetEnv("AUTH_SERVICE_URL", "https://api.id.smarthome.hipahopa.ru"),
 		TokenEndpoint: "/oauth/token",
 		UserEndpoint:  "/oauth/userinfo",
 		Timeout:       5 * time.Second,

@@ -2,18 +2,22 @@ package handlers
 
 import (
 	"log/slog"
+	"os"
 	"panel-api/internal/config"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-// todo надо перейти на разные домены для разных кусков бэкенда
+const SessionIDName = "sid"
 
-const (
-	SessionIDName = "sid"
-	DomainName    = ".smarthome.hipahopa.ru"
-)
+var DomainName = func() string {
+	if v := os.Getenv("PANEL_COOKIE_DOMAIN"); v != "" {
+		return v
+	}
+	return ".smarthome.hipahopa.ru"
+}()
 
 type Router struct {
 	engine *gin.Engine
@@ -50,11 +54,14 @@ func (r *Router) Run() error {
 
 func (r *Router) configureCors() {
 	r.log.Info("initializing cors")
+
+	origins := []string{"https://smarthome.hipahopa.ru", "http://localhost:5173"}
+	if extra := os.Getenv("CORS_ALLOWED_ORIGINS"); extra != "" {
+		origins = append(origins, strings.Split(extra, ",")...)
+	}
+
 	r.engine.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"https://smarthome.hipahopa.ru",
-			"http://localhost:5173",
-		},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

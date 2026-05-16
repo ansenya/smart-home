@@ -5,7 +5,7 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
   loading?: boolean
-  highlight?: boolean // ← Новый проп
+  highlight?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
@@ -14,7 +14,7 @@ withDefaults(defineProps<Props>(), {
   type: 'button',
   disabled: false,
   loading: false,
-  highlight: false, // ← По умолчанию false
+  highlight: false,
 })
 </script>
 
@@ -25,7 +25,7 @@ withDefaults(defineProps<Props>(), {
     class="btn"
     :class="[`btn--${variant}`, `btn--${size}`, { 'btn--highlight': highlight }]"
   >
-    <span v-if="loading" class="btn__loader">⟳</span>
+    <span v-if="loading" class="btn__loader" />
     <slot />
   </button>
 </template>
@@ -35,106 +35,95 @@ withDefaults(defineProps<Props>(), {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-family: inherit;
+  white-space: nowrap;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
+/* Variants */
 .btn--primary {
-  background: #3b82f6;
-  color: white;
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
 }
 .btn--primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #4f46e5;
+  border-color: #4f46e5;
 }
 
 .btn--secondary {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: #1e1e1e;
+  color: #a3a3a3;
+  border-color: #2a2a2a;
 }
 .btn--secondary:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: #252525;
+  color: #e5e5e5;
+  border-color: #333;
 }
 
 .btn--danger {
-  background: #fee2e2;
-  color: #dc2626;
+  background: transparent;
+  color: #f87171;
+  border-color: #3f1515;
 }
 .btn--danger:hover:not(:disabled) {
-  background: #fecaca;
+  background: #1f0f0f;
+  border-color: #7f1d1d;
 }
 
 .btn--ghost {
   background: transparent;
-  color: #1f2937;
+  color: #737373;
+  border-color: transparent;
 }
 .btn--ghost:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: #1a1a1a;
+  color: #e5e5e5;
 }
 
-.btn--sm {
-  padding: 4px 12px;
-  font-size: 13px;
-}
+/* Sizes */
+.btn--sm  { padding: 5px 10px; font-size: 12px; }
+.btn--md  { padding: 7px 14px; font-size: 14px; }
+.btn--lg  { padding: 10px 20px; font-size: 15px; }
+.btn--icon { padding: 8px; border-radius: 50%; }
 
-.btn--md {
-  padding: 8px 16px;
-  font-size: 14px;
-}
-
-.btn--lg {
-  padding: 12px 24px;
-  font-size: 16px;
-}
-
-.btn--icon {
-  padding: 8px;
-  border-radius: 50%;
-}
-
+/* Loader */
 .btn__loader {
-  animation: spin 1s linear infinite;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
+/* Highlight (shake + red for login prompt) */
 .btn--highlight {
-  background-color: darkred;
-  animation: shake 1s ease-in-out;
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+  animation: shake 0.5s ease-in-out;
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-4px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(4px);
-  }
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
 }
 </style>

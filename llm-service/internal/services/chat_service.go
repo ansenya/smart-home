@@ -5,12 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"llm-service/internal/agents"
 	"llm-service/internal/clients"
+	"llm-service/internal/config"
+	"llm-service/internal/dto"
 	"llm-service/internal/models"
 	"llm-service/internal/repositories"
+	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -27,18 +33,33 @@ type ChatService interface {
 	UpdateChat(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, title string, model string) (*models.Chat, error)
 	DeleteChat(ctx context.Context, chatID uuid.UUID, userID uuid.UUID) error
 	GetHistory(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, limit int) ([]models.Message, error)
-	SendMessage(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string) (*models.Message, error)
+
+	SendMessage(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string) (*dto.MessageResponse, error)
 	StreamResponse(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string, tokenChan chan string) error
+	GenerateTitle(ctx context.Context, chatID uuid.UUID, userID uuid.UUID) (string, error)
 }
+
 type chatService struct {
-	chatRepository repositories.ChatRepository
-	toolRegistry   *ToolRegistry
-	llmClient      clients.LLMClient
+	chatRepository    repositories.ChatRepository
+	messageRepository repositories.MessageRepository
+	orchestrator      agents.Orchestrator
+
+	log *slog.Logger
+}
+
+func NewChatService(cfg *config.Container, repos *repositories.Container, orchestrator agents.Orchestrator) ChatService {
+	return &chatService{
+		chatRepository:    repos.ChatRepository,
+		messageRepository: repos.MessageRepository,
+		orchestrator:      orchestrator,
+
+		log: cfg.Log,
+	}
 }
 
 func (s *chatService) CreateChat(ctx context.Context, userID uuid.UUID, model, title string) (*models.Chat, error) {
 	if model == "" {
-		model = "gpt-5.2"
+		model = "gpt-4o"
 	}
 	if title == "" {
 		title = "New Chat"
@@ -51,14 +72,14 @@ func (s *chatService) CreateChat(ctx context.Context, userID uuid.UUID, model, t
 		Title:  title,
 	}
 
-	if err := s.chatRepository.CreateChat(ctx, chat); err != nil {
+	if err := s.chatRepository.Create(ctx, chat); err != nil {
 		return nil, fmt.Errorf("failed to create chat: %w", err)
 	}
 	return chat, nil
 }
 
 func (s *chatService) GetUserChats(ctx context.Context, userID uuid.UUID, limit int) ([]models.Chat, error) {
-	chats, err := s.chatRepository.GetChatsByUser(ctx, userID, limit)
+	chats, err := s.chatRepository.ListByUser(ctx, userID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch chats by user: %w", err)
 	}
@@ -66,9 +87,12 @@ func (s *chatService) GetUserChats(ctx context.Context, userID uuid.UUID, limit 
 }
 
 func (s *chatService) GetChat(ctx context.Context, chatID uuid.UUID, userID uuid.UUID) (*models.Chat, error) {
-	chat, err := s.chatRepository.GetChatByID(ctx, chatID, userID)
+	chat, err := s.chatRepository.GetByID(ctx, chatID, userID)
 	if err != nil {
-		return nil, ErrChatNotFound
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrChatNotFound
+		}
+		return nil, fmt.Errorf("get chat failed: %w", err)
 	}
 
 	if chat.UserID != userID {
@@ -92,7 +116,7 @@ func (s *chatService) UpdateChat(ctx context.Context, chatID uuid.UUID, userID u
 	}
 	chat.UpdatedAt = time.Now()
 
-	if err := s.chatRepository.UpdateChat(ctx, chat); err != nil {
+	if err := s.chatRepository.Update(ctx, chat); err != nil {
 		return nil, fmt.Errorf("failed to update chat: %w", err)
 	}
 
@@ -105,7 +129,7 @@ func (s *chatService) DeleteChat(ctx context.Context, chatID uuid.UUID, userID u
 		return err
 	}
 
-	if err := s.chatRepository.DeleteChat(ctx, chatID, userID); err != nil {
+	if err := s.chatRepository.Delete(ctx, chatID, userID); err != nil {
 		return fmt.Errorf("failed to delete chat: %w", err)
 	}
 
@@ -118,7 +142,7 @@ func (s *chatService) GetHistory(ctx context.Context, chatID uuid.UUID, userID u
 		return nil, err
 	}
 
-	msgs, err := s.chatRepository.GetMessagesByChatID(ctx, chatID, limit)
+	msgs, err := s.messageRepository.ListByChat(ctx, chatID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get messages: %w", err)
 	}
@@ -126,239 +150,212 @@ func (s *chatService) GetHistory(ctx context.Context, chatID uuid.UUID, userID u
 	return msgs, nil
 }
 
-func (s *chatService) SendMessage(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string) (*models.Message, error) {
-	if content == "" {
-		return nil, ErrInvalidContent
-	}
-
+func (s *chatService) SendMessage(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string) (*dto.MessageResponse, error) {
 	chat, err := s.GetChat(ctx, chatID, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 1. Сохраняем сообщение пользователя
+	history, err := s.messageRepository.ListByChat(ctx, chatID, 50)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get messages: %w", err)
+	}
+
+	// Persist user message
 	userMsg := &models.Message{
 		ID:        uuid.New(),
 		ChatID:    chatID,
 		Role:      models.RoleUser,
-		ModelName: "user",
 		Content:   content,
+		ModelName: chat.Model,
 		Status:    models.StatusCompleted,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	}
+	if err := s.messageRepository.Create(ctx, userMsg); err != nil {
+		return nil, fmt.Errorf("failed to save user message: %w", err)
 	}
 
-	if err := s.chatRepository.CreateMessage(ctx, userMsg); err != nil {
-		return nil, fmt.Errorf("failed to create user message: %w", err)
-	}
+	allMessages := append(history, *userMsg)
 
-	// 2. Запускаем цикл генерации (с поддержкой tools)
-	assistantMsg, err := s.runLLMWithTools(ctx, chat, userID, false, nil)
+	resp, err := s.orchestrator.Handle(ctx, agents.ChatRequest{
+		UserID:   userID,
+		ChatID:   chatID,
+		Messages: allMessages,
+		Model:    chat.Model,
+		Channel:  agents.ChannelWeb,
+	})
 	if err != nil {
-		// Помечаем сообщение пользователя как failed
-		userMsg.Status = models.StatusFailed
-		s.chatRepository.UpdateMessage(ctx, userMsg)
-		return nil, fmt.Errorf("llm execution failed: %w", err)
+		return nil, fmt.Errorf("failed to send message: %w", err)
 	}
 
-	return assistantMsg, nil
+	// Persist new messages from orchestrator (tool calls + final assistant)
+	if err := s.persistNewMessages(ctx, chatID, chat.Model, resp.NewMessages); err != nil {
+		s.log.Error("failed to persist orchestrator messages", slog.Any("err", err))
+	}
+
+	return &dto.MessageResponse{Content: resp.Output}, nil
 }
 
 func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, userID uuid.UUID, content string, tokenChan chan string) error {
-	defer close(tokenChan)
-
-	if content == "" {
-		return ErrInvalidContent
-	}
-
 	chat, err := s.GetChat(ctx, chatID, userID)
 	if err != nil {
 		return err
 	}
 
-	// 1. Сохраняем сообщение пользователя
+	history, err := s.messageRepository.ListByChat(ctx, chatID, 50)
+	if err != nil {
+		return fmt.Errorf("failed to get messages: %w", err)
+	}
+
+	// Persist user message
 	userMsg := &models.Message{
 		ID:        uuid.New(),
 		ChatID:    chatID,
 		Role:      models.RoleUser,
-		ModelName: "user",
 		Content:   content,
+		ModelName: chat.Model,
 		Status:    models.StatusCompleted,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	}
+	if err := s.messageRepository.Create(ctx, userMsg); err != nil {
+		return fmt.Errorf("failed to save user message: %w", err)
 	}
 
-	if err := s.chatRepository.CreateMessage(ctx, userMsg); err != nil {
-		return fmt.Errorf("failed to create user message: %w", err)
-	}
+	allMessages := append(history, *userMsg)
 
-	// 2. Запускаем цикл генерации со стримингом
-	_, err = s.runLLMWithTools(ctx, chat, userID, true, tokenChan)
+	eventChan, err := s.orchestrator.Stream(ctx, agents.ChatRequest{
+		UserID:   userID,
+		ChatID:   chatID,
+		Messages: allMessages,
+		Model:    chat.Model,
+		Channel:  agents.ChannelWeb,
+	})
 	if err != nil {
-		return fmt.Errorf("llm streaming failed: %w", err)
+		return fmt.Errorf("failed to start stream: %w", err)
+	}
+
+	var fullContent strings.Builder
+	for ev := range eventChan {
+		if ev.Done {
+			break
+		}
+		if ev.ContentDelta != "" {
+			tokenChan <- ev.ContentDelta
+			fullContent.WriteString(ev.ContentDelta)
+		}
+	}
+	close(tokenChan)
+
+	// Persist assistant response
+	if fullContent.Len() > 0 {
+		assistantMsg := &models.Message{
+			ID:        uuid.New(),
+			ChatID:    chatID,
+			Role:      models.RoleAssistant,
+			Content:   fullContent.String(),
+			ModelName: chat.Model,
+			Status:    models.StatusCompleted,
+		}
+		if err := s.messageRepository.Create(ctx, assistantMsg); err != nil {
+			s.log.Error("failed to persist assistant message", slog.Any("err", err))
+		}
 	}
 
 	return nil
 }
 
-// runLLMWithTools - основной цикл с поддержкой инструментов
-func (s *chatService) runLLMWithTools(ctx context.Context, chat *models.Chat, userID uuid.UUID, isStream bool, tokenChan chan string) (*models.Message, error) {
-	// Получаем историю для контекста
-	history, err := s.chatRepository.GetMessagesByChatID(ctx, chat.ID, 50)
+func (s *chatService) persistNewMessages(ctx context.Context, chatID uuid.UUID, modelName string, msgs []clients.Message) error {
+	for _, m := range msgs {
+		msg := &models.Message{
+			ID:        uuid.New(),
+			ChatID:    chatID,
+			Role:      models.MessageRole(m.Role),
+			Content:   m.Content,
+			ModelName: modelName,
+			Status:    models.StatusCompleted,
+		}
+
+		if m.ToolCallID != "" {
+			msg.ToolCallID = &m.ToolCallID
+		}
+		if m.Name != "" {
+			msg.ToolName = &m.Name
+		}
+		if len(m.ToolCalls) > 0 {
+			raw, _ := json.Marshal(m.ToolCalls)
+			rawMsg := json.RawMessage(raw)
+			msg.ToolArgs = &rawMsg
+		}
+		if m.Role == clients.RoleTool && m.Content != "" {
+			raw := json.RawMessage(`{"result":` + jsonQuote(m.Content) + `}`)
+			msg.ToolResult = &raw
+		}
+
+		if err := s.messageRepository.Create(ctx, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func jsonQuote(s string) string {
+	b, _ := json.Marshal(s)
+	return string(b)
+}
+
+func (s *chatService) GenerateTitle(ctx context.Context, chatID uuid.UUID, userID uuid.UUID) (string, error) {
+	chat, err := s.GetChat(ctx, chatID, userID)
 	if err != nil {
-		history = []models.Message{}
+		return "", err
 	}
 
-	// Конвертируем в формат клиента
-	messages := s.buildMessages(history)
-
-	// Цикл генерации (максимум 5 итераций для tools)
-	var lastResponse *clients.LLMResponse
-	for iteration := 0; iteration < 5; iteration++ {
-
-		// Вызов LLM
-		if isStream {
-			lastResponse, err = s.llmClient.GenerateStream(ctx, messages, s.toolRegistry.GetAllSpecs(), tokenChan)
-		} else {
-			lastResponse, err = s.llmClient.Generate(ctx, messages, s.toolRegistry.GetAllSpecs())
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("llm generate failed: %w", err)
-		}
-
-		// Если есть вызов инструмента - выполняем его
-		if lastResponse.ToolCall != nil {
-			// Сохраняем вызов инструмента в БД
-			toolMsg := &models.Message{
-				ID:         uuid.New(),
-				ChatID:     chat.ID,
-				Role:       models.RoleAssistant,
-				ModelName:  chat.Model,
-				Content:    "",
-				ToolCallID: &lastResponse.ToolCall.ID,
-				ToolName:   &lastResponse.ToolCall.Name,
-				ToolArgs:   lastResponse.ToolCall.Args,
-				Status:     models.StatusCompleted,
-				CreatedAt:  time.Now(),
-				UpdatedAt:  time.Now(),
-			}
-			s.chatRepository.CreateMessage(ctx, toolMsg)
-
-			// Находим и выполняем инструмент
-			tool := s.toolRegistry.Get(lastResponse.ToolCall.Name)
-			if tool == nil {
-				return nil, fmt.Errorf("tool not found: %s", lastResponse.ToolCall.Name)
-			}
-
-			result, err := tool.Call(ctx, userID, lastResponse.ToolCall.Args)
-			if err != nil {
-				result = fmt.Sprintf("Error: %v", err)
-			}
-
-			// Сохраняем результат инструмента
-			resultMsg := &models.Message{
-				ID:         uuid.New(),
-				ChatID:     chat.ID,
-				Role:       models.RoleTool,
-				ModelName:  chat.Model,
-				Content:    result,
-				ToolCallID: &lastResponse.ToolCall.ID,
-				ToolName:   &lastResponse.ToolCall.Name,
-				ToolResult: json.RawMessage(result),
-				Status:     models.StatusCompleted,
-				CreatedAt:  time.Now(),
-				UpdatedAt:  time.Now(),
-			}
-			s.chatRepository.CreateMessage(ctx, resultMsg)
-
-			// Добавляем в контекст для следующего цикла
-			messages = append(messages, clients.Message{
-				Role:      "assistant",
-				ToolCalls: lastResponse.ToolCallRaw,
-			})
-			messages = append(messages, clients.Message{
-				Role:       "tool",
-				Content:    result,
-				ToolCallID: lastResponse.ToolCall.ID,
-			})
-
-			// Продолжаем цикл для получения финального ответа
-			continue
-		}
-
-		// Финальный ответ - сохраняем и возвращаем
-		assistantMsg := &models.Message{
-			ID:           uuid.New(),
-			ChatID:       chat.ID,
-			Role:         models.RoleAssistant,
-			ModelName:    chat.Model,
-			Content:      lastResponse.Content,
-			InputTokens:  0, // Можно получить из ответа клиента
-			OutputTokens: 0,
-			Status:       models.StatusCompleted,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-		}
-
-		if err := s.chatRepository.CreateMessage(ctx, assistantMsg); err != nil {
-			return nil, err
-		}
-
-		return assistantMsg, nil
-	}
-
-	return nil, fmt.Errorf("max tool iterations exceeded")
-}
-
-func (s *chatService) buildMessages(history []models.Message) []clients.Message {
-	messages := make([]clients.Message, 0, len(history))
-	for _, msg := range history {
-		m := clients.Message{
-			Role:    string(msg.Role),
-			Content: msg.Content,
-		}
-
-		if msg.Role == models.RoleAssistant && msg.ToolCallID != nil {
-			// TODO: конвертировать ToolArgs в ToolCalls формат OpenAI
-		}
-
-		if msg.Role == models.RoleTool && msg.ToolCallID != nil {
-			m.ToolCallID = *msg.ToolCallID
-		}
-
-		messages = append(messages, m)
-	}
-	return messages
-}
-
-func (s *chatService) callLLM(ctx context.Context, chatID, userID uuid.UUID, messages []clients.Message) (*clients.LLMResponse, error) {
-	specs := s.toolRegistry.GetAllSpecs()
-
-	response, err := s.llmClient.Generate(ctx, messages, specs)
+	// Find first user message
+	msgs, err := s.messageRepository.ListByChat(ctx, chatID, 5)
 	if err != nil {
-		return nil, fmt.Errorf("failed to call LLM: %w", err)
+		return "", err
 	}
-
-	if response.ToolCall != nil {
-		tool := s.toolRegistry.Get(response.ToolCall.Name)
-		if tool != nil {
-			result, err := tool.Call(ctx, userID, response.ToolCall.Args)
-			if err != nil {
-				return nil, fmt.Errorf("tool call failed: %w", err)
-			}
-			// Здесь можно обработать результат
-			_ = result
+	var firstUserContent string
+	for _, m := range msgs {
+		if m.Role == models.RoleUser {
+			firstUserContent = m.Content
+			break
 		}
 	}
-
-	return response, nil
-}
-
-func NewChatService(repos *repositories.Container, registry *ToolRegistry, openaiClient clients.LLMClient) ChatService {
-	return &chatService{
-		chatRepository: repos.ChatRepository,
-		toolRegistry:   registry,
-		llmClient:      openaiClient,
+	if firstUserContent == "" {
+		return "", fmt.Errorf("no user messages found")
 	}
+
+	// Trim long messages
+	if len(firstUserContent) > 400 {
+		firstUserContent = firstUserContent[:400]
+	}
+
+	resp, err := s.orchestrator.Handle(ctx, agents.ChatRequest{
+		UserID: userID,
+		ChatID: chatID,
+		Model:  chat.Model,
+		Messages: []models.Message{
+			{
+				Role:      models.RoleUser,
+				Content:   "Generate a short title (3-6 words) for a chat that starts with this message. Reply with ONLY the title, no quotes, no punctuation at the end:\n\n" + firstUserContent,
+				ModelName: chat.Model,
+			},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	title := strings.TrimSpace(resp.Output)
+	// Strip surrounding quotes if model adds them
+	title = strings.Trim(title, `"'`)
+	if len(title) > 100 {
+		title = title[:100]
+	}
+
+	chat.Title = title
+	chat.UpdatedAt = time.Now()
+	if err := s.chatRepository.Update(ctx, chat); err != nil {
+		return "", err
+	}
+
+	return title, nil
 }

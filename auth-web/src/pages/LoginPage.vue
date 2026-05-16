@@ -1,142 +1,142 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+  <AuthLayout>
+    <!-- OAuth error -->
+    <div v-if="queryError" class="text-center">
+      <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <p class="text-sm text-slate-500">{{ queryError }}</p>
+    </div>
 
-      <h1 class="text-2xl font-bold mb-6">Login</h1>
+    <!-- Already logged in -->
+    <div v-else-if="user">
+      <div class="mb-8">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1">Вы вошли</h2>
+        <p class="text-slate-500 text-sm">{{ user.email }}</p>
+      </div>
+      <button @click="handleAuthorize" class="btn-primary w-full mb-3">
+        Продолжить
+      </button>
+      <button @click="handleLogout" class="btn-ghost w-full">
+        Выйти из аккаунта
+      </button>
+    </div>
 
-      <!-- Ошибка в query -->
-      <p v-if="queryError" class="text-red-500">{{ queryError }}</p>
-
-      <!-- Пользователь авторизован -->
-      <div v-else-if="user">
-        <p class="mb-4">Вы авторизованы по почте <strong>{{ user.email }}</strong></p>
-        <button @click="handleAuthorize"
-                class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition mb-2">
-          Далее
-        </button>
-        <button @click="handleLogout"
-                class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition">
-          Выйти
-        </button>
+    <!-- Login form -->
+    <div v-else>
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-1.5">Добро пожаловать</h2>
+        <p class="text-slate-500 text-sm">Войдите в аккаунт, чтобы продолжить</p>
       </div>
 
-      <!-- Пользователь не авторизован -->
-      <form v-else @submit.prevent="handleLogin" class="space-y-4">
+      <form @submit.prevent="handleLogin" class="space-y-5">
         <div>
-          <label class="block mb-1 font-medium">Email</label>
-          <input v-model="email" type="text" required
-                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+          <input v-model="email" type="email" required placeholder="you@example.com" class="input"/>
         </div>
+
         <div>
-          <label class="block mb-1 font-medium">Password</label>
-          <input v-model="password" type="password" required
-                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-medium text-slate-700">Пароль</label>
+            <router-link :to="`/reset-password${queryString}`"
+                         class="text-xs text-indigo-600 hover:text-indigo-700 transition-colors">
+              Забыли пароль?
+            </router-link>
+          </div>
+          <input v-model="password" type="password" required placeholder="••••••••" class="input"/>
         </div>
-        <button type="submit"
-                class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-          Log In
-        </button>
-        <div>
-          <router-link class="text-blue-500 underline" :to="`/reset-password${queryString}`">Forgot password?</router-link>
-          <br>
-          <router-link class="text-blue-500 underline" :to="`/register${queryString}`">Register</router-link>
+
+        <div v-if="error" class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
+          <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-sm text-red-600">{{ error }}</span>
         </div>
-        <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
+
+        <button type="submit" class="btn-primary w-full">Войти</button>
       </form>
+
+      <p class="text-center text-sm text-slate-500 mt-6">
+        Нет аккаунта?
+        <router-link :to="`/register${queryString}`" class="text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+          Зарегистрироваться
+        </router-link>
+      </p>
     </div>
-  </div>
+  </AuthLayout>
 </template>
 
 <script lang="ts" setup>
-import {ref, onMounted} from 'vue'
-import {me, login, logout, authorize} from '../api/auth'
+import { ref, onMounted } from 'vue'
+import { me, login, logout, authorize } from '../api/auth'
+import AuthLayout from '../components/AuthLayout.vue'
 
 interface User {
   email: string
 }
 
 const queryString = window.location.search
-
 const email = ref('')
 const password = ref('')
 const error = ref('')
 const user = ref<User | null>(null)
 const queryError = ref<string | null>(null)
 
-// ---------------------
-// Helper: проверка query на корректность
-// ---------------------
+let oauthQueries: Record<string, string> | null = null
+
 function validateOAuthQuery(qs: string): Record<string, string> | null {
   const params = new URLSearchParams(qs)
   const required = ['client_id', 'redirect_uri', 'response_type', 'state']
   const missing = required.filter(key => !params.has(key))
-
   if (missing.length) {
     queryError.value = `Некорректные query параметры: отсутствуют ${missing.join(', ')}`
     return null
   }
-
   const result: Record<string, string> = {}
   params.forEach((value, key) => result[key] = value)
   return result
 }
 
-// ---------------------
-// Проверка при монтировании
-// ---------------------
-let oauthQueries: Record<string, string> | null = null
 onMounted(() => {
   const qs = window.location.search.startsWith('?') ? window.location.search : ''
   oauthQueries = validateOAuthQuery(qs)
-  if (!oauthQueries) return // query неправильные → показываем только ошибку
-
-  // Проверка текущей сессии
+  if (!oauthQueries) return
   me()
-      .then(res => {
-        user.value = res.data
-      })
-      .catch(err => {
-        if (err.response?.status !== 401) console.error('Error checking auth:', err)
-      })
+    .then(res => { user.value = res.data })
+    .catch(err => { if (err.response?.status !== 401) console.error('Error checking auth:', err) })
 })
 
-// ---------------------
-// Actions
-// ---------------------
 function handleLogin() {
-  if (!oauthQueries) return // защита от неправильного query
+  if (!oauthQueries) return
   error.value = ''
-
-  login({email: email.value, password: password.value})
-      .then(() => me())
-      .then(res => {
-        user.value = res.data
-        email.value = ''
-        password.value = ''
-      })
-      .catch(err => {
-        error.value = err.response?.data?.message || 'Login failed'
-      })
+  login({ email: email.value, password: password.value })
+    .then(() => me())
+    .then(res => {
+      user.value = res.data
+      email.value = ''
+      password.value = ''
+    })
+    .catch(err => { error.value = err.response?.data?.message || 'Ошибка входа' })
 }
 
 function handleAuthorize() {
   if (!oauthQueries) return
   authorize(oauthQueries)
-      .then(res => {
-        if (res.data.redirect_url) window.location.replace(res.data.redirect_url)
-        else console.error('No redirect_url in response')
-      })
-      .catch(err => console.error('Authorization error:', err))
+    .then(res => { if (res.data.redirect_url) window.location.replace(res.data.redirect_url) })
+    .catch(err => console.error('Authorization error:', err))
 }
 
 function handleLogout() {
   if (!oauthQueries) return
   logout()
-      .then(() => {
-        user.value = null
-        email.value = ''
-        password.value = ''
-      })
-      .catch(err => console.error('Logout error:', err))
+    .then(() => { user.value = null; email.value = ''; password.value = '' })
+    .catch(err => console.error('Logout error:', err))
 }
 </script>

@@ -15,6 +15,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!user.value)
 
+  // Resolves once the initial fetchUser() completes — used by the router guard
+  // to avoid the race condition where navigation is checked before auth state is known.
+  let _readyResolve!: () => void
+  const ready: Promise<void> = new Promise((resolve) => {
+    _readyResolve = resolve
+  })
+
   const triggerLoginHighlight = () => {
     highlightLogin.value = true
     setTimeout(() => {
@@ -36,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } finally {
       isLoading.value = false
+      _readyResolve()
     }
   }
 
@@ -69,6 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isLoading,
     highlightLogin,
+    ready,
     triggerLoginHighlight,
     fetchUser,
     login,

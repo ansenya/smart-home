@@ -103,7 +103,8 @@ func (h *usersHandler) ExchangeCode(c *gin.Context) {
 		return
 	}
 
+	const sessionMaxAge = 30 * 24 * 60 * 60 // 30 days
 	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie(SessionIDName, session.ID.String(), int(tokens.ExpiresIn), "/", DomainName, true, true)
+	c.SetCookie(SessionIDName, session.ID.String(), sessionMaxAge, "/", DomainName, true, true)
 	c.JSON(http.StatusOK, session)
 }

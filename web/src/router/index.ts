@@ -16,8 +16,13 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+
+  // Wait for the initial auth check to finish before evaluating guards.
+  // Without this, the guard sees isAuthenticated=false on every page reload
+  // because fetchUser() hasn't completed yet.
+  await authStore.ready
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     push.error({
@@ -25,6 +30,7 @@ router.beforeEach((to, from, next) => {
       message: 'Please login to access this page',
     })
     authStore.triggerLoginHighlight()
+    next('/')
   } else {
     next()
   }

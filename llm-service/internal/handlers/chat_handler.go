@@ -3,6 +3,7 @@ package handlers
 import (
 	"llm-service/internal/dto"
 	"llm-service/internal/services"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -21,6 +22,7 @@ func (h *chatHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.GET("/:id", h.GetByID)
 	rg.PUT("/:id", h.UpdateChat)
 	rg.DELETE("/:id", h.DeleteChat)
+	rg.POST("/:id/generate-title", h.GenerateTitle)
 }
 
 func (h *chatHandler) CreateChat(c *gin.Context) {
@@ -56,7 +58,7 @@ func (h *chatHandler) GetChats(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
-
+	log.Println(userID)
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 	if limit <= 0 || limit > 100 {
 		limit = 50
@@ -163,6 +165,28 @@ func (h *chatHandler) DeleteChat(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *chatHandler) GenerateTitle(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	chatID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid chat id"})
+		return
+	}
+
+	title, err := h.chatService.GenerateTitle(c.Request.Context(), chatID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"title": title})
 }
 
 func getUserID(c *gin.Context) (uuid.UUID, error) {

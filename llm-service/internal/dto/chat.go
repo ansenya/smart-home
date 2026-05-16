@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,18 +37,18 @@ type ChatListResponse struct {
 }
 
 type MessageResponse struct {
-	ID           uuid.UUID      `json:"id"`
-	Role         string         `json:"role"`
-	Content      string         `json:"content"`
-	ModelName    string         `json:"model_name,omitempty"`
-	InputTokens  int            `json:"input_tokens,omitempty"`
-	OutputTokens int            `json:"output_tokens,omitempty"`
-	ToolCallID   *string        `json:"tool_call_id,omitempty"`
-	ToolName     *string        `json:"tool_name,omitempty"`
-	ToolArgs     map[string]any `json:"tool_args,omitempty"`
-	ToolResult   map[string]any `json:"tool_result,omitempty"`
-	Status       string         `json:"status"`
-	CreatedAt    time.Time      `json:"created_at"`
+	ID           uuid.UUID       `json:"id"`
+	Role         string          `json:"role"`
+	Content      string          `json:"content"`
+	ModelName    string          `json:"model_name,omitempty"`
+	InputTokens  int             `json:"input_tokens,omitempty"`
+	OutputTokens int             `json:"output_tokens,omitempty"`
+	ToolCallID   *string          `json:"tool_call_id,omitempty"`
+	ToolName     *string          `json:"tool_name,omitempty"`
+	ToolArgs     json.RawMessage  `json:"tool_args,omitempty"`
+	ToolResult   json.RawMessage  `json:"tool_result,omitempty"`
+	Status       string          `json:"status"`
+	CreatedAt    time.Time       `json:"created_at"`
 }
 
 type MessageListResponse struct {

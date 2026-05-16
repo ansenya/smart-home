@@ -53,10 +53,10 @@ type Message struct {
 
 	Content string `gorm:"type:text" json:"content"`
 
-	ToolCallID *string         `gorm:"size:255" json:"tool_call_id,omitempty"`
-	ToolName   *string         `gorm:"size:255" json:"tool_name,omitempty"`
-	ToolArgs   json.RawMessage `gorm:"type:jsonb" json:"tool_args,omitempty"`
-	ToolResult json.RawMessage `gorm:"type:jsonb" json:"tool_result,omitempty"`
+	ToolCallID *string          `gorm:"size:255" json:"tool_call_id,omitempty"`
+	ToolName   *string          `gorm:"size:255" json:"tool_name,omitempty"`
+	ToolArgs   *json.RawMessage `gorm:"type:jsonb" json:"tool_args,omitempty"`
+	ToolResult *json.RawMessage `gorm:"type:jsonb" json:"tool_result,omitempty"`
 
 	Status MessageStatus `gorm:"type:varchar(20);not null;default:'completed'" json:"status"`
 

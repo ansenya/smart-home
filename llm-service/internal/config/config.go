@@ -10,10 +10,16 @@ import (
 )
 
 type Container struct {
-	Server         *Server
-	PostgresConfig *PostgresConfig
-	OpenaiConfig   *OpenaiConfig
-	Log            *slog.Logger
+	Server          *Server
+	PostgresConfig  *PostgresConfig
+	OpenaiConfig    *OpenaiConfig
+	AnthropicConfig *AnthropicConfig
+	Log             *slog.Logger
+}
+
+type AnthropicConfig struct {
+	APIKey   string
+	ProxyURL string
 }
 
 type Server struct {
@@ -44,6 +50,10 @@ func NewConfig() *Container {
 			ApiKey:   utils.GetEnv("OPENAI_API_KEY", ""),
 			ProxyURL: utils.GetEnv("PROXY_URL", ""),
 			Model:    utils.GetEnv("OPENAI_MODEL", "gpt-5.2"),
+		},
+		AnthropicConfig: &AnthropicConfig{
+			APIKey:   utils.GetEnv("ANTHROPIC_API_KEY", ""),
+			ProxyURL: utils.GetEnv("ANTHROPIC_PROXY_URL", ""),
 		},
 		Log: logger,
 	}

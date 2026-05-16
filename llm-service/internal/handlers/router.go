@@ -28,7 +28,6 @@ type Router struct {
 func (r *Router) registerRoutes(repos *repositories.Container) {
 	chatsGroup := r.engine.Group("/chats")
 	chatsGroup.Use(middleware.SessionAuth(repos.SessionRepository))
-
 	r.ChatHandler.RegisterRoutes(chatsGroup)
 
 	messagesGroup := chatsGroup.Group("/:id")
@@ -61,7 +60,7 @@ func (r *Router) Run() error {
 
 func NewRouter(cfg *config.Container, svcs *services.Container, repos *repositories.Container) *Router {
 	router := &Router{
-		engine: gin.New(),
+		engine: gin.Default(),
 		log:    cfg.Log,
 		cfg:    cfg,
 

@@ -27,13 +27,15 @@ func NewUsersService(log *slog.Logger, sessionRepo repositories.SessionRepositor
 	}
 }
 
+const sessionDuration = 30 * 24 * time.Hour
+
 func (s *usersService) CreateSession(user *models.User, tokens *models.Tokens) (*models.Session, error) {
 	session := models.Session{
 		UserID:       user.ID,
 		TokenType:    tokens.TokenType,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    time.Now().Add(time.Duration(tokens.ExpiresIn) * time.Second),
+		ExpiresAt:    time.Now().Add(sessionDuration),
 	}
 	return &session, s.sessionRepo.Create(&session)
 }

@@ -1,7 +1,7 @@
 import { api } from '@/api/client'
 
-const CLIENT_ID = 'c85e6304-7f65-49f9-8145-823bd71a5a83'
-const PROVIDER_AUTHORIZE = 'https://id.smarthome.hipahopa.ru'
+const CLIENT_ID = import.meta.env.VITE_OAUTH_CLIENT_ID as string
+const PROVIDER_AUTHORIZE = import.meta.env.VITE_OAUTH_PROVIDER_URL as string
 const REDIRECT_URI = `${window.location.origin}/auth/callback`
 
 interface User {
@@ -70,7 +70,7 @@ export const authService = {
     sessionStorage.removeItem('oauth_state')
     sessionStorage.removeItem('pkce_verifier')
 
-    await api.post('https://api.smarthome.hipahopa.ru/panel/v1/users/exchange-code', {
+    await api.post('/panel/v1/users/exchange-code', {
       code: code,
       client_id: CLIENT_ID,
       redirect_uri: REDIRECT_URI,
@@ -78,13 +78,13 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
-    const { data } = await api.get('https://api.smarthome.hipahopa.ru/panel/v1/users/me')
+    const { data } = await api.get('/panel/v1/users/me')
     return data
   },
 
   async logout() {
     try {
-      await api.post('https://api.smarthome.hipahopa.ru/panel/v1/users/logout')
+      await api.post('/panel/v1/users/logout')
     } catch (e) {
       console.warn('Logout error', e)
     } finally {

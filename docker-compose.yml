@@ -10,6 +10,7 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       GIN_MODE: ${GIN_MODE}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN}
       TZ: Europe/Moscow
     volumes:
       - ./keys:/app/keys:ro
@@ -41,6 +42,9 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       GIN_MODE: ${GIN_MODE}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      PANEL_COOKIE_DOMAIN: ${PANEL_COOKIE_DOMAIN}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       TZ: Europe/Moscow
     volumes:
       - ./keys:/app/keys:ro
@@ -72,11 +76,16 @@ services:
   auth-web:
     build:
       context: ./auth-web
+      args:
+        VITE_API_URL: ${VITE_AUTH_WEB_API_URL}
     restart: unless-stopped
 
   web:
     build:
       context: ./web
+      args:
+        VITE_OAUTH_PROVIDER_URL: ${VITE_OAUTH_PROVIDER_URL}
+        VITE_OAUTH_CLIENT_ID: ${VITE_OAUTH_CLIENT_ID}
     restart: unless-stopped
 
   nginx:
@@ -88,15 +97,14 @@ services:
       - adapter
       - llm-service
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx:/etc/nginx
     restart: unless-stopped
 
   db:
     image: postgres:17
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: password
@@ -108,8 +116,6 @@ services:
 
   redis:
     image: redis:8.0
-    ports:
-      - "6379:6379"
     environment:
       TZ: "Europe/Moscow"
     restart: unless-stopped
@@ -118,8 +124,6 @@ services:
     image: eclipse-mosquitto:2.0.22
     environment:
       TZ: Europe/Moscow
-    ports:
-      - "1883:1883"
     volumes:
       - ./mosquitto/config:/mosquitto/config # user: user; password: superdifficultpassword
       - ./mosquitto/data:/mosquitto/data

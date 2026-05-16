@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"llm-service/internal/dto"
 	"llm-service/internal/services"
 	"net/http"
@@ -51,14 +50,6 @@ func (h *messagesHandler) GetHistory(c *gin.Context) {
 	}
 
 	for _, msg := range msgs {
-		var toolArgs, toolResult map[string]any
-		if err := json.Unmarshal(msg.ToolArgs, &toolArgs); err != nil {
-			c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: fmt.Sprintf("failed to unmarshal tool args: %s", err.Error())})
-			return
-		}
-		if err := json.Unmarshal(msg.ToolResult, &toolResult); err != nil {
-			c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: fmt.Sprintf("failed to unmarshal tool result: %s", err)})
-		}
 		response.Messages = append(response.Messages, dto.MessageResponse{
 			ID:           msg.ID,
 			Role:         string(msg.Role),
@@ -68,8 +59,8 @@ func (h *messagesHandler) GetHistory(c *gin.Context) {
 			OutputTokens: msg.OutputTokens,
 			ToolCallID:   msg.ToolCallID,
 			ToolName:     msg.ToolName,
-			ToolArgs:     toolArgs,
-			ToolResult:   toolResult,
+			ToolArgs:     rawOrNil(msg.ToolArgs),
+			ToolResult:   rawOrNil(msg.ToolResult),
 			Status:       string(msg.Status),
 			CreatedAt:    msg.CreatedAt,
 		})
@@ -104,28 +95,31 @@ func (h *messagesHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	msg, err := h.chatService.SendMessage(c.Request.Context(), chatID, userID, req.Content)
+	resp, err := h.chatService.SendMessage(c.Request.Context(), chatID, userID, req.Content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.MessageResponse{
-		ID:           msg.ID,
-		Role:         string(msg.Role),
-		Content:      msg.Content,
-		ModelName:    msg.ModelName,
-		InputTokens:  msg.InputTokens,
-		OutputTokens: msg.OutputTokens,
-		Status:       string(msg.Status),
-		CreatedAt:    msg.CreatedAt,
-	})
+	//c.JSON(http.StatusOK, dto.MessageResponse{
+	//	ID:           msg.ID,
+	//	Role:         string(msg.Role),
+	//	Content:      msg.Content,
+	//	ModelName:    msg.ModelName,
+	//	InputTokens:  msg.InputTokens,
+	//	OutputTokens: msg.OutputTokens,
+	//	Status:       string(msg.Status),
+	//	CreatedAt:    msg.CreatedAt,
+	//})
+	c.JSON(http.StatusOK, resp)
 }
+
 func (h *messagesHandler) sendMessageStream(c *gin.Context, chatID, userID uuid.UUID, content string) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 	c.Header("X-Accel-Buffering", "no")
+	c.Header("Transfer-Encoding", "chunked")
 
 	tokenChan := make(chan string, 10)
 	errChan := make(chan error, 1)
@@ -163,4 +157,11 @@ func NewMessagesHandler(svcs *services.Container) Handler {
 	return &messagesHandler{
 		chatService: svcs.ChatService,
 	}
+}
+
+func rawOrNil(p *json.RawMessage) json.RawMessage {
+	if p == nil {
+		return nil
+	}
+	return *p
 }

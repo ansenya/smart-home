@@ -1,15 +1,16 @@
 package handlers
 
 import (
+	"auth-server/utils"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
-const (
-	SessionIDName = "oauth-sid"
-	DomainName    = "api.id.smarthome.hipahopa.ru"
-)
+const SessionIDName = "oauth-sid"
+
+var DomainName = utils.GetEnv("AUTH_COOKIE_DOMAIN", "api.id.smarthome.hipahopa.ru")
 
 type Router struct {
 	healthHandler *healthHandler
