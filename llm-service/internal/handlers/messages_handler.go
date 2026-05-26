@@ -125,8 +125,10 @@ func (h *messagesHandler) sendMessageStream(c *gin.Context, chatID, userID uuid.
 	errChan := make(chan error, 1)
 
 	go func() {
-		err := h.chatService.StreamResponse(c.Request.Context(), chatID, userID, content, tokenChan)
-		errChan <- err
+		defer close(errChan)
+		if err := h.chatService.StreamResponse(c.Request.Context(), chatID, userID, content, tokenChan); err != nil {
+			errChan <- err
+		}
 	}()
 
 	for {
@@ -140,11 +142,15 @@ func (h *messagesHandler) sendMessageStream(c *gin.Context, chatID, userID uuid.
 			c.SSEvent("message", dto.StreamChunk{Token: token, Done: false})
 			c.Writer.Flush()
 
-		case err := <-errChan:
-			if err != nil {
-				c.SSEvent("error", dto.ErrorResponse{Error: err.Error()})
+		case err, ok := <-errChan:
+			if !ok {
+				// goroutine returned without error; keep draining tokenChan
+				// until it closes. Nil-out errChan so this case stops firing.
+				errChan = nil
+				continue
 			}
-			close(tokenChan)
+			c.SSEvent("error", dto.ErrorResponse{Error: err.Error()})
+			c.Writer.Flush()
 			return
 
 		case <-c.Request.Context().Done():
