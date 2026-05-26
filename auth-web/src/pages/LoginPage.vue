@@ -21,9 +21,10 @@
         <h2 class="text-2xl font-bold text-slate-900 mb-1">Вы вошли</h2>
         <p class="text-slate-500 text-sm">{{ user.email }}</p>
       </div>
-      <button @click="handleAuthorize" class="btn-primary w-full mb-3">
+      <button v-if="oauthQueries" @click="handleAuthorize" class="btn-primary w-full mb-3">
         Продолжить
       </button>
+      <p v-else class="text-sm text-slate-500 mb-3">Вы вошли в аккаунт. Можно закрыть вкладку или выйти ниже.</p>
       <button @click="handleLogout" class="btn-ghost w-full">
         Выйти из аккаунта
       </button>
@@ -89,11 +90,12 @@ const error = ref('')
 const user = ref<User | null>(null)
 const queryError = ref<string | null>(null)
 
-let oauthQueries: Record<string, string> | null = null
+const oauthQueries = ref<Record<string, string> | null>(null)
 
-function validateOAuthQuery(qs: string): Record<string, string> | null {
+function parseOAuthQuery(qs: string): Record<string, string> | null {
   const params = new URLSearchParams(qs)
-  const required = ['client_id', 'redirect_uri', 'response_type', 'state']
+  if (!params.has('client_id')) return null
+  const required = ['client_id', 'redirect_uri', 'response_type']
   const missing = required.filter(key => !params.has(key))
   if (missing.length) {
     queryError.value = `Некорректные query параметры: отсутствуют ${missing.join(', ')}`
@@ -105,16 +107,13 @@ function validateOAuthQuery(qs: string): Record<string, string> | null {
 }
 
 onMounted(() => {
-  const qs = window.location.search.startsWith('?') ? window.location.search : ''
-  oauthQueries = validateOAuthQuery(qs)
-  if (!oauthQueries) return
+  oauthQueries.value = parseOAuthQuery(window.location.search)
   me()
     .then(res => { user.value = res.data })
     .catch(err => { if (err.response?.status !== 401) console.error('Error checking auth:', err) })
 })
 
 function handleLogin() {
-  if (!oauthQueries) return
   error.value = ''
   login({ email: email.value, password: password.value })
     .then(() => me())
@@ -134,14 +133,13 @@ function handleLogin() {
 }
 
 function handleAuthorize() {
-  if (!oauthQueries) return
-  authorize(oauthQueries)
+  if (!oauthQueries.value) return
+  authorize(oauthQueries.value)
     .then(res => { if (res.data.redirect_url) window.location.replace(res.data.redirect_url) })
     .catch(err => console.error('Authorization error:', err))
 }
 
 function handleLogout() {
-  if (!oauthQueries) return
   logout()
     .then(() => { user.value = null; email.value = ''; password.value = '' })
     .catch(err => console.error('Logout error:', err))

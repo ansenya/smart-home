@@ -36,6 +36,17 @@ func (r *userRepository) GetByID(id string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *userRepository) UpdatePassword(userID, passwordHash string) error {
+	res := r.db.Model(&models.User{}).Where("id = ?", userID).Update("password", passwordHash)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{
 		db: db,

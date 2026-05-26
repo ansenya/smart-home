@@ -27,3 +27,11 @@ export const authorize = (queries: Record<string, string>) => {
 export const register = (payload: AuthPayload) => {
     return api.post('/auth/register', payload)
 }
+
+export const requestPasswordReset = (email: string) => {
+    return api.post('/auth/password-reset/request', { email })
+}
+
+export const confirmPasswordReset = (token: string, newPassword: string) => {
+    return api.post('/auth/password-reset/confirm', { token, new_password: newPassword })
+}

@@ -6,6 +6,7 @@ type UserRepository interface {
 	Create(user *models.User) error
 	GetByEmail(email string) (*models.User, error)
 	GetByID(id string) (*models.User, error)
+	UpdatePassword(userID, passwordHash string) error
 }
 
 type OauthClientsRepository interface {
@@ -16,4 +17,5 @@ type SessionRepository interface {
 	Create(session *models.Session) error
 	GetByID(id string) (*models.Session, error)
 	Delete(id string) error
+	DeleteByUserID(userID string) error
 }

@@ -13,16 +13,18 @@ const SessionIDName = "oauth-sid"
 var DomainName = utils.GetEnv("AUTH_COOKIE_DOMAIN", "api.id.smarthome.hipahopa.ru")
 
 type Router struct {
-	healthHandler *healthHandler
-	authHandler   *authHandler
-	oauthHandler  *oauthHandler
+	healthHandler        *healthHandler
+	authHandler          *authHandler
+	oauthHandler         *oauthHandler
+	passwordResetHandler *passwordResetHandler
 }
 
 func NewRouter(db *gorm.DB, redisClient *redis.Client) *Router {
 	return &Router{
-		healthHandler: newHealthHandler(),
-		authHandler:   newAuthRouter(db),
-		oauthHandler:  newOauthHandler(db, redisClient),
+		healthHandler:        newHealthHandler(),
+		authHandler:          newAuthRouter(db),
+		oauthHandler:         newOauthHandler(db, redisClient),
+		passwordResetHandler: newPasswordResetHandler(db, redisClient),
 	}
 }
 
@@ -33,6 +35,7 @@ func (r *Router) RegisterRoutes(engine *gin.Engine) {
 	// auth
 	authGroup := engine.Group("/auth")
 	r.authHandler.RegisterRoutes(authGroup)
+	r.passwordResetHandler.RegisterRoutes(authGroup)
 
 	// oauth
 	oauthGroup := engine.Group("/oauth")

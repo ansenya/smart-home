@@ -33,6 +33,11 @@ func (r *sessionRepository) Delete(id string) error {
 	return res.Error
 }
 
+func (r *sessionRepository) DeleteByUserID(userID string) error {
+	res := r.db.Where("user_id = ?", userID).Delete(&models.Session{})
+	return res.Error
+}
+
 func NewSessionRepository(db *gorm.DB) SessionRepository {
 	return &sessionRepository{db: db}
 }
