@@ -234,7 +234,11 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 	}
 
 	var fullContent strings.Builder
+	var streamErr error
 	for ev := range eventChan {
+		if ev.Err != nil {
+			streamErr = ev.Err
+		}
 		if ev.Done {
 			break
 		}
@@ -242,6 +246,11 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 			tokenChan <- ev.ContentDelta
 			fullContent.WriteString(ev.ContentDelta)
 		}
+	}
+
+	if streamErr != nil {
+		s.log.Error("stream recv failed", slog.String("model", chat.Model), slog.Any("err", streamErr))
+		return fmt.Errorf("stream failed: %w", streamErr)
 	}
 	close(tokenChan)
 

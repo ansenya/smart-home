@@ -11,4 +11,5 @@ type StreamEvent struct {
 	ContentDelta  string
 	ToolCallDelta *ToolCall
 	Done          bool
+	Err           error
 }

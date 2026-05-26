@@ -98,6 +98,8 @@ func (o *orchestrator) Stream(ctx context.Context, req ChatRequest) (<-chan clie
 			ev, err := stream.Recv(ctx)
 			if err != nil {
 				if err != io.EOF {
+					ch <- clients.StreamEvent{Done: true, Err: err}
+				} else {
 					ch <- clients.StreamEvent{Done: true}
 				}
 				return
