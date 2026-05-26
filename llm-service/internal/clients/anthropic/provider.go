@@ -3,10 +3,9 @@ package anthropic
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"llm-service/internal/clients"
+	"llm-service/internal/clients/proxyhttp"
 
 	sdk "github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -101,13 +100,11 @@ func (p *provider) WithAPIKey(key string) clients.Provider {
 func New(apiKey, proxyURL string) (clients.Provider, error) {
 	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
 	if proxyURL != "" {
-		parsed, err := url.Parse(proxyURL)
+		httpClient, err := proxyhttp.NewClient(proxyURL)
 		if err != nil {
-			return nil, fmt.Errorf("invalid proxy URL: %w", err)
+			return nil, fmt.Errorf("anthropic proxy client: %w", err)
 		}
-		opts = append(opts, option.WithHTTPClient(&http.Client{
-			Transport: &http.Transport{Proxy: http.ProxyURL(parsed)},
-		}))
+		opts = append(opts, option.WithHTTPClient(httpClient))
 	}
 	c := sdk.NewClient(opts...)
 	return &provider{client: &c}, nil

@@ -3,10 +3,9 @@ package openaicompat
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"llm-service/internal/clients"
+	"llm-service/internal/clients/proxyhttp"
 
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -99,13 +98,11 @@ func New(name, baseURL, apiKey, proxyURL string) (clients.Provider, error) {
 		opts = append(opts, option.WithBaseURL(baseURL))
 	}
 	if proxyURL != "" {
-		parsed, err := url.Parse(proxyURL)
+		httpClient, err := proxyhttp.NewClient(proxyURL)
 		if err != nil {
-			return nil, fmt.Errorf("invalid proxy URL: %w", err)
+			return nil, fmt.Errorf("openai proxy client: %w", err)
 		}
-		opts = append(opts, option.WithHTTPClient(&http.Client{
-			Transport: &http.Transport{Proxy: http.ProxyURL(parsed)},
-		}))
+		opts = append(opts, option.WithHTTPClient(httpClient))
 	}
 	c := openai.NewClient(opts...)
 	return &provider{client: &c, name: name, apiKey: apiKey}, nil

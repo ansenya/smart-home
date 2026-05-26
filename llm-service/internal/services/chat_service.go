@@ -229,6 +229,7 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 		Channel:  agents.ChannelWeb,
 	})
 	if err != nil {
+		s.log.Error("orchestrator stream failed", slog.String("model", chat.Model), slog.Any("err", err))
 		return fmt.Errorf("failed to start stream: %w", err)
 	}
 
