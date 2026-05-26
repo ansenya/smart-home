@@ -28,6 +28,11 @@ func (r *sessionRepository) GetByID(id string) (*models.Session, error) {
 	return &session, nil
 }
 
+func (r *sessionRepository) Delete(id string) error {
+	res := r.db.Where("id = ?", id).Delete(&models.Session{})
+	return res.Error
+}
+
 func NewSessionRepository(db *gorm.DB) SessionRepository {
 	return &sessionRepository{db: db}
 }

@@ -160,7 +160,14 @@ function handleRegister() {
   register({ email: email.value, password: password.value })
     .then(() => me())
     .then(res => { user.value = res.data; password.value = ''; password2.value = '' })
-    .catch(err => { error.value = err.response?.data?.message || 'Ошибка регистрации' })
+    .catch(err => {
+      const data = err.response?.data
+      if (err.response?.status === 409) {
+        error.value = 'Этот email уже зарегистрирован. Попробуйте войти.'
+      } else {
+        error.value = data?.error || data?.message || 'Ошибка регистрации'
+      }
+    })
 }
 
 function handleAuthorize() {

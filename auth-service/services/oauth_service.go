@@ -17,6 +17,7 @@ import (
 
 var (
 	ErrorClientNotEnabled = errors.New("client not enabled")
+	ErrorClientNotFound   = errors.New("client not found")
 	ErrorInvalidSession   = errors.New("invalid session")
 	ErrorInvalidToken     = errors.New("invalid token")
 	ErrorInvalidCode      = errors.New("invalid code")
@@ -32,8 +33,11 @@ type oauthService struct {
 
 func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (string, error) {
 	oauthClient, err := s.oauthClientsRepository.GetByID(queries.ClientID)
-	if err != nil || oauthClient == nil {
+	if err != nil {
 		return "", err
+	}
+	if oauthClient == nil {
+		return "", ErrorClientNotFound
 	}
 	if !oauthClient.Enabled {
 		return "", ErrorClientNotEnabled
@@ -44,6 +48,9 @@ func (s *oauthService) Authorize(queries models.OauthRequest, sid string) (strin
 		return "", err
 	}
 	if session == nil {
+		return "", ErrorInvalidSession
+	}
+	if session.ExpiresAt != nil && session.ExpiresAt.Before(time.Now()) {
 		return "", ErrorInvalidSession
 	}
 

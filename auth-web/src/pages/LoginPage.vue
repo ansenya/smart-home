@@ -123,7 +123,14 @@ function handleLogin() {
       email.value = ''
       password.value = ''
     })
-    .catch(err => { error.value = err.response?.data?.message || 'Ошибка входа' })
+    .catch(err => {
+      const data = err.response?.data
+      if (err.response?.status === 401) {
+        error.value = 'Неверный email или пароль'
+      } else {
+        error.value = data?.error || data?.message || 'Ошибка входа'
+      }
+    })
 }
 
 function handleAuthorize() {

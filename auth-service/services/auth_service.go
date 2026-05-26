@@ -5,13 +5,18 @@ import (
 	"auth-server/repository"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
 	"log"
+	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var (
 	ErrorIncorrectPassword = errors.New("bad password")
+	ErrorEmailExists       = errors.New("email already registered")
+	ErrorInvalidEmail      = errors.New("invalid email")
+	ErrorInvalidCredentials = errors.New("invalid email or password")
 )
 
 type authService struct {
@@ -26,6 +31,9 @@ func (s *authService) Me(sid string) (*models.User, error) {
 	if err != nil || session == nil {
 		return nil, fmt.Errorf("invalid session id")
 	}
+	if session.ExpiresAt != nil && session.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("session expired")
+	}
 	user, err := s.userRepository.GetByID(session.UserID)
 	if err != nil || user == nil {
 		return nil, fmt.Errorf("invalid session id")
@@ -36,14 +44,17 @@ func (s *authService) Me(sid string) (*models.User, error) {
 func (s *authService) Login(request *models.AuthRequest) (*models.Session, error) {
 	user, err := s.userRepository.GetByEmail(request.Email)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrorInvalidCredentials
+		}
 		return nil, err
 	}
 	if user == nil {
-		return nil, fmt.Errorf("user not found")
+		return nil, ErrorInvalidCredentials
 	}
 
 	if err := s.passwordService.IsPasswordCorrect(request.Password, user.Password); err != nil {
-		return nil, err
+		return nil, ErrorInvalidCredentials
 	}
 
 	expiresAt := time.Now().Add(s.jwtService.GetRefreshTokenDuration())
@@ -58,6 +69,10 @@ func (s *authService) Login(request *models.AuthRequest) (*models.Session, error
 }
 
 func (s *authService) Register(request *models.AuthRequest) (*models.Session, error) {
+	email := strings.TrimSpace(strings.ToLower(request.Email))
+	if email == "" || !strings.Contains(email, "@") {
+		return nil, ErrorInvalidEmail
+	}
 	if !s.passwordService.IsPasswordValid(request.Password) {
 		return nil, ErrorIncorrectPassword
 	}
@@ -69,11 +84,14 @@ func (s *authService) Register(request *models.AuthRequest) (*models.Session, er
 	}
 
 	user := models.User{
-		Email:    request.Email,
+		Email:    email,
 		Password: hash,
 	}
 
 	if err := s.userRepository.Create(&user); err != nil {
+		if isDuplicateEmail(err) {
+			return nil, ErrorEmailExists
+		}
 		log.Printf("error creating user: %v", err)
 		return nil, err
 	}
@@ -87,6 +105,21 @@ func (s *authService) Register(request *models.AuthRequest) (*models.Session, er
 		return nil, err
 	}
 	return &session, nil
+}
+
+func (s *authService) Logout(sid string) error {
+	if sid == "" {
+		return nil
+	}
+	return s.sessionRepository.Delete(sid)
+}
+
+func isDuplicateEmail(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "duplicate key") && strings.Contains(msg, "users_email_key")
 }
 
 func NewAuthService(db *gorm.DB) AuthService {

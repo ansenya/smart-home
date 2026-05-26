@@ -50,8 +50,17 @@ func (h *oauthHandler) Authorize(c *gin.Context) {
 
 	redirectUri, err := h.oauthService.Authorize(params, sid)
 	if err != nil {
-		if errors.Is(err, services.ErrorInvalidSession) || errors.Is(err, services.ErrorClientNotEnabled) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+		if errors.Is(err, services.ErrorInvalidSession) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+			return
+		}
+		if errors.Is(err, services.ErrorClientNotEnabled) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "client not enabled"})
+			return
+		}
+		if errors.Is(err, services.ErrorClientNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "client not found"})
+			return
 		}
 		log.Printf("failed to authorize: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to authorize"})
@@ -75,7 +84,7 @@ func (h *oauthHandler) Token(c *gin.Context) {
 	tokenResponse, err := h.oauthService.GenerateTokens(request)
 	if err != nil {
 		if errors.Is(err, services.ErrorInvalidCode) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 		log.Printf("failed to generate tokens: %s", err)
@@ -98,7 +107,7 @@ func (h *oauthHandler) Refresh(c *gin.Context) {
 	tokenResponse, err := h.oauthService.RefreshTokens(request)
 	if err != nil {
 		if errors.Is(err, services.ErrorInvalidCode) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
 		log.Printf("failed to generate tokens: %s", err)
