@@ -17,17 +17,27 @@ type Router struct {
 
 	healthHandler  *healthHandler
 	pairingHandler *pairingHandler
+	devicesHandler *devicesHandler
+	streamHandler  *streamHandler
 
 	log *slog.Logger
 }
 
-func NewRouter(container *config.Container, repo repositories.SessionRepository, service services.PairingService) *Router {
+func NewRouter(
+	container *config.Container,
+	repo repositories.SessionRepository,
+	pairing services.PairingService,
+	devices services.DevicesService,
+	stream services.StreamService,
+) *Router {
 	engine := gin.Default()
 	router := Router{
 		engine:         engine,
 		config:         container,
 		healthHandler:  newHealthHandler(),
-		pairingHandler: newPairingHandler(service),
+		pairingHandler: newPairingHandler(pairing),
+		devicesHandler: newDevicesHandler(devices),
+		streamHandler:  newStreamHandler(stream),
 		log:            container.Log,
 	}
 	router.configureCors()
@@ -40,8 +50,13 @@ func (r *Router) registerRoutes(repo repositories.SessionRepository) {
 
 	pairingGroup := r.engine.Group("/devices/pairing")
 	pairingGroup.Use(middleware.SessionAuth(repo))
-	devicesGroup := r.engine.Group("/devices/pairing")
-	r.pairingHandler.RegisterRoutes(pairingGroup, devicesGroup)
+	devicesPairingGroup := r.engine.Group("/devices/pairing")
+	r.pairingHandler.RegisterRoutes(pairingGroup, devicesPairingGroup)
+
+	devicesGroup := r.engine.Group("/devices")
+	devicesGroup.Use(middleware.SessionAuth(repo))
+	r.devicesHandler.RegisterRoutes(devicesGroup)
+	r.streamHandler.RegisterRoutes(devicesGroup)
 }
 
 func (r *Router) Run() error {
@@ -55,7 +70,7 @@ func (r *Router) configureCors() {
 			"https://smarthome.hipahopa.ru",
 			"http://localhost:5173",
 		},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,

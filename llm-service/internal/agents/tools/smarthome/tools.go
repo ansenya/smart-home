@@ -8,12 +8,13 @@ import (
 	"llm-service/internal/clients"
 	"llm-service/internal/ctxkeys"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-func Register(db *gorm.DB, reg tools.Registry) []clients.Tool {
-	repo := newDeviceRepo(db)
+func Register(db *gorm.DB, mqttClient mqtt.Client, reg tools.Registry) []clients.Tool {
+	repo := newDeviceRepo(db, mqttClient)
 
 	reg.Register("list_devices", listDevicesHandler(repo))
 	reg.Register("get_device_state", getDeviceStateHandler(repo))
@@ -49,7 +50,7 @@ func Definitions() []clients.Tool {
 		},
 		{
 			Name:        "control_device",
-			Description: "Sends a control command to a device capability. Use list_devices and get_device_state first to find the device ID and available capability types.",
+			Description: "Sends a control command to a device capability. The command is delivered to the physical device over MQTT. Use list_devices and get_device_state first to find the device ID, available capability types, and the correct instance for that capability. For on_off capability the instance is always 'on'. For color_setting use 'hsv' (value: {h:0-360, s:0-100, v:0-100}), 'temperature_k' (value: 2700-6500), or 'scene' (value: scene id). For range/mode/toggle capabilities the instance depends on the device — read it from get_device_state first.",
 			Parameters: `{
 				"type": "object",
 				"properties": {
@@ -61,8 +62,12 @@ func Definitions() []clients.Tool {
 						"type": "string",
 						"description": "The capability type to update, e.g. 'devices.capabilities.on_off', 'devices.capabilities.range', 'devices.capabilities.mode', 'devices.capabilities.toggle', 'devices.capabilities.color_setting'"
 					},
+					"instance": {
+						"type": "string",
+						"description": "Optional capability instance (e.g. 'on', 'brightness', 'hsv', 'temperature_k', 'scene'). Defaults to 'on' for on_off and to the current instance from get_device_state for other capabilities."
+					},
 					"value": {
-						"description": "The new value for the capability. For on_off use true/false. For range use a number. For mode/toggle use a string."
+						"description": "The new value for the capability. For on_off use true/false. For range use a number. For mode/toggle use a string. For color_setting hsv use {h,s,v}; for temperature_k use a number; for scene use a string."
 					}
 				},
 				"required": ["device_id", "capability", "value"]
@@ -176,6 +181,17 @@ func getDeviceStateHandler(repo *deviceRepo) tools.Handler {
 	}
 }
 
+func defaultInstance(capType string) string {
+	switch capType {
+	case "devices.capabilities.on_off":
+		return "on"
+	case "devices.capabilities.color_setting":
+		return "hsv"
+	default:
+		return ""
+	}
+}
+
 func controlDeviceHandler(repo *deviceRepo) tools.Handler {
 	return func(ctx context.Context, args []byte) (string, error) {
 		uid, err := userIDFromCtx(ctx)
@@ -186,6 +202,7 @@ func controlDeviceHandler(repo *deviceRepo) tools.Handler {
 		var req struct {
 			DeviceID   string          `json:"device_id"`
 			Capability string          `json:"capability"`
+			Instance   string          `json:"instance"`
 			Value      json.RawMessage `json:"value"`
 		}
 		if err := json.Unmarshal(args, &req); err != nil {
@@ -195,15 +212,27 @@ func controlDeviceHandler(repo *deviceRepo) tools.Handler {
 			return "", fmt.Errorf("device_id and capability are required")
 		}
 
-		// Verify device belongs to user
 		if _, err := repo.getDevice(ctx, req.DeviceID, uid.String()); err != nil {
 			return "", fmt.Errorf("device not found: %w", err)
 		}
 
-		if err := repo.updateCapabilityState(ctx, req.DeviceID, req.Capability, req.Value); err != nil {
+		instance := req.Instance
+		if instance == "" {
+			if existing, ok := repo.readInstance(ctx, req.DeviceID, req.Capability); ok {
+				instance = existing
+			} else {
+				instance = defaultInstance(req.Capability)
+			}
+		}
+
+		if err := repo.updateCapabilityState(ctx, req.DeviceID, req.Capability, instance, req.Value); err != nil {
 			return "", err
 		}
 
-		return fmt.Sprintf(`{"status":"ok","device_id":"%s","capability":"%s"}`, req.DeviceID, req.Capability), nil
+		if err := repo.publishSet(uid.String(), req.DeviceID, req.Capability, instance, req.Value); err != nil {
+			return "", fmt.Errorf("mqtt publish: %w", err)
+		}
+
+		return fmt.Sprintf(`{"status":"ok","device_id":"%s","capability":"%s","instance":"%s"}`, req.DeviceID, req.Capability, instance), nil
 	}
 }

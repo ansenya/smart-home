@@ -5,6 +5,7 @@ import (
 	"devices-api/internal/config"
 	"devices-api/internal/handlers"
 	"devices-api/internal/infra/db"
+	"devices-api/internal/infra/mqtt"
 	"devices-api/internal/infra/rds"
 	"devices-api/internal/repositories"
 	"devices-api/internal/services"
@@ -19,7 +20,7 @@ func main() {
 
 	// config
 	container := config.NewConfig()
-	container.Log.Info("notification service started")
+	container.Log.Info("devices-api starting")
 
 	// DB
 	dbClient := db.NewClient(container)
@@ -36,15 +37,25 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	mqttClient, err := mqtt.NewClient(container.Log)
+	if err != nil {
+		container.Log.Error("mqtt connect failed", slog.Any("err", err))
+		os.Exit(1)
+	}
+	defer mqttClient.Close()
+
 	// repositories
 	sessionRepository := repositories.NewSessionRepository(dbClient.DB)
 	pairingRepository := repositories.NewPairingRepository(dbClient.DB)
 	pairingCache := repositories.NewPairingCache(redisClient.NewNamespacedRedis("pairing-cache"))
+	devicesRepository := repositories.NewDevicesRepository(dbClient.DB)
 
 	// services
 	pairingService := services.NewPairingService(pairingRepository, pairingCache)
+	devicesService := services.NewDevicesService(devicesRepository, mqttClient.Client, container.Log)
+	streamService := services.NewStreamService(mqttClient.Client, container.Log)
 
-	router := handlers.NewRouter(container, sessionRepository, pairingService)
+	router := handlers.NewRouter(container, sessionRepository, pairingService, devicesService, streamService)
 	if err := router.Run(); err != nil {
 		container.Log.Error(fmt.Sprintf("failed to start: %s", err))
 	}

@@ -1,9 +1,48 @@
 <script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { listDevices } from '@/api/devices'
+import { getChats } from '@/api/chat'
+import type { Device } from '@/types/device'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+const devices = ref<Device[]>([])
+const chatsCount = ref<number | null>(null)
+const loading = ref(false)
+
+async function loadOverview() {
+  if (!authStore.isAuthenticated) return
+  loading.value = true
+  try {
+    const [devicesR, chatsR] = await Promise.allSettled([listDevices(), getChats(50)])
+    if (devicesR.status === 'fulfilled') {
+      devices.value = devicesR.value.data.devices ?? []
+    }
+    if (chatsR.status === 'fulfilled') {
+      chatsCount.value = chatsR.value.data.chats?.length ?? 0
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadOverview)
+watch(() => authStore.isAuthenticated, (auth) => { if (auth) loadOverview() })
+
+const stats = (() => ({
+  total: () => devices.value.length,
+  online: () => devices.value.filter(d => {
+    if (!d.last_seen) return false
+    return Date.now() - new Date(d.last_seen).getTime() < 60_000
+  }).length,
+  on: () => devices.value.filter(d => {
+    const cap = d.capabilities?.find(c => c.type === 'devices.capabilities.on_off')
+    return Boolean(cap?.state?.value)
+  }).length,
+}))()
 </script>
 
 <template>
@@ -14,20 +53,76 @@ const router = useRouter()
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
       </div>
-      <h1 class="hero-title">Добро пожаловать в<br><span class="gradient-text">Hiphome</span></h1>
-      <p class="hero-sub">Управляйте устройствами, создавайте автоматизации и общайтесь с AI-ассистентом умного дома.</p>
+      <h1 class="hero-title">
+        <template v-if="authStore.isAuthenticated">
+          С возвращением,<br>
+          <span class="gradient-text">{{ authStore.user?.name || 'друг' }}</span>
+        </template>
+        <template v-else>
+          Добро пожаловать в<br><span class="gradient-text">Hiphome</span>
+        </template>
+      </h1>
+      <p class="hero-sub">
+        Управляйте устройствами, создавайте автоматизации и общайтесь с AI-ассистентом умного дома.
+      </p>
       <div class="hero-actions">
-        <button v-if="!authStore.isAuthenticated" class="btn-primary" @click="authStore.login()">
-          Войти
-        </button>
-        <button v-else class="btn-primary" @click="router.push('/chats')">
-          Открыть чаты
-        </button>
-        <button v-if="authStore.isAuthenticated" class="btn-secondary" @click="router.push('/devices')">
-          Мои устройства
-        </button>
+        <button v-if="!authStore.isAuthenticated" class="btn-primary" @click="authStore.login()">Войти</button>
+        <template v-else>
+          <button class="btn-primary" @click="router.push('/chats')">Открыть чат</button>
+          <button class="btn-secondary" @click="router.push('/devices')">Мои устройства</button>
+        </template>
       </div>
     </div>
+
+    <!-- Overview cards for authenticated users -->
+    <section v-if="authStore.isAuthenticated && !loading" class="overview">
+      <button class="overview-card" @click="router.push('/devices')">
+        <div class="overview-header">
+          <div class="overview-icon" style="background: linear-gradient(135deg, #0ea5e9, #6366f1)">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+            </svg>
+          </div>
+          <div class="overview-label">Устройства</div>
+        </div>
+        <div class="overview-stats">
+          <div class="stat-big">
+            <div class="stat-num">{{ stats.total() }}</div>
+            <div class="stat-cap">всего</div>
+          </div>
+          <div class="stat-pair">
+            <div class="stat-line">
+              <span class="stat-dot stat-dot--online" />
+              <span class="stat-val">{{ stats.online() }} онлайн</span>
+            </div>
+            <div class="stat-line">
+              <span class="stat-dot stat-dot--on" />
+              <span class="stat-val">{{ stats.on() }} активно</span>
+            </div>
+          </div>
+        </div>
+      </button>
+
+      <button class="overview-card" @click="router.push('/chats')">
+        <div class="overview-header">
+          <div class="overview-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6)">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div class="overview-label">AI-чаты</div>
+        </div>
+        <div class="overview-stats">
+          <div class="stat-big">
+            <div class="stat-num">{{ chatsCount ?? '—' }}</div>
+            <div class="stat-cap">сессий</div>
+          </div>
+          <div class="stat-pair">
+            <div class="stat-hint">Общайтесь с ассистентом и управляйте умным домом через диалог.</div>
+          </div>
+        </div>
+      </button>
+    </section>
 
     <div class="features">
       <div class="feature-card" v-for="f in features" :key="f.title">
@@ -74,7 +169,7 @@ const features = [
   justify-content: center;
   min-height: 100%;
   padding: 48px 24px;
-  gap: 64px;
+  gap: 48px;
   overflow-y: auto;
   background: #0f0f0f;
 }
@@ -155,6 +250,87 @@ const features = [
 }
 .btn-secondary:hover { background: #1a1a1a; color: #a3a3a3; }
 
+/* Overview */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+}
+.overview-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+.overview-card:hover { border-color: #2a2a2a; background: #131313; }
+
+.overview-header { display: flex; align-items: center; gap: 10px; }
+.overview-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+.overview-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e5e5e5;
+}
+
+.overview-stats {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.stat-big { display: flex; align-items: baseline; gap: 6px; }
+.stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e5e5e5;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-cap { font-size: 12px; color: #525252; }
+
+.stat-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+.stat-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #737373;
+}
+.stat-val { color: #a3a3a3; }
+.stat-dot { width: 7px; height: 7px; border-radius: 50%; }
+.stat-dot--online { background: #4ade80; box-shadow: 0 0 6px rgba(74, 222, 128, 0.5); }
+.stat-dot--on { background: #c4b5fd; box-shadow: 0 0 6px rgba(196, 181, 253, 0.5); }
+.stat-hint {
+  font-size: 11px;
+  color: #525252;
+  max-width: 140px;
+  text-align: right;
+  line-height: 1.4;
+}
+
 /* Features grid */
 .features {
   display: grid;
@@ -203,6 +379,7 @@ const features = [
 
 @media (max-width: 640px) {
   .features { grid-template-columns: 1fr; }
+  .overview { grid-template-columns: 1fr; }
   .hero-title { font-size: 28px; }
 }
 </style>

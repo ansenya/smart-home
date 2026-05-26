@@ -57,8 +57,16 @@ services:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       GIN_MODE: ${GIN_MODE}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_PROXY_URL: ${ANTHROPIC_PROXY_URL:-}
       PROXY_URL: ${PROXY_URL}
+      MQTT_URL: tcp://broker:1883
+      MQTT_USER: ${MQTT_USER:-user}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-superdifficultpassword}
       TZ: Europe/Moscow
+    depends_on:
+      - broker
+      - db
     restart: unless-stopped
 
   devices-api:
@@ -67,8 +75,15 @@ services:
     environment:
       POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}
       REDIS_URL: ${REDIS_HOST}:${REDIS_PORT}
+      MQTT_URL: tcp://broker:1883
+      MQTT_USER: ${MQTT_USER:-user}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-superdifficultpassword}
       GIN_MODE: ${GIN_MODE}
       TZ: Europe/Moscow
+    depends_on:
+      - broker
+      - db
+      - redis
     volumes:
       - ./keys:/app/keys:ro
     restart: unless-stopped
@@ -96,6 +111,8 @@ services:
       - web
       - adapter
       - llm-service
+      - devices-api
+      - panel-api
     ports:
       - "80:80"
       - "443:443"

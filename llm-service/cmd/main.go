@@ -12,6 +12,7 @@ import (
 	"llm-service/internal/config"
 	"llm-service/internal/handlers"
 	"llm-service/internal/infra/db"
+	"llm-service/internal/infra/mqtt"
 	"llm-service/internal/repositories"
 	"llm-service/internal/services"
 	"log/slog"
@@ -32,6 +33,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer dbClient.Close()
+
+	mqttClient, err := mqtt.NewClient(cfg.Log)
+	if err != nil {
+		cfg.Log.Error("mqtt connect failed", slog.Any("err", err))
+		os.Exit(1)
+	}
+	defer mqttClient.Close()
 
 	repos := repositories.NewContainer(dbClient)
 
@@ -60,7 +68,7 @@ func main() {
 
 	// Tool registry
 	toolReg := tools.NewRegistry()
-	toolDefs := smarthome.Register(dbClient.DB, toolReg)
+	toolDefs := smarthome.Register(dbClient.DB, mqttClient.Client, toolReg)
 	toolExec := tools.NewExecutor(toolReg)
 	toolLoop := runtime.NewToolLoop(&tools.RuntimeAdapter{Exec: toolExec}, 8)
 
