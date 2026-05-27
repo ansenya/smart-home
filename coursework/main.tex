@@ -40,6 +40,7 @@
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage{multirow}
+\usepackage{amssymb}
 \usepackage{caption}
 \addto\captionsrussian{%
   \renewcommand{\figurename}{Рис.}%
@@ -344,6 +345,42 @@ Various works and projects propose captive-portal-based provisioning (captive DN
 The wider availability of large language models with structured tool-use interfaces~\cite{openai-tools, anthropic-tools, lewis-rag} has made it practical to expose backend operations as functions that the model can invoke during a conversation. This pattern is the basis for the Hipahome chat layer: rather than parsing natural-language commands with brittle handcrafted rules, the LLM is given a small set of tool definitions (\verb|list_devices|, \verb|get_device_state|, \verb|control_device|) and is allowed to plan multi-step actions over them. Server-Sent Events (SSE)~\cite{mdn-sse} are used to stream both intermediate reasoning and the final assistant response back to the client.
 
 Retrieval-Augmented Generation (RAG)~\cite{lewis-rag} is a complementary technique that allows arbitrarily long user history to be injected into a bounded model context window through similarity search over a vector store. In Hipahome, the RAG layer is scaffolded as an interface (\verb|rag.Retriever|) but is not yet backed by a production vector index --- this is the primary outstanding work item.
+
+\subsection{Feature comparison with existing analogs}
+\label{sec:competitors}
+
+The previous subsections describe the relevant prior art in prose. Table~\ref{tab:competitors} summarises the most relevant alternatives along the dimensions that motivated this project. Hipahome is positioned in the rightmost column. The table is intentionally limited to features that distinguish the alternatives --- it is not a complete feature list of either Home Assistant or the vendor platforms, both of which ship many capabilities that Hipahome does not attempt to match (extensive integration libraries, mobile apps, geofencing, scenes, energy dashboards, etc.).
+
+\begin{table}[h]
+\centering
+\caption{Comparison of Hipahome with existing smart-home and assistant platforms}
+\label{tab:competitors}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{X c c c c c}
+\toprule
+\textbf{Capability} & \shortstack{\textbf{Home}\\\textbf{Assistant}} & \shortstack{\textbf{Yandex}\\\textbf{Smart Home}} & \shortstack{\textbf{Apple}\\\textbf{HomeKit}} & \shortstack{\textbf{ChatGPT /}\\\textbf{Claude}} & \textbf{Hipahome} \\
+\midrule
+Open source                                                          & \checkmark & ---        & ---        & ---        & \checkmark \\
+Self-hostable                                                        & \checkmark & ---        & ---        & ---        & \checkmark \\
+Local control (no cloud round-trip for command)                      & \checkmark & ---        & partial    & ---        & \checkmark \\
+Custom hobbyist ESP device, no YAML / no manual config               & ---        & ---        & ---        & n/a        & \checkmark \\
+One-time-code captive-portal pairing (no companion app)              & ---        & ---        & ---        & n/a        & \checkmark \\
+Built-in conversational interface with tool calls                    & partial\textsuperscript{$\dagger$}    & limited\textsuperscript{$\ddagger$}    & limited\textsuperscript{$\ddagger$}    & \checkmark & \checkmark \\
+Assistant grounded in concrete device state (queries live capabilities) & partial & ---        & ---        & ---        & \checkmark \\
+Bridge to Yandex Smart Home                                          & via skill  & native     & ---        & ---        & \checkmark \\
+Bridge to Home Assistant                                             & native     & ---        & via bridge & ---        & planned    \\
+Streaming chat over SSE                                              & ---        & ---        & ---        & \checkmark & \checkmark \\
+Pluggable LLM provider (OpenAI / Anthropic / local)                  & ---        & ---        & ---        & locked     & \checkmark \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\footnotesize\textsuperscript{$\dagger$}~Home Assistant exposes an Assist pipeline that can be wired to an LLM, but it requires manual configuration of the intent set, prompt, and provider; it is not a turn-key chat surface. \textsuperscript{$\ddagger$}~Yandex Alice and Siri respond to voice commands routed through their vendor cloud, but neither exposes a developer-facing tool-call API that an external developer can ground in their own device data.\normalsize
+
+\medskip
+
+\noindent\textbf{Takeaway.} The empty row in column ``Custom hobbyist ESP device, no YAML / no manual config'' (only Hipahome ticks it) summarises the differentiation: existing local-first platforms (Home Assistant) offer flexibility at the cost of manual configuration, vendor platforms offer convenience at the cost of openness, and stand-alone chat assistants are blind to physical state. Hipahome targets the intersection that these alternatives leave open --- a single-step pairing flow for hobbyist hardware combined with a chat surface that sees and controls real devices.
 
 \subsection{Positioning of Hipahome}
 
@@ -976,6 +1013,42 @@ The most important result is qualitative: the full end-to-end scenario works on 
 \end{itemize}
 
 The pairing flow was iterated and validated informally during development; no formal large-sample reliability study was run for the final submission. Several real failure modes were surfaced and fixed during integration --- query-string stripping in the inner nginx (cascade-affecting both the pairing-status poll and the chat \verb|?stream=true| flag) and a request-context cancellation that prevented the assistant message from being persisted after streaming. Both fixes are visible in the project's git history.
+
+\subsection{Worked example: chat-driven LED strip control}
+\label{sec:exp:worked}
+
+This subsection traces a concrete chat session from the production deployment on 2026-05-27 (chat id \verb|e0e3017b-9b33-4669-aae9-3cf27ff71e0d|, model \verb|gpt-4o|). The transcript was reconstructed from the \verb|llm_chat_message| table in PostgreSQL and from the corresponding adapter and ESP32 logs --- nothing in this subsection is fabricated; every line below has a corresponding production-log artefact.
+
+\paragraph{Step 1 --- ``what devices do I have?''}
+\textbf{User} (Russian):  \foreignlanguage{russian}{\emph{``привет, какие у меня есть устройства?''}}\par
+The LLM issued the tool call \verb|list_devices()|. The tool returned a single device with id \verb|c135e79e-af77-4e54-86d6-78d4291583c8|, name \verb|esp32-DC84D015B80C|, type \verb|devices.types.light.strip|, and three capabilities (\verb|on_off|, \verb|range/brightness|, \verb|color_setting|).\par
+\textbf{Assistant:} \foreignlanguage{russian}{\emph{``Привет! У вас есть одно устройство: \textbf{Имя:} esp32-DC84D015B80C, \textbf{Тип:} Светодиодная лента (light strip)\ldots''}}\par
+Total wall-clock for this turn: \textbf{2.03~s} (Table~\ref{tab:chat-stream}, row 1).
+
+\paragraph{Step 2 --- ``turn it on''}
+\textbf{User:} \foreignlanguage{russian}{\emph{``можешь включить?''}}\par
+The LLM issued the tool call \verb|control_device(device="esp32-DC84D015B80C",| \verb|capability="devices.capabilities.on_off", value=true)|. The handler resolved the device by name to its UUID (recall the previously fixed bug where the model passed the human-readable name instead of the UUID), persisted the desired state via \verb|POST .../capabilities/devices.capabilities.on_off/set|, and published the corresponding MQTT message:
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,frame=single,breaklines=true]
+topic:  c2701344-5365-4bd4-adbf-0588041bf030/
+        c135e79e-af77-4e54-86d6-78d4291583c8/
+        capabilities/devices.capabilities.on_off/set
+payload: {"state":{"instance":"on","value":true}}
+\end{lstlisting}
+The ESP32 serial log shows the matching reception: \verb|[CAPMAN] routed to devices.capabilities.on_off, ok=1|, followed by a smooth brightness ramp \verb|[WS_BRIGHTNESS] current: 0 -> 133|.\par
+\textbf{Assistant:} \foreignlanguage{russian}{\emph{``Светодиодная лента включена.''}}\par
+Total wall-clock: \textbf{5.05~s} (Table~\ref{tab:chat-stream}, row 6 --- single-tool turn).
+
+\paragraph{Step 3 --- ``and now turn it off''}
+\textbf{User:} \foreignlanguage{russian}{\emph{``а теперь выключи''}}\par
+Analogous \verb|control_device| call with \verb|value=false|. The adapter log records the same topic; the firmware reports \verb|[CAPMAN] routed to devices.capabilities.on_off, ok=1|; the brightness ramps \verb|133 -> 0|.\par
+\textbf{Assistant:} \foreignlanguage{russian}{\emph{``Светодиодная лента выключена.''}}
+
+\paragraph{Step 4 --- introspecting the device}
+\textbf{User:} \foreignlanguage{russian}{\emph{``а что ты можешь с ней ещё сделать?''}}\par
+This turn used no tool calls; the model relied on the capabilities it had already seen in step~1 (the conversation context is retained server-side). It summarised that the strip supports on/off, brightness, and colour setting. This is a useful negative example: the system does not waste a tool round-trip when the answer is already in the context.
+
+\paragraph{What this example demonstrates.}
+The session exercises the four interlocking pieces of the system: (i)~the LLM tool router (\verb|list_devices|, \verb|control_device|); (ii)~the persistence path \verb|POST /devices/.../set|; (iii)~the MQTT bus with the user-id/device-id/capability topic layout (Appendix~D); (iv)~the firmware capability dispatcher in the ESP32. The same physical strip is then also controlled from the panel UI (\verb|DevicesView|) by clicking the on/off toggle; the resulting MQTT publish is identical, confirming that chat and panel are two interchangeable surfaces over the same underlying device-state contract.
 
 \subsection{Server-side latency for a device command}
 
