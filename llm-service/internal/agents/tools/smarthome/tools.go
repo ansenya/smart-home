@@ -212,27 +212,31 @@ func controlDeviceHandler(repo *deviceRepo) tools.Handler {
 			return "", fmt.Errorf("device_id and capability are required")
 		}
 
-		if _, err := repo.getDevice(ctx, req.DeviceID, uid.String()); err != nil {
+		device, err := repo.getDevice(ctx, req.DeviceID, uid.String())
+		if err != nil {
 			return "", fmt.Errorf("device not found: %w", err)
 		}
+		// Use the resolved UUID for downstream DB and MQTT operations — req.DeviceID
+		// may have been passed as the device name/UID by the LLM.
+		deviceID := device.ID
 
 		instance := req.Instance
 		if instance == "" {
-			if existing, ok := repo.readInstance(ctx, req.DeviceID, req.Capability); ok {
+			if existing, ok := repo.readInstance(ctx, deviceID, req.Capability); ok {
 				instance = existing
 			} else {
 				instance = defaultInstance(req.Capability)
 			}
 		}
 
-		if err := repo.updateCapabilityState(ctx, req.DeviceID, req.Capability, instance, req.Value); err != nil {
+		if err := repo.updateCapabilityState(ctx, deviceID, req.Capability, instance, req.Value); err != nil {
 			return "", err
 		}
 
-		if err := repo.publishSet(uid.String(), req.DeviceID, req.Capability, instance, req.Value); err != nil {
+		if err := repo.publishSet(uid.String(), deviceID, req.Capability, instance, req.Value); err != nil {
 			return "", fmt.Errorf("mqtt publish: %w", err)
 		}
 
-		return fmt.Sprintf(`{"status":"ok","device_id":"%s","capability":"%s","instance":"%s"}`, req.DeviceID, req.Capability, instance), nil
+		return fmt.Sprintf(`{"status":"ok","device_id":"%s","capability":"%s","instance":"%s"}`, deviceID, req.Capability, instance), nil
 	}
 }

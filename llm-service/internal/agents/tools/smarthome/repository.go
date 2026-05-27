@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -29,12 +30,19 @@ func (r *deviceRepo) listDevices(ctx context.Context, userID string) ([]Device, 
 
 func (r *deviceRepo) getDevice(ctx context.Context, deviceID, userID string) (*Device, error) {
 	var device Device
-	err := r.db.WithContext(ctx).
+	q := r.db.WithContext(ctx).
 		Preload("Capabilities").
-		Preload("Properties").
-		Where("id = ? AND user_id = ?", deviceID, userID).
-		First(&device).Error
-	if err != nil {
+		Preload("Properties")
+
+	// Accept either a UUID or a device name/UID — the LLM frequently passes the
+	// human-readable name ("esp32-XXXX") instead of the UUID id.
+	if _, err := uuid.Parse(deviceID); err == nil {
+		q = q.Where("id = ? AND user_id = ?", deviceID, userID)
+	} else {
+		q = q.Where("name = ? AND user_id = ?", deviceID, userID)
+	}
+
+	if err := q.First(&device).Error; err != nil {
 		return nil, fmt.Errorf("get device: %w", err)
 	}
 	return &device, nil
