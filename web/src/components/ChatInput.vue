@@ -80,7 +80,12 @@ const send = async () => {
   }
 }
 
-defineExpose({ clear: () => { content.value = ''; if (textarea.value) textarea.value.style.height = 'auto' }, focusTextarea, selectedModel })
+const sendNow = (text: string) => {
+  content.value = text
+  send()
+}
+
+defineExpose({ clear: () => { content.value = ''; if (textarea.value) textarea.value.style.height = 'auto' }, focusTextarea, selectedModel, sendNow })
 
 focusTextarea()
 </script>

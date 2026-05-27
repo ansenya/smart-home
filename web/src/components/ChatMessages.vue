@@ -4,7 +4,8 @@ import ChatMessage from '@/components/ChatMessage.vue'
 import { getHistory } from '@/api/chat'
 import type { Message } from '@/types/chat'
 
-const props = defineProps<{ chatId: string | null }>()
+defineProps<{ chatId: string | null }>()
+const emit = defineEmits<{ suggestion: [text: string] }>()
 
 const messages = ref<Message[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
@@ -34,31 +35,46 @@ const clearMessages = () => {
   messages.value = []
 }
 
+const suggestions = [
+  'What devices do I have?',
+  'Turn off the LED strip',
+  'Set the strip to warm white',
+]
+
 defineExpose({ loadHistory, clearMessages, messages, scrollToBottom })
 </script>
 
 <template>
   <div class="messages-wrap">
-    <!-- Empty state -->
-    <div v-if="!chatId && messages.length === 0" class="empty-state">
+    <!-- Loading skeleton -->
+    <div v-if="isLoading" class="messages-container">
+      <div v-for="i in 4" :key="i" class="skeleton-msg" :class="i % 2 === 0 ? 'skeleton-right' : 'skeleton-left'">
+        <div class="skeleton-bubble" :style="{ width: (50 + (i * 17) % 30) + '%' }" />
+      </div>
+    </div>
+
+    <!-- Empty state: no chat selected, or chat is empty -->
+    <div v-else-if="messages.length === 0" class="empty-state">
       <div class="empty-icon">
         <svg width="28" height="28" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
       </div>
-      <h2 class="empty-title">Smart Home Assistant</h2>
-      <p class="empty-sub">Ask me about your devices, automations, or anything about your home.</p>
+      <h2 class="empty-title">{{ chatId ? 'Ready when you are' : 'Smart Home Assistant' }}</h2>
+      <p class="empty-sub">
+        {{ chatId
+          ? 'This chat is empty. Send a message to get started.'
+          : 'Ask me about your devices, control them, or just chat about your home.'
+        }}
+      </p>
       <div class="suggestions">
-        <div class="suggestion">What devices are online?</div>
-        <div class="suggestion">Turn off all lights</div>
-        <div class="suggestion">Set bedroom to 22°C</div>
-      </div>
-    </div>
-
-    <!-- Loading skeleton -->
-    <div v-else-if="isLoading" class="messages-container">
-      <div v-for="i in 4" :key="i" class="skeleton-msg" :class="i % 2 === 0 ? 'skeleton-right' : 'skeleton-left'">
-        <div class="skeleton-bubble" :style="{ width: (50 + (i * 17) % 30) + '%' }" />
+        <button
+          v-for="s in suggestions"
+          :key="s"
+          type="button"
+          class="suggestion"
+          @click="emit('suggestion', s)"
+        >{{ s }}</button>
       </div>
     </div>
 
@@ -152,6 +168,7 @@ defineExpose({ loadHistory, clearMessages, messages, scrollToBottom })
   background: #1a1a1a;
   color: #737373;
   font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }

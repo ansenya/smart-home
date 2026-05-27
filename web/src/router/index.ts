@@ -11,7 +11,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: HomeView },
     { path: '/devices', component: DevicesView, meta: { requiresAuth: true } },
-    { path: '/chats', component: ChatsView, meta: { requiresAuth: true } },
+    { path: '/chats/:chatId?', component: ChatsView, meta: { requiresAuth: true } },
     { path: '/auth/callback', component: AuthCallbackView },
   ],
 })

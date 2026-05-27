@@ -5,7 +5,7 @@ import { createChat, getChats, deleteChat, updateChat } from '@/api/chat'
 import { push } from 'notivue'
 import ChatSidebarItem from '@/components/ChatSidebarItem.vue'
 
-defineProps<{ open: boolean }>()
+defineProps<{ open: boolean; activeChatId: string | null }>()
 
 const emit = defineEmits<{
   chatSelected: [chatId: string]
@@ -16,7 +16,6 @@ const emit = defineEmits<{
 
 const chats = ref<Chat[]>([])
 const isLoading = ref(true)
-const currentChatID = ref<string | null>(null)
 
 const loadChats = async () => {
   isLoading.value = true
@@ -32,10 +31,9 @@ const loadChats = async () => {
 
 const handleNewChat = async () => {
   try {
-    const res = await createChat({ title: 'Новый чат' })
+    const res = await createChat({ title: 'New chat' })
     const newChat = res.data
     chats.value.unshift(newChat)
-    currentChatID.value = newChat.id
     emit('newChat', newChat.id)
     emit('chatSelected', newChat.id)
   } catch (error: any) {
@@ -44,7 +42,6 @@ const handleNewChat = async () => {
 }
 
 const selectChat = (chatId: string) => {
-  currentChatID.value = chatId
   emit('chatSelected', chatId)
 }
 
@@ -52,9 +49,6 @@ const handleDelete = async (chatId: string) => {
   try {
     await deleteChat(chatId)
     chats.value = chats.value.filter((c) => c.id !== chatId)
-    if (currentChatID.value === chatId) {
-      currentChatID.value = null
-    }
     emit('chatDeleted', chatId)
   } catch (error: any) {
     push.error({ title: 'Failed to delete chat', message: error.message })
@@ -103,7 +97,7 @@ defineExpose({ refreshChats: loadChats, updateChatTitle })
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
-      Новый чат
+      New chat
     </button>
 
     <div class="chat-list">
@@ -115,7 +109,7 @@ defineExpose({ refreshChats: loadChats, updateChatTitle })
           <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: #404040;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
           </svg>
-          <span>Нет чатов</span>
+          <span>No chats yet</span>
         </div>
       </template>
       <template v-else>
@@ -123,7 +117,7 @@ defineExpose({ refreshChats: loadChats, updateChatTitle })
           v-for="chat in chats"
           :key="chat.id"
           :chat="chat"
-          :active="chat.id === currentChatID"
+          :active="chat.id === activeChatId"
           @click="selectChat(chat.id)"
           @delete="handleDelete(chat.id)"
           @rename="(title) => handleRename(chat.id, title)"

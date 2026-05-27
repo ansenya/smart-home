@@ -32,7 +32,14 @@ async function startPairingProcess() {
 async function checkStatus() {
   try {
     const r = await pairingStatus({ code: code.value })
-    if (r.data.status === 'done') { cleanup(); status.value = 'done'; emit('success') }
+    if (r.data.status === 'done') {
+      cleanup()
+      status.value = 'done'
+      emit('success')
+      // Give the user a beat to see the success state, then reload so the
+      // newly paired device shows up everywhere (Devices list, Home screen, etc).
+      setTimeout(() => window.location.reload(), 1500)
+    }
     else if (r.data.status === 'expired') { cleanup(); status.value = 'expired' }
   } catch {
     status.value = 'error'

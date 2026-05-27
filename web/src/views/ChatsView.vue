@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ChatSidebar from '@/components/ChatSidebar.vue'
 import ChatMessages from '@/components/ChatMessages.vue'
 import ChatInput from '@/components/ChatInput.vue'
@@ -7,7 +8,10 @@ import { streamMessage, generateTitle } from '@/api/chat'
 import type { Message } from '@/types/chat'
 import { push } from 'notivue'
 
-const currentChatId = ref<string | null>(null)
+const route = useRoute()
+const router = useRouter()
+
+const currentChatId = computed(() => (route.params.chatId as string) || null)
 const sidebarRef = ref<InstanceType<typeof ChatSidebar> | null>(null)
 const messagesRef = ref<InstanceType<typeof ChatMessages> | null>(null)
 const inputRef = ref<InstanceType<typeof ChatInput> | null>(null)
@@ -16,24 +20,29 @@ const sidebarOpen = ref(false)
 // Tracks chat IDs that already have a generated title
 const titledChats = new Set<string>()
 
+// Drive message loading off the URL — covers initial mount, browser nav, and reloads.
+watch(
+  currentChatId,
+  (id) => {
+    if (id) messagesRef.value?.loadHistory(id)
+    else messagesRef.value?.clearMessages()
+  },
+  { immediate: true, flush: 'post' },
+)
+
 const handleChatSelected = (chatId: string) => {
-  currentChatId.value = chatId
-  messagesRef.value?.loadHistory(chatId)
+  if (currentChatId.value !== chatId) router.replace({ path: `/chats/${chatId}` })
   sidebarOpen.value = false
 }
 
 const handleNewChat = (chatId: string) => {
-  currentChatId.value = chatId
-  messagesRef.value?.loadHistory(chatId)
+  router.replace({ path: `/chats/${chatId}` })
   sidebarRef.value?.refreshChats()
   sidebarOpen.value = false
 }
 
 const handleChatDeleted = (chatId: string) => {
-  if (currentChatId.value === chatId) {
-    currentChatId.value = null
-    messagesRef.value?.clearMessages()
-  }
+  if (currentChatId.value === chatId) router.replace({ path: '/chats' })
 }
 
 const handleMessageSent = (chatId: string, content: string) => {
@@ -107,6 +116,7 @@ const handleError = (error: string) => push.error(error)
     <ChatSidebar
       ref="sidebarRef"
       :open="sidebarOpen"
+      :active-chat-id="currentChatId"
       @chat-selected="handleChatSelected"
       @new-chat="handleNewChat"
       @chat-deleted="handleChatDeleted"
@@ -121,11 +131,15 @@ const handleError = (error: string) => push.error(error)
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <span class="mobile-title">{{ currentChatId ? 'Чат' : 'Smart Home' }}</span>
+        <span class="mobile-title">{{ currentChatId ? 'Chat' : 'Smart Home' }}</span>
         <div style="width: 36px;" />
       </div>
 
-      <ChatMessages ref="messagesRef" :chat-id="currentChatId" />
+      <ChatMessages
+        ref="messagesRef"
+        :chat-id="currentChatId"
+        @suggestion="(text) => inputRef?.sendNow(text)"
+      />
       <ChatInput
         ref="inputRef"
         :chat-id="currentChatId"
