@@ -249,12 +249,14 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 	}
 
 	if streamErr != nil {
+		close(tokenChan)
 		s.log.Error("stream recv failed", slog.String("model", chat.Model), slog.Any("err", streamErr))
 		return fmt.Errorf("stream failed: %w", streamErr)
 	}
-	close(tokenChan)
 
-	// Persist assistant response
+	// Persist before closing tokenChan: handler stays in select until close,
+	// keeping the request ctx alive for the DB write. Belt-and-suspenders:
+	// detach from request cancellation so a flaky client doesn't drop the message.
 	if fullContent.Len() > 0 {
 		assistantMsg := &models.Message{
 			ID:        uuid.New(),
@@ -264,11 +266,14 @@ func (s *chatService) StreamResponse(ctx context.Context, chatID uuid.UUID, user
 			ModelName: chat.Model,
 			Status:    models.StatusCompleted,
 		}
-		if err := s.messageRepository.Create(ctx, assistantMsg); err != nil {
+		persistCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		if err := s.messageRepository.Create(persistCtx, assistantMsg); err != nil {
 			s.log.Error("failed to persist assistant message", slog.Any("err", err))
 		}
+		cancel()
 	}
 
+	close(tokenChan)
 	return nil
 }
 
