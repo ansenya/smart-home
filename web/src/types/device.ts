@@ -66,21 +66,22 @@ export interface SetCapabilityRequest {
 }
 
 export const CAPABILITY_LABELS: Record<CapabilityType, string> = {
-  'devices.capabilities.on_off': 'Питание',
-  'devices.capabilities.color_setting': 'Цвет',
-  'devices.capabilities.mode': 'Режим',
-  'devices.capabilities.range': 'Уровень',
-  'devices.capabilities.toggle': 'Переключатель',
+  'devices.capabilities.on_off': 'Power',
+  'devices.capabilities.color_setting': 'Color',
+  'devices.capabilities.mode': 'Mode',
+  'devices.capabilities.range': 'Level',
+  'devices.capabilities.toggle': 'Toggle',
 }
 
 export const DEVICE_TYPE_LABELS: Record<string, string> = {
-  'devices.types.light': 'Освещение',
-  'devices.types.socket': 'Розетка',
-  'devices.types.switch': 'Выключатель',
-  'devices.types.thermostat': 'Термостат',
-  'devices.types.sensor': 'Сенсор',
-  'devices.types.media_device': 'Медиа',
-  'devices.types.other': 'Другое',
+  'devices.types.light': 'Light',
+  'devices.types.light.strip': 'LED strip',
+  'devices.types.socket': 'Socket',
+  'devices.types.switch': 'Switch',
+  'devices.types.thermostat': 'Thermostat',
+  'devices.types.sensor': 'Sensor',
+  'devices.types.media_device': 'Media',
+  'devices.types.other': 'Other',
 }
 
 export function deviceTypeLabel(type: string): string {

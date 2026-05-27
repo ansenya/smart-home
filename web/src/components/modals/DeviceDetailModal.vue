@@ -77,9 +77,9 @@ async function saveMeta() {
     const r = await updateDevice(localDevice.value.id, payload)
     localDevice.value = r.data
     emit('updated', r.data)
-    push.success({ title: 'Сохранено', message: 'Изменения применены' })
+    push.success({ title: 'Saved', message: 'Changes applied' })
   } catch {
-    push.error({ title: 'Не удалось', message: 'Сохранить не получилось' })
+    push.error({ title: 'Failed', message: 'Could not save changes' })
   } finally {
     renaming.value = false
   }
@@ -95,9 +95,9 @@ async function handleDelete() {
   try {
     await deleteDevice(localDevice.value.id)
     emit('deleted', localDevice.value.id)
-    push.success({ title: 'Устройство удалено' })
+    push.success({ title: 'Device deleted' })
   } catch {
-    push.error({ title: 'Не удалось удалить' })
+    push.error({ title: 'Failed to delete' })
   } finally {
     deleting.value = false
     confirmDelete.value = false
@@ -119,7 +119,7 @@ async function setCap(cap: Capability, value: unknown, instance?: string) {
     emit('updated', localDevice.value)
   } catch {
     cap.state = { ...(cap.state ?? {}), value: prev }
-    push.error({ title: 'Команда не доставлена' })
+    push.error({ title: 'Command was not delivered' })
   } finally {
     capPending.value.delete(cap.id)
   }
@@ -245,7 +245,7 @@ function lastSeenLabel(): string {
   if (!localDevice.value?.last_seen) return '—'
   const d = new Date(localDevice.value.last_seen)
   if (isNaN(d.getTime())) return '—'
-  return d.toLocaleString('ru-RU')
+  return d.toLocaleString()
 }
 </script>
 
@@ -262,7 +262,7 @@ function lastSeenLabel(): string {
                 </svg>
               </div>
               <div class="header-text">
-                <div class="header-name">{{ localDevice.name || 'Без имени' }}</div>
+                <div class="header-name">{{ localDevice.name || 'Unnamed device' }}</div>
                 <div class="header-meta">
                   <span :class="['status-pill', isOnline ? 'status-pill--on' : 'status-pill--off']">
                     {{ isOnline ? 'online' : 'offline' }}
@@ -272,7 +272,7 @@ function lastSeenLabel(): string {
                 </div>
               </div>
             </div>
-            <button class="close-btn" @click="close" aria-label="Закрыть">
+            <button class="close-btn" @click="close" aria-label="Close">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -282,7 +282,7 @@ function lastSeenLabel(): string {
           <div class="modal-body">
             <!-- Capabilities -->
             <section v-if="onOffCap || colorCap || rangeCap || modeCaps.length || toggleCaps.length" class="section">
-              <h3 class="section-title">Управление</h3>
+              <h3 class="section-title">Controls</h3>
 
               <!-- On/Off -->
               <div v-if="onOffCap" class="control-row">
@@ -376,12 +376,12 @@ function lastSeenLabel(): string {
             </section>
 
             <section v-else class="section section--empty">
-              <div class="empty-cap">У этого устройства нет настраиваемых возможностей.</div>
+              <div class="empty-cap">This device has no controllable capabilities.</div>
             </section>
 
             <!-- Properties -->
             <section v-if="localDevice.properties?.length" class="section">
-              <h3 class="section-title">Показания</h3>
+              <h3 class="section-title">Sensors</h3>
               <div class="properties">
                 <div v-for="prop in localDevice.properties" :key="prop.id" class="property">
                   <div class="prop-label">{{ prop.state?.instance ?? prop.type.split('.').pop() }}</div>
@@ -392,29 +392,29 @@ function lastSeenLabel(): string {
 
             <!-- Settings -->
             <section class="section">
-              <h3 class="section-title">Настройки</h3>
+              <h3 class="section-title">Settings</h3>
               <div class="field">
-                <label>Название</label>
-                <input v-model="editName" type="text" placeholder="Например, торшер в спальне" />
+                <label>Name</label>
+                <input v-model="editName" type="text" placeholder="e.g. Bedroom lamp" />
               </div>
               <div class="field">
-                <label>Комната</label>
-                <input v-model="editRoom" type="text" placeholder="Например, Спальня" />
+                <label>Room</label>
+                <input v-model="editRoom" type="text" placeholder="e.g. Bedroom" />
               </div>
               <div class="field">
-                <label>Описание</label>
+                <label>Description</label>
                 <input v-model="editDescription" type="text" placeholder="—" />
               </div>
               <button class="btn-primary btn-block" @click="saveMeta" :disabled="renaming">
-                {{ renaming ? 'Сохранение…' : 'Сохранить' }}
+                {{ renaming ? 'Saving…' : 'Save' }}
               </button>
             </section>
 
             <!-- Info -->
             <section class="section">
-              <h3 class="section-title">Информация</h3>
+              <h3 class="section-title">Info</h3>
               <div class="info-row">
-                <span class="info-key">ID устройства</span>
+                <span class="info-key">Device ID</span>
                 <span class="info-val">{{ localDevice.id }}</span>
               </div>
               <div class="info-row">
@@ -422,7 +422,7 @@ function lastSeenLabel(): string {
                 <span class="info-val">{{ localDevice.device_uid }}</span>
               </div>
               <div class="info-row">
-                <span class="info-key">Последняя активность</span>
+                <span class="info-key">Last seen</span>
                 <span class="info-val">{{ lastSeenLabel() }}</span>
               </div>
             </section>
@@ -436,10 +436,10 @@ function lastSeenLabel(): string {
                 :disabled="deleting"
               >
                 {{ deleting
-                   ? 'Удаление…'
+                   ? 'Deleting…'
                    : confirmDelete
-                     ? 'Точно удалить?'
-                     : 'Удалить устройство' }}
+                     ? 'Confirm delete?'
+                     : 'Delete device' }}
               </button>
             </section>
           </div>

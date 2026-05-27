@@ -85,8 +85,8 @@ function toggle(e: MouseEvent) {
     </div>
 
     <div class="card-body">
-      <div class="card-name" :title="device.name || 'Без имени'">
-        {{ device.name || 'Без имени' }}
+      <div class="card-name" :title="device.name || 'Unnamed device'">
+        {{ device.name || 'Unnamed device' }}
       </div>
       <div class="card-meta">
         <span class="meta-type">{{ deviceTypeLabel(device.type) }}</span>

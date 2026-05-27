@@ -10,11 +10,13 @@ bool confirmPair(){
   http.begin(PAIRING_URL);
   http.addHeader("Content-Type","application/json");
 
-  StaticJsonDocument<256> d;
+  StaticJsonDocument<384> d;
   d["code"] = prefs.getString("pair_code", "");
   d["device_uid"] = deviceUID;
   d["mac_address"] = macAddress;
   d["type"] = "devices.types.light.strip";
+  String storedName = prefs.getString("name", "");
+  if (storedName.length() > 0) d["name"] = storedName;
 
   String body; serializeJson(d, body);
   LOG("[PAIR] Body: %s", body.c_str());

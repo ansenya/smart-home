@@ -58,7 +58,7 @@ const toolIcon = computed(() => {
         </div>
         <div class="tool-card-meta">
           <span class="tool-card-name">{{ message.tool_name }}</span>
-          <span class="tool-card-label">результат получен</span>
+          <span class="tool-card-label">result received</span>
         </div>
       </div>
       <svg class="tool-chevron" :class="{ 'tool-chevron--open': expanded }"

@@ -55,21 +55,21 @@ const stats = (() => ({
       </div>
       <h1 class="hero-title">
         <template v-if="authStore.isAuthenticated">
-          С возвращением,<br>
-          <span class="gradient-text">{{ authStore.user?.name || 'друг' }}</span>
+          Welcome back,<br>
+          <span class="gradient-text">{{ authStore.user?.name || 'friend' }}</span>
         </template>
         <template v-else>
-          Добро пожаловать в<br><span class="gradient-text">Hiphome</span>
+          Welcome to<br><span class="gradient-text">Hiphome</span>
         </template>
       </h1>
       <p class="hero-sub">
-        Управляйте устройствами, создавайте автоматизации и общайтесь с AI-ассистентом умного дома.
+        Control your devices, build automations, and chat with your smart home assistant.
       </p>
       <div class="hero-actions">
-        <button v-if="!authStore.isAuthenticated" class="btn-primary" @click="authStore.login()">Войти</button>
+        <button v-if="!authStore.isAuthenticated" class="btn-primary" @click="authStore.login()">Sign in</button>
         <template v-else>
-          <button class="btn-primary" @click="router.push('/chats')">Открыть чат</button>
-          <button class="btn-secondary" @click="router.push('/devices')">Мои устройства</button>
+          <button class="btn-primary" @click="router.push('/chats')">Open chat</button>
+          <button class="btn-secondary" @click="router.push('/devices')">My devices</button>
         </template>
       </div>
     </div>
@@ -83,21 +83,21 @@ const stats = (() => ({
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
             </svg>
           </div>
-          <div class="overview-label">Устройства</div>
+          <div class="overview-label">Devices</div>
         </div>
         <div class="overview-stats">
           <div class="stat-big">
             <div class="stat-num">{{ stats.total() }}</div>
-            <div class="stat-cap">всего</div>
+            <div class="stat-cap">total</div>
           </div>
           <div class="stat-pair">
             <div class="stat-line">
               <span class="stat-dot stat-dot--online" />
-              <span class="stat-val">{{ stats.online() }} онлайн</span>
+              <span class="stat-val">{{ stats.online() }} online</span>
             </div>
             <div class="stat-line">
               <span class="stat-dot stat-dot--on" />
-              <span class="stat-val">{{ stats.on() }} активно</span>
+              <span class="stat-val">{{ stats.on() }} active</span>
             </div>
           </div>
         </div>
@@ -110,15 +110,15 @@ const stats = (() => ({
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <div class="overview-label">AI-чаты</div>
+          <div class="overview-label">AI Chats</div>
         </div>
         <div class="overview-stats">
           <div class="stat-big">
             <div class="stat-num">{{ chatsCount ?? '—' }}</div>
-            <div class="stat-cap">сессий</div>
+            <div class="stat-cap">sessions</div>
           </div>
           <div class="stat-pair">
-            <div class="stat-hint">Общайтесь с ассистентом и управляйте умным домом через диалог.</div>
+            <div class="stat-hint">Talk to the assistant and control your home through conversation.</div>
           </div>
         </div>
       </button>
@@ -141,20 +141,20 @@ const stats = (() => ({
 <script lang="ts">
 const features = [
   {
-    title: 'AI-ассистент',
-    desc: 'Управляйте домом голосом и текстом через умного ассистента.',
+    title: 'AI Assistant',
+    desc: 'Run your home with voice and chat through an AI that understands your devices.',
     icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
     bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
   },
   {
-    title: 'Устройства',
-    desc: 'Контролируйте все умные устройства из единого интерфейса.',
+    title: 'Devices',
+    desc: 'Control every connected device from one place, with live status updates.',
     icon: 'M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18',
     bg: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
   },
   {
-    title: 'Автоматизация',
-    desc: 'Создавайте сценарии, которые работают без вашего участия.',
+    title: 'Automations',
+    desc: 'Build routines that run on their own, so your home reacts before you ask.',
     icon: 'M13 10V3L4 14h7v7l9-11h-7z',
     bg: 'linear-gradient(135deg, #10b981, #0ea5e9)',
   },

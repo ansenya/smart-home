@@ -34,14 +34,14 @@ const groupedByRoom = computed<{ room: string; devices: Device[] }[]>(() => {
 
   const groups = new Map<string, Device[]>()
   for (const d of filtered) {
-    const r = d.room?.trim() || 'Без комнаты'
+    const r = d.room?.trim() || 'No room'
     if (!groups.has(r)) groups.set(r, [])
     groups.get(r)!.push(d)
   }
   return Array.from(groups.entries())
     .sort((a, b) => {
-      if (a[0] === 'Без комнаты') return 1
-      if (b[0] === 'Без комнаты') return -1
+      if (a[0] === 'No room') return 1
+      if (b[0] === 'No room') return -1
       return a[0].localeCompare(b[0])
     })
     .map(([room, devices]) => ({ room, devices }))
@@ -71,7 +71,7 @@ async function loadDevices() {
     if (err.response?.status === 401) {
       error.value = 'auth'
     } else {
-      error.value = 'Не удалось загрузить устройства'
+      error.value = 'Failed to load devices'
     }
   } finally {
     loading.value = false
@@ -91,7 +91,7 @@ async function handleToggle(device: Device, next: boolean) {
     await setCapability(device.id, 'devices.capabilities.on_off', { value: next })
   } catch {
     if (cap) cap.state = { ...(cap.state ?? {}), value: prev }
-    push.error({ title: 'Не удалось', message: 'Команда не доставлена' })
+    push.error({ title: 'Failed', message: 'Command was not delivered' })
   } finally {
     pendingIds.value.delete(device.id)
   }
@@ -192,32 +192,32 @@ onUnmounted(stopStream)
     <header class="hero">
       <div class="hero-text">
         <h1>
-          Мои устройства
+          My devices
           <span
             v-if="!loading && !error"
             class="live-pill"
             :class="{ 'live-pill--active': isLive }"
-            :title="isLive ? 'Подключено к stream' : 'Подключение...'"
+            :title="isLive ? 'Connected to live stream' : 'Connecting...'"
           >
             <span class="live-dot" />
             {{ isLive ? 'live' : 'idle' }}
           </span>
         </h1>
-        <p>Управляйте всеми подключенными устройствами в одном месте.</p>
+        <p>Manage every connected device in one place.</p>
       </div>
 
       <div class="hero-stats" v-if="!loading && !error">
         <div class="stat">
           <div class="stat-value">{{ stats.total }}</div>
-          <div class="stat-label">всего</div>
+          <div class="stat-label">total</div>
         </div>
         <div class="stat stat--online">
           <div class="stat-value">{{ stats.online }}</div>
-          <div class="stat-label">онлайн</div>
+          <div class="stat-label">online</div>
         </div>
         <div class="stat stat--on">
           <div class="stat-value">{{ stats.on }}</div>
-          <div class="stat-label">активно</div>
+          <div class="stat-label">active</div>
         </div>
       </div>
     </header>
@@ -230,9 +230,9 @@ onUnmounted(stopStream)
         <input
           v-model="search"
           type="text"
-          placeholder="Поиск по имени, комнате или типу"
+          placeholder="Search by name, room or type"
         />
-        <button v-if="search" class="clear-btn" @click="search = ''" aria-label="Очистить">
+        <button v-if="search" class="clear-btn" @click="search = ''" aria-label="Clear">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -251,8 +251,8 @@ onUnmounted(stopStream)
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <div class="empty-title">Нужна авторизация</div>
-        <div class="empty-sub">Войдите, чтобы увидеть свои устройства.</div>
+        <div class="empty-title">Sign in required</div>
+        <div class="empty-sub">Sign in to see your devices.</div>
       </div>
 
       <div v-else-if="error" class="empty">
@@ -261,9 +261,9 @@ onUnmounted(stopStream)
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
           </svg>
         </div>
-        <div class="empty-title">Ошибка</div>
+        <div class="empty-title">Error</div>
         <div class="empty-sub">{{ error }}</div>
-        <button class="btn-primary" @click="loadDevices">Повторить</button>
+        <button class="btn-primary" @click="loadDevices">Retry</button>
       </div>
 
       <div v-else-if="devices.length === 0" class="empty">
@@ -272,13 +272,13 @@ onUnmounted(stopStream)
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
           </svg>
         </div>
-        <div class="empty-title">Пока нет устройств</div>
-        <div class="empty-sub">Нажмите на круглую кнопку справа внизу и выберите «Add Device», чтобы добавить первое устройство.</div>
+        <div class="empty-title">No devices yet</div>
+        <div class="empty-sub">Tap the round button at the bottom-right and choose &ldquo;Add device&rdquo; to add your first one.</div>
       </div>
 
       <div v-else-if="groupedByRoom.length === 0" class="empty">
-        <div class="empty-title">Ничего не найдено</div>
-        <div class="empty-sub">Попробуйте другой поисковый запрос.</div>
+        <div class="empty-title">Nothing found</div>
+        <div class="empty-sub">Try a different search.</div>
       </div>
 
       <template v-else>
