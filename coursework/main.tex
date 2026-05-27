@@ -1,0 +1,1484 @@
+\documentclass[a4paper,12pt]{article}
+
+% ==========================================================
+%  Hipahome — Final Coursework Report
+%  Author: Anoshin Arseniy (БПАД241)
+%  Supervisor: Rudakov Kirill
+%  HSE FCS, 2026
+% ==========================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A,T1]{fontenc}
+\usepackage[english,russian]{babel}
+
+\usepackage[a4paper,left=25mm,right=15mm,top=20mm,bottom=20mm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{2pt}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.geometric,calc,decorations.pathreplacing}
+\usepackage{pgfgantt}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue,
+  pdftitle={Hipahome: A Smart Home Platform with Hyper-Personalized Conversational Assistant},
+  pdfauthor={Anoshin Arseniy}
+}
+
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{caption}
+\addto\captionsrussian{%
+  \renewcommand{\figurename}{Рис.}%
+  \renewcommand{\tablename}{Таблица}%
+}
+\addto\captionsenglish{%
+  \renewcommand{\figurename}{\foreignlanguage{russian}{Рис.}}%
+  \renewcommand{\tablename}{\foreignlanguage{russian}{Таблица}}%
+  \renewcommand{\lstlistingname}{\foreignlanguage{russian}{Листинг}}%
+}
+\addto\captionsrussian{%
+  \renewcommand{\lstlistingname}{Листинг}%
+}
+
+\usepackage{listings}
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{codeblue}{rgb}{0,0.2,0.6}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codegray},
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codegreen}\itshape,
+  stringstyle=\color{codepurple},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray},
+  tabsize=2,
+  upquote=true,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate={а}{{\selectfont\char224}}1 {б}{{\selectfont\char225}}1
+           {в}{{\selectfont\char226}}1 {г}{{\selectfont\char227}}1
+           {д}{{\selectfont\char228}}1 {е}{{\selectfont\char229}}1
+           {ё}{{\selectfont\char184}}1 {ж}{{\selectfont\char230}}1
+           {з}{{\selectfont\char231}}1 {и}{{\selectfont\char232}}1
+           {й}{{\selectfont\char233}}1 {к}{{\selectfont\char234}}1
+           {л}{{\selectfont\char235}}1 {м}{{\selectfont\char236}}1
+           {н}{{\selectfont\char237}}1 {о}{{\selectfont\char238}}1
+           {п}{{\selectfont\char239}}1 {р}{{\selectfont\char240}}1
+           {с}{{\selectfont\char241}}1 {т}{{\selectfont\char242}}1
+           {у}{{\selectfont\char243}}1 {ф}{{\selectfont\char244}}1
+           {х}{{\selectfont\char245}}1 {ц}{{\selectfont\char246}}1
+           {ч}{{\selectfont\char247}}1 {ш}{{\selectfont\char248}}1
+           {щ}{{\selectfont\char249}}1 {ъ}{{\selectfont\char250}}1
+           {ы}{{\selectfont\char251}}1 {ь}{{\selectfont\char252}}1
+           {э}{{\selectfont\char253}}1 {ю}{{\selectfont\char254}}1
+           {я}{{\selectfont\char255}}1
+           {А}{{\selectfont\char192}}1 {Б}{{\selectfont\char193}}1
+           {В}{{\selectfont\char194}}1 {Г}{{\selectfont\char195}}1
+           {Д}{{\selectfont\char196}}1 {Е}{{\selectfont\char197}}1
+           {Ё}{{\selectfont\char168}}1 {Ж}{{\selectfont\char198}}1
+           {З}{{\selectfont\char199}}1 {И}{{\selectfont\char200}}1
+           {Й}{{\selectfont\char201}}1 {К}{{\selectfont\char202}}1
+           {Л}{{\selectfont\char203}}1 {М}{{\selectfont\char204}}1
+           {Н}{{\selectfont\char205}}1 {О}{{\selectfont\char206}}1
+           {П}{{\selectfont\char207}}1 {Р}{{\selectfont\char208}}1
+           {С}{{\selectfont\char209}}1 {Т}{{\selectfont\char210}}1
+           {У}{{\selectfont\char211}}1 {Ф}{{\selectfont\char212}}1
+           {Х}{{\selectfont\char213}}1 {Ц}{{\selectfont\char214}}1
+           {Ч}{{\selectfont\char215}}1 {Ш}{{\selectfont\char216}}1
+           {Щ}{{\selectfont\char217}}1 {Ъ}{{\selectfont\char218}}1
+           {Ы}{{\selectfont\char219}}1 {Ь}{{\selectfont\char220}}1
+           {Э}{{\selectfont\char221}}1 {Ю}{{\selectfont\char222}}1
+           {Я}{{\selectfont\char223}}1
+}
+
+\lstdefinelanguage{Go}{
+  keywords={break,default,func,interface,select,case,defer,go,map,struct,chan,else,goto,package,switch,const,fallthrough,if,range,type,continue,for,import,return,var},
+  keywordstyle=\color{codeblue}\bfseries,
+  ndkeywords={true,false,nil,iota},
+  ndkeywordstyle=\color{codepurple}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=true,
+  comment=[l]//,
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\color{codepurple}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% Custom command for English foreign terms
+\newcommand{\eng}[1]{\textit{#1}}
+
+\begin{document}
+
+% =========================================================
+%   TITLE PAGE
+% =========================================================
+\begin{titlepage}
+\selectlanguage{english}
+\begin{center}
+{\normalsize NATIONAL RESEARCH UNIVERSITY \\ HIGHER SCHOOL OF ECONOMICS}
+
+\vspace{0.5cm}
+{\normalsize Faculty of Computer Science \\ Bachelor's Programme ``Data Science and Business Analytics''}
+
+\vspace{4cm}
+
+{\bfseries\large Software Project Report on the Topic:\\[6pt]
+Hipahome: A Smart Home Software Platform with a Hyper-Personalized Conversational Assistant}
+
+\vspace{4pt}
+{\normalsize (final report)}
+
+\end{center}
+
+\vspace{3cm}
+
+\noindent\textbf{Submitted by the Student:}\\[4pt]
+\hspace*{0.5cm} group \foreignlanguage{russian}{\#БПАД241}, 2nd year of study \hspace{1.2cm} [Anoshin Arseniy]
+
+\vspace{0.8cm}
+
+\noindent\textbf{Approved by the Project Supervisor:}\\[4pt]
+\hspace*{0.5cm} [Rudakov Kirill]\\
+\hspace*{0.5cm} [Senior Teacher]\\
+\hspace*{0.5cm} Faculty of Computer Science, HSE University
+
+\vfill
+\begin{center}
+Moscow 2026
+\end{center}
+\end{titlepage}
+
+% =========================================================
+%   TABLE OF CONTENTS
+% =========================================================
+\selectlanguage{russian}
+\renewcommand{\contentsname}{\textbf{Содержание}}
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+% =========================================================
+%   ABSTRACT (EN)
+% =========================================================
+\selectlanguage{english}
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+Hipahome is a smart home software platform that unifies device control with a hyper-personalized conversational assistant. The project addresses two long-standing problems in the smart home space: the fragmentation between vendor ecosystems and the lack of contextual awareness in existing voice and chat assistants. The platform provides a middleware layer that connects user-defined hardware devices, cloud services, and existing smart home ecosystems such as Home Assistant and Yandex Smart Home, while exposing a single conversational interface with shared memory across web and (future) voice modalities.
+
+The system is built on a microservice architecture written in Go, with PostgreSQL for persistent state, Redis for caching, MQTT (Eclipse Mosquitto) as the device message bus, and a Vue~3 frontend. The conversational layer is provided by a dedicated \verb|llm-service| that abstracts over multiple LLM providers (OpenAI-compatible APIs and Anthropic Claude) and executes tool calls against the smart home backend through a bounded \eng{tool loop}. Devices are based on ESP32 microcontrollers with a unified firmware architecture supporting captive-portal pairing, MAC-based identity claim with a schema-level placeholder for cryptographic binding, capability declaration, and MQTT-based runtime communication.
+
+This report presents the final state of the project: the full architecture, the implementation of all core components (authentication, pairing, device runtime, LLM-driven control, Yandex Smart Home adapter), the experimental evaluation of latency and pairing reliability, the customer development findings, and the conclusions and future work. At submission, the prototype demonstrates an end-to-end scenario in which a user pairs a physical ESP32-based LED strip via a captive portal and then controls it from the web chat through natural-language commands routed through the LLM tool loop and MQTT bus.
+
+\newpage
+
+% =========================================================
+%   АННОТАЦИЯ (RU)
+% =========================================================
+\selectlanguage{russian}
+\section*{Аннотация}
+\addcontentsline{toc}{section}{Аннотация}
+
+Hipahome --- программная платформа умного дома, объединяющая управление устройствами с гипер-персонализированным разговорным ассистентом. Проект решает две давние проблемы рынка умных домов: фрагментацию вендорских экосистем и отсутствие контекстной памяти у существующих голосовых и чат-ассистентов. Платформа представляет собой промежуточный программный слой, соединяющий пользовательские аппаратные устройства, облачные сервисы и существующие экосистемы (Home Assistant, Яндекс~Умный Дом), при этом единый разговорный интерфейс имеет общую память между веб- и (в перспективе) голосовым каналами.
+
+Система построена на микросервисной архитектуре на Go, с PostgreSQL в качестве основного хранилища, Redis для кэширования, MQTT (Eclipse Mosquitto) в качестве шины сообщений устройств и фронтендом на Vue~3. Разговорный слой реализован в виде отдельного сервиса \verb|llm-service|, абстрагирующего нескольких LLM-провайдеров (OpenAI-совместимые API и Anthropic Claude) и исполняющего tool-вызовы к смарт-хом бэкенду через ограниченный \eng{tool loop}. Устройства строятся на микроконтроллерах ESP32 с единой архитектурой прошивки, поддерживающей сопряжение через captive-portal, аппаратно-привязанную идентичность, декларацию возможностей и MQTT-runtime.
+
+В отчёте представлено финальное состояние проекта: полная архитектура, реализация всех ключевых компонентов (аутентификация, pairing, runtime устройств, управление через LLM, адаптер для Яндекс Умный Дом), экспериментальная оценка задержек и надёжности pairing, результаты customer development, а также выводы и направления дальнейшего развития. На момент защиты прототип демонстрирует сквозной сценарий: пользователь сопрягает физический ESP32-светильник через captive-портал и далее управляет им из веб-чата с помощью команд на естественном языке, маршрутизируемых через LLM tool loop и MQTT-шину.
+
+\newpage
+
+% =========================================================
+%   KEYWORDS
+% =========================================================
+\section*{Keywords}
+\addcontentsline{toc}{section}{Keywords}
+
+\selectlanguage{english}
+Smart home, IoT platform, MQTT, microservices, device pairing, Home Assistant, Yandex Smart Home, smart home UX, IoT middleware, AI assistant, LLM, large language models, function calling, tool use, contextual awareness, hyper-personalization, ESP32, captive portal, Go, Vue 3, RAG, retrieval-augmented generation.
+
+\newpage
+
+% =========================================================
+%   1. INTRODUCTION
+% =========================================================
+\selectlanguage{russian}
+\section{Introduction}
+
+\selectlanguage{english}
+Smart home systems have become widely adopted in consumer electronics; however, most existing solutions are either closed ecosystems or require complex manual configuration to achieve advanced functionality. Commercial platforms typically prioritize mass-market usability while sacrificing flexibility and transparency, whereas open-source solutions often demand significant technical expertise from users.
+
+This contradiction creates a gap between usability and extensibility. Users who wish to develop custom devices or deeply integrate software utilities into their smart home environment are forced to rely on scripts, configuration files, and heterogeneous integrations between multiple vendors. Such an approach reduces system reliability, increases maintenance complexity, and limits user control.
+
+A second observation, which fundamentally shaped the direction of this project, is that even users of mature smart home platforms experience a hard separation between their \emph{home} assistant (voice control over devices) and their \emph{personal productivity} assistant (chat-based AI tools for work). The two systems share no context: the smart home reacts to explicit commands, the chat assistant has no awareness of physical environment state, and neither remembers what happened in the other.
+
+The Hipahome project addresses both problems with a single platform. From a systems perspective, it is a smart home middleware that combines plug-and-play usability with engineering-level extensibility: a microservice backend that connects user-defined hardware devices, cloud services, and existing smart home ecosystems into a unified architecture. From an interaction perspective, it is a hyper-personalized conversational assistant: a single AI agent that maintains a unified context spanning device states, conversation history, and (in future iterations) user calendar and communication data, and that is accessible through a web chat interface --- with the long-term goal of being accessible through a voice interface that shares the same memory.
+
+The project is focused on providing a stable, transparent, and flexible environment for smart home enthusiasts and developers, while preserving compatibility with popular platforms such as Home Assistant and Yandex Smart Home.
+
+\subsection{Project type and scope}
+
+This is an individual software project (prototype level) with engineered innovation in two areas:
+
+\begin{enumerate}
+  \item A new model for integrating user-created devices into a single middleware, with a UX approach that minimizes manual configuration while preserving compatibility with Home Assistant and Yandex Smart Home.
+  \item A unified, agent-style conversational layer that bridges device control and chat-based productivity assistance through a shared, persistent context and a structured tool-use interface to the smart home backend.
+\end{enumerate}
+
+The project consists of: a Go-based microservice backend (six services), a Vue~3 web frontend, an ESP32 firmware family in PlatformIO with two reference variants, a PostgreSQL data model, and an Eclipse Mosquitto MQTT broker. The deployment is orchestrated through Docker Compose.
+
+\subsection{Document structure}
+
+The remainder of this report is organized as follows. Section~\ref{sec:evolution} describes the project's evolution between Checkpoint~1, Checkpoint~2, and the final submission. Section~\ref{sec:lit} reviews the relevant prior art. Section~\ref{sec:problem} formalizes the research and engineering problem. Section~\ref{sec:objectives} states the concrete objectives. Section~\ref{sec:design} presents the final system design, including the LLM agent layer. Section~\ref{sec:impl} describes the implementation in detail. Section~\ref{sec:func} gives the functional specification of the delivered prototype. Section~\ref{sec:cd} reports customer development findings. Section~\ref{sec:exp} presents the experimental evaluation. Section~\ref{sec:roadmap} reviews the roadmap and the project timeline. Section~\ref{sec:canvas} presents the final Lean Canvas. Section~\ref{sec:conclusion} concludes the report. References and appendices follow.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   2. PROJECT EVOLUTION
+% =========================================================
+\section{Project Evolution: From Plug-and-Play Middleware to a Hyper-Personalized Assistant}
+\label{sec:evolution}
+
+\selectlanguage{english}
+The project evolved over two control points and a final development phase. The initial scope (Checkpoint~1) focused exclusively on the smart home middleware layer: device pairing, MQTT-based control, and an adapter for Yandex Smart Home. Checkpoint~2 introduced a major scope expansion towards hyper-personalization, adding a dedicated chat microservice and LLM integration. The final phase consolidated and stabilized both layers, added Anthropic Claude as a parallel LLM provider, completed the tool-calling integration, and produced a second reference firmware (WS2811 LED strip) demonstrating the capability framework.
+
+\subsection{Motivation for the pivot at Checkpoint 2}
+
+After completing the first development milestone, interviews with potential users and reflection on the competitive landscape revealed a critical insight: \emph{the core value of a smart home assistant is not device control per se, but contextual awareness}. Existing solutions --- whether commercial (Yandex Station, Amazon Echo) or open-source (Home Assistant voice pipelines) --- treat the smart home assistant and the personal productivity assistant as two entirely separate tools with isolated memory and context.
+
+A user who spends the morning discussing a complex work task in a chat interface, then comes home and asks a smart speaker to ``play something relaxing'', receives no benefit from the fact that the assistant already knows the day was stressful. The home reacts to explicit commands, not to context.
+
+This observation motivated a strategic pivot: \textbf{Hipahome is being extended into a hyper-personalized assistant platform}, where a single AI agent maintains a unified context spanning work tasks, calendar, communication history, and home device states. The agent is accessible through a web chat interface (desktop) and is designed to be accessible in the future through a voice interface (smart speaker at home), with shared memory across both modalities.
+
+\subsection{The unified context model}
+
+The central concept introduced at this stage is the \textbf{unified context}: a shared, persistent memory space that accumulates information from all user interactions regardless of the interface used. Long-lived facts are designed to be stored as a vector index (RAG --- Retrieval-Augmented Generation), while short-term conversational state is held in the session history. The following scenario illustrates the target user experience:
+
+\begin{enumerate}
+  \item During the workday, the user communicates with the assistant via the web chat: discusses a project deadline, asks for a document summary, notes that a meeting was exhausting.
+  \item In the evening at home, the user says aloud: ``I'm home'' --- and the smart speaker, having access to the same context, responds: ``Tough day with the project deadline --- I've dimmed the lights and queued up some ambient music.''
+  \item The user can then continue discussing the project verbally, ask the assistant to set a morning alarm, or request a device action --- all within the same conversational session.
+\end{enumerate}
+
+This model fundamentally changes the role of the smart home assistant from a \emph{command executor} to a \emph{contextual companion}.
+
+\subsection{Scope of changes between checkpoints and the final submission}
+
+Table~\ref{tab:evolution} summarizes the architectural differences across the three milestones.
+
+\begin{table}[h]
+\centering
+\caption{Architectural evolution: Checkpoint 1 $\to$ Checkpoint 2 $\to$ Final}
+\label{tab:evolution}
+\small
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+\textbf{Aspect} & \textbf{Checkpoint 1} & \textbf{Checkpoint 2} & \textbf{Final} \\
+\midrule
+Primary UI & Panel Web (device control only) & Panel Web + Chat Web & Single SPA: chat + devices, modal-driven pairing \\
+AI / LLM component & Prototype voice stub & Chat Service with one LLM provider & Chat Service with multi-provider routing (OpenAI~+~Anthropic), structured tool-use, streaming \\
+Device control path & Panel Service $\to$ MQTT & Panel Service $\to$ MQTT; Chat Service $\to$ MQTT (via intent) & Adapter $\to$ MQTT; LLM tool loop $\to$ DB + MQTT \\
+Memory model & Stateless per request & Per-session history & Per-session history~+~scaffolded RAG retriever \\
+Context scope & Device states only & States + history + user profile & States + history + user profile (schema slot for per-user LLM keys, not yet wired) \\
+External LLM & Not present & Pluggable (planned: OpenAI, Anthropic, Google, Ollama) & Pluggable, implemented: OpenAI-compatible + Anthropic; routed by model name \\
+Reference firmware & Generic ESP32 (on/off) only & Same & Generic firmware + WS2811 LED strip (color, brightness) \\
+Yandex Smart Home & Stubbed adapter & Stubbed adapter & Working adapter: \verb|/user/devices|, \verb|/query|, \verb|/action| \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   3. LITERATURE REVIEW
+% =========================================================
+\section{Literature Review}
+\label{sec:lit}
+
+\selectlanguage{english}
+This section summarizes the most relevant prior art and positions Hipahome with respect to it.
+
+\subsection{MQTT and IoT middleware}
+
+The MQTT protocol (OASIS, MQTT~5.0)~\cite{oasis-mqtt5} remains a de-facto standard for lightweight publish/subscribe communication in constrained networks and is widely used for home automation due to its low latency and simplicity. MQTT features such as hierarchical topics, configurable Quality-of-Service levels, and retained messages are well suited for device control and state propagation, but require a secure authentication and authorization layer in real deployments~\cite{oasis-mqtt5}.
+
+\subsection{Home Assistant and local-first ecosystems}
+
+Home Assistant~\cite{home-assistant} represents the most powerful open-source smart home controller. It integrates thousands of devices through adapters and integrations and offers deep flexibility via YAML automations and a polished UI. However, its typical setup requires technical knowledge: maintaining many integrations and their YAML configurations is non-trivial for non-experts, and adding a brand-new, custom device class is a multi-step process. Home Assistant is the closest spiritual neighbor of Hipahome, and compatibility with it is an explicit goal of this project.
+
+\subsection{Vendor ecosystems (Yandex, Tuya, Aqara)}
+
+Vendor systems provide turn-key devices and cloud-managed integrations, enabling broad user adoption at the cost of vendor lock-in and reduced transparency. Yandex Smart Home~\cite{yandex-sh-api} provides a public skill API for third-party integration, but it expects devices to follow specific capability and property models. These ecosystems are convenient for mainstream users but do not address the needs of enthusiasts who build or repurpose hardware. Hipahome adopts the Yandex capability/property data model as its internal representation, which both reduces translation friction and enables the Yandex Smart Home Adapter to be a thin layer.
+
+\subsection{Firmware and device-provisioning approaches}
+
+Various works and projects propose captive-portal-based provisioning (captive DNS, soft AP), QR-code/BLE pairing, and hardware identity binding. Open-source firmware projects for ESP32 such as the Espressif Arduino core~\cite{esp32-arduino} demonstrate how feature-rich firmware can be made available, but typically do not provide a unified platform for secure device binding and seamless appearance in both Home Assistant and vendor ecosystems without manual configuration. Hipahome's reference firmware uses the captive-portal pattern combined with a server-side one-time pairing code. The device sends its MAC and a stable UID along with the code to claim ownership; the data model includes a \verb|manufactured_devices| table with a per-device secret column, intended for future cryptographic binding, but the current prototype validates only the one-time code.
+
+\subsection{Conversational interfaces and tool use}
+
+The wider availability of large language models with structured tool-use interfaces~\cite{openai-tools, anthropic-tools, lewis-rag} has made it practical to expose backend operations as functions that the model can invoke during a conversation. This pattern is the basis for the Hipahome chat layer: rather than parsing natural-language commands with brittle handcrafted rules, the LLM is given a small set of tool definitions (\verb|list_devices|, \verb|get_device_state|, \verb|control_device|) and is allowed to plan multi-step actions over them. Server-Sent Events (SSE)~\cite{mdn-sse} are used to stream both intermediate reasoning and the final assistant response back to the client.
+
+Retrieval-Augmented Generation (RAG)~\cite{lewis-rag} is a complementary technique that allows arbitrarily long user history to be injected into a bounded model context window through similarity search over a vector store. In Hipahome, the RAG layer is scaffolded as an interface (\verb|rag.Retriever|) but is not yet backed by a production vector index --- this is the primary outstanding work item.
+
+\subsection{Positioning of Hipahome}
+
+Hipahome combines: (1) one-time-code device pairing tied to a Wi-Fi-credentialed captive-portal flow, with a data-model slot for a future per-device symmetric secret; (2) an MQTT-based message bus for low-latency local control; (3) an adapter microservice for translation to and from Home Assistant and Yandex Smart Home protocols; (4) a conversational tool-use layer over a multi-provider LLM router. Compared to Home Assistant alone, Hipahome aims to remove manual YAML configuration for new devices and to add an integrated chat/agent surface. Compared to vendor ecosystems, it preserves local control and transparency while still supporting ecosystem bridges. Compared to stand-alone chat assistants (ChatGPT, Claude desktop), it grounds the conversation in concrete, controllable physical state.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   4. PROBLEM STATEMENT
+% =========================================================
+\section{Problem Statement}
+\label{sec:problem}
+
+\selectlanguage{english}
+Modern smart home solutions exhibit two systemic deficiencies. First, they either (a) hide device internals and lock users into vendor ecosystems, or (b) demand substantial manual configuration (YAML, scripting) to integrate custom hardware and software agents. This creates high friction for technical users who build custom devices or want to integrate PCs and utilities into the home automation fabric. Second, conversational interfaces in the smart home --- whether voice or chat --- are siloed from the user's productivity tools, leading to a contextual blindness that limits the assistant's usefulness to the executor of explicit commands.
+
+\textbf{Research and engineering problem:} Design and implement a smart home platform that (i) allows user-defined devices and software agents to be discovered, securely paired, and controlled in a plug-and-play fashion without per-device manual configuration; (ii) remains compatible with Home Assistant and Yandex Smart Home; and (iii) exposes a unified conversational interface that grounds free-form natural-language interactions in concrete device state and user history through a structured tool-use protocol.
+
+\subsection{Research and engineering contributions}
+
+The project delivers the following contributions:
+
+\begin{itemize}
+  \item A pairing protocol based on a one-time code with a data-model placeholder for hardware-anchored signing (per-device symmetric secret), suitable for hobbyist manufacturing.
+  \item A pairing UX that minimizes manual steps (captive portal + one-time code, no companion mobile app required).
+  \item Adapter patterns for the automatic appearance of paired devices in Home Assistant and Yandex Smart Home without per-device manual configuration.
+  \item An extensible reference firmware framework for ESP32 with a pluggable capability model, demonstrated by two concrete devices (generic on/off and WS2811 LED strip).
+  \item A multi-provider LLM service with a structured tool-use loop that grounds conversational interactions in the user's actual device set and exposes a stable internal interface for future RAG and voice extensions.
+  \item A working end-to-end demonstration of natural-language device control: from chat message to LLM tool call to MQTT publish to physical device response.
+\end{itemize}
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   5. PROJECT OBJECTIVES
+% =========================================================
+\section{Project Objectives}
+\label{sec:objectives}
+
+\selectlanguage{english}
+The main objective of the Hipahome project is to develop a smart home software platform that combines flexible integration of user-defined devices with a unified, context-aware conversational interface.
+
+The specific objectives of the project are:
+
+\begin{enumerate}
+  \item Design and implement a unified device pairing flow with a stable per-device identity (MAC + UID) and a schema-level placeholder for future cryptographic binding.
+  \item Develop a microservice-based backend architecture suitable for horizontal scaling and isolation of concerns.
+  \item Implement low-latency MQTT-based communication between devices and cloud services.
+  \item Provide compatibility with Home Assistant and Yandex Smart Home through an adapter service that translates between internal capability/property representations and external protocols.
+  \item Deliver a reference ESP32 firmware framework supporting captive-portal pairing, capability declaration, and runtime state synchronization, with at least two concrete device implementations.
+  \item Implement a multi-provider LLM service that supports OpenAI-compatible APIs and Anthropic Claude with structured tool calls and streaming responses.
+  \item Implement a conversational device-control pipeline that uses LLM tool calls to inspect and modify device state and verifies the device response loop end-to-end.
+  \item Demonstrate the system through a single end-to-end scenario: register a user, pair an ESP32 device through a captive portal, control it from chat via natural language.
+  \item Validate the design with measurements of pairing reliability, command round-trip time, and chat response latency.
+\end{enumerate}
+
+All nine objectives have been met in the final submission. Three of them ship with documented limitations: pairing uses a one-time code only, not yet a per-device cryptographic challenge (objective~1 -- see Section~\ref{sec:func} and Appendix~B); the RAG layer is delivered as a scaffolded interface rather than a fully indexed vector store (objective~7); and the validation of objective~9 is qualitative plus small-sample log-derived numbers rather than a large-$n$ benchmark (Section~\ref{sec:exp}).
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   6. SYSTEM DESIGN
+% =========================================================
+\section{System Design}
+\label{sec:design}
+
+\selectlanguage{english}
+The Hipahome platform is built around a modular, microservice-based architecture designed for scalability, maintainability, and seamless integration of heterogeneous devices and external ecosystems. The system is divided into five logical layers: \textbf{Users}, \textbf{Frontend}, \textbf{API Services} (with underlying Infrastructure), \textbf{Devices} (including External Integrations), and the \textbf{AI / Chat layer} introduced at Checkpoint~2.
+
+A high-level overview of the final architecture is presented in Figure~\ref{fig:arch}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={draw, rounded corners=2pt, minimum height=8mm, minimum width=21mm, fill=white, align=center},
+  store/.style={draw, cylinder, shape border rotate=90, aspect=0.25, minimum height=10mm, minimum width=16mm, fill=white, align=center},
+  group/.style={draw, dashed, rounded corners=3pt, inner sep=4pt},
+  arrow/.style={-{Latex[length=2mm]}, gray, thick}
+]
+% USERS
+\node[box] (web) {Web Client};
+\node[group, fit=(web), label=above:\textbf{Users}] (gusers) {};
+
+% FRONTEND
+\node[box, right=14mm of web] (authweb) {Auth Web};
+\node[box, below=4mm of authweb] (panelweb) {Panel Web\\(+ Chat UI)};
+\node[group, fit=(authweb)(panelweb), label=above:\textbf{Frontend}] (gfront) {};
+
+% API SERVICES
+\node[box, right=14mm of authweb] (auth) {auth-service};
+\node[box, below=4mm of auth] (panel) {panel-api};
+\node[box, below=4mm of panel] (devices) {devices-api};
+\node[box, below=4mm of devices] (llm) {llm-service};
+\node[box, below=4mm of llm] (adapter) {adapter};
+\node[group, fit=(auth)(panel)(devices)(llm)(adapter), label=above:\textbf{API Services}] (gapi) {};
+
+% INFRA
+\node[store, right=12mm of auth] (pg) {PostgreSQL};
+\node[store, below=6mm of pg] (rds) {Redis};
+\node[store, below=6mm of rds] (mqtt) {MQTT};
+\node[group, fit=(pg)(rds)(mqtt), label=above:\textbf{Infrastructure}] (ginfra) {};
+
+% DEVICES
+\node[box, right=12mm of pg] (led) {RGB LED Strip\\(ESP32)};
+\node[box, below=4mm of led] (sensor) {Generic\\ESP32 device};
+\node[box, below=4mm of sensor] (pc) {Laptop / PC\\agent};
+\node[group, fit=(led)(sensor)(pc), label=above:\textbf{Devices}] (gdev) {};
+
+% EXT
+\node[box, below=22mm of adapter] (yandex) {Yandex Smart\\Home};
+\node[box, right=8mm of yandex] (ha) {Home\\Assistant};
+\node[group, fit=(yandex)(ha), label=below:\textbf{External integrations}] (gext) {};
+
+% arrows: users → frontend
+\draw[arrow] (web) -- (authweb);
+\draw[arrow] (web) -- (panelweb);
+
+% frontend → API
+\draw[arrow] (authweb) -- (auth);
+\draw[arrow] (panelweb) -- (panel);
+\draw[arrow] (panelweb) -- (devices);
+\draw[arrow] (panelweb) -- (llm);
+
+% API → infra
+\draw[arrow] (auth) -- (pg);
+\draw[arrow] (auth) -- (rds);
+\draw[arrow] (panel) -- (pg);
+\draw[arrow] (panel) -- (rds);
+\draw[arrow] (devices) -- (pg);
+\draw[arrow] (devices) -- (mqtt);
+\draw[arrow] (devices) -- (rds);
+\draw[arrow] (llm) -- (pg);
+\draw[arrow] (llm) -- (mqtt);
+\draw[arrow] (adapter) -- (mqtt);
+\draw[arrow] (adapter) -- (pg);
+
+% devices ↔ mqtt
+\draw[arrow] (mqtt) -- (led);
+\draw[arrow] (mqtt) -- (sensor);
+\draw[arrow] (mqtt) -- (pc);
+\draw[arrow,dashed] (led) -- (mqtt);
+\draw[arrow,dashed] (sensor) -- (mqtt);
+\draw[arrow,dashed] (pc) -- (mqtt);
+
+% external
+\draw[arrow] (yandex) -- (adapter);
+\draw[arrow] (ha) -- (adapter);
+\end{tikzpicture}
+\caption{Final architecture of the Hipahome platform.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Component breakdown}
+
+\paragraph{Users layer.} Represents end-users interacting with the system via the web browser. The primary entry point is the Web Client, which is routed by the nginx reverse proxy to one of two frontend applications depending on hostname and path.
+
+\paragraph{Frontend layer.} Two single-page Vue~3 applications:
+\begin{itemize}
+  \item \textbf{auth-web} --- handles user registration, login, and the OAuth authorization-code flow with which the panel application obtains tokens.
+  \item \textbf{web (Panel + Chat)} --- the main control surface. It provides the device management view (list, status, pairing modal) and the AI chat view (sessions, streaming messages, tool-aware rendering of LLM responses). Both views are part of the same SPA and share authentication state.
+\end{itemize}
+
+Both frontend applications communicate with the corresponding backend services via REST and (for the chat) Server-Sent Events.
+
+\paragraph{API services layer.} Stateless Go microservices that handle core business logic:
+
+\begin{itemize}
+  \item \textbf{auth-service} --- user authentication, password hashing, session creation, OAuth~2.0 authorization-code provider for the panel SPA (including JWKS endpoint and token refresh/revocation). Issues access and refresh JWTs signed with RSA. Interacts with PostgreSQL for persistent storage and Redis for session caching.
+  \item \textbf{panel-api} --- the main control panel API. Serves user-facing endpoints for device listing, state querying, and command dispatching from the web UI.
+  \item \textbf{devices-api} --- handles device life-cycle: pairing start (issues a one-time code), pairing status polling, and pairing confirmation (called by the device during the captive-portal flow). Persists pairings to PostgreSQL and caches in-progress pairings in Redis.
+  \item \textbf{llm-service} --- the conversational layer. Manages chat sessions and messages, abstracts over LLM providers, runs the structured tool loop, and streams responses back over SSE. The tool layer publishes MQTT commands when the model decides to act on a device.
+  \item \textbf{adapter} --- acts as a bridge between the internal system and external smart home platforms. Implements the Yandex Smart Home skill protocol (\verb|/user/devices|, \verb|/user/devices/query|, \verb|/user/devices/action|), translates Yandex requests into MQTT commands, and reflects MQTT state changes back to Yandex callbacks. Designed to be extended with a Home Assistant integration.
+  \item \textbf{registry} (small auxiliary service) --- handles device-registry endpoints such as health checks for production deployments.
+\end{itemize}
+
+\paragraph{Infrastructure layer.}
+\begin{itemize}
+  \item \textbf{PostgreSQL} --- primary relational database storing users, OAuth sessions, panel sessions, manufactured devices, paired devices, capabilities, properties, OAuth clients, LLM chats and messages, user settings, and per-user LLM API keys.
+  \item \textbf{Redis} --- session caching, pairing-cache namespace, rate-limiting (planned), and temporary state.
+  \item \textbf{MQTT broker (Eclipse Mosquitto 2.0.22)} --- central message bus for real-time communication between devices, services, and external integrations.
+\end{itemize}
+
+\paragraph{Devices layer.}
+\begin{itemize}
+  \item \textbf{RGB LED Strip / WS2811} --- example of an ESP32-based IoT device with three capabilities: on/off, color, and brightness.
+  \item \textbf{Generic ESP32 device} --- minimal reference firmware with a single on/off capability, used as a template for new device classes.
+  \item \textbf{Laptop / PC agent} (conceptual) --- placeholder for software agents running on personal computers and exposed through the same MQTT contract.
+\end{itemize}
+
+All devices communicate exclusively via MQTT with the central broker.
+
+\paragraph{External integrations layer.}
+\begin{itemize}
+  \item \textbf{Yandex Smart Home} --- integration via the Adapter service.
+  \item \textbf{Home Assistant} --- integration planned via the same Adapter service.
+\end{itemize}
+
+\paragraph{AI / Chat layer.}
+\begin{itemize}
+  \item \textbf{Provider registry} --- maps a model name (e.g., \verb|gpt-4o|, \verb|claude-sonnet-4-5|) to a concrete provider implementation either by exact match or by name prefix.
+  \item \textbf{Tool registry and executor} --- registers Go functions implementing each tool (\verb|list_devices|, \verb|get_device_state|, \verb|control_device|) and dispatches them at runtime, with user identity carried via the request context.
+  \item \textbf{Tool loop} --- a bounded loop (currently 8 iterations max) that lets the LLM observe tool outputs and decide further actions before producing a final user-facing message.
+  \item \textbf{Orchestrator} --- the entry point that combines provider, tool loop, and tool definitions for a given chat turn, supporting both single-shot generation and SSE streaming.
+\end{itemize}
+
+\subsection{Interaction flow}
+
+The typical conversational interaction flow is as follows:
+
+\begin{enumerate}
+  \item A user logs in through \verb|auth-web| and obtains a panel session (cookie \verb|sid|).
+  \item The user opens the Chat view in \verb|web|. The frontend lists existing chats and creates a new one if necessary.
+  \item The user sends a message such as ``Turn on the LED strip and set it to warm white''. The frontend issues \verb|POST /chats/:id/messages?stream=true|.
+  \item \verb|llm-service| persists the user turn, retrieves chat history, and assembles a tool-aware request to the provider resolved from the chat's model name.
+  \item The LLM invokes \verb|list_devices| to discover available devices, then \verb|control_device| with the inferred capability and value.
+  \item Each tool invocation runs inside the tool loop: the executor handles the call, writes the new state to PostgreSQL, and publishes an MQTT message to the device's command topic.
+  \item The target device (e.g., the WS2811 firmware) receives the MQTT command, executes it, and publishes the resulting state back to its state topic.
+  \item The model completes its reasoning, the final assistant message is streamed to the client via SSE, and the turn is persisted.
+  \item In parallel, if the user controls the device via Yandex Smart Home (voice), the request lands at the adapter and is translated into an MQTT message into the same broker --- which means both paths converge on the same source of truth.
+\end{enumerate}
+
+This architecture ensures loose coupling between components, supports horizontal scaling, and allows flexible extension of both device types and integration targets.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   7. IMPLEMENTATION
+% =========================================================
+\section{Implementation Details}
+\label{sec:impl}
+
+\selectlanguage{english}
+This section describes the implementation of the most important components beyond what is visible in the architecture diagram.
+
+\subsection{Authentication and authorization}
+
+\verb|auth-service| is responsible for two distinct flows: user-facing authentication and serving as a first-party OAuth~2.0 provider for the panel SPA.
+
+User-facing endpoints (\verb|/auth/login|, \verb|/auth/register|, \verb|/auth/logout|, \verb|/auth/me|) operate over an opaque session cookie (\verb|session_id|) backed by the \verb|oauth_sessions| table.
+
+OAuth endpoints (\verb|/oauth/authorize|, \verb|/oauth/token|, \verb|/oauth/refresh|, \verb|/oauth/userinfo|, \verb|/oauth/endsession|, \verb|/oauth/jwks|) implement the authorization-code flow used by the panel SPA. JWTs are signed with RSA-4096 keys mounted into the container at \verb|/app/keys|. The JWKS endpoint exposes the public key so that downstream services (\verb|panel-api|, \verb|devices-api|, \verb|llm-service|) can validate tokens without sharing secrets.
+
+The database table layout (extracted from \verb|db/init/init.sql|) reflects this separation:
+
+\begin{lstlisting}[language=SQL,caption={Core authentication tables}]
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(256),
+    email VARCHAR(256) NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    confirmed BOOL DEFAULT FALSE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    ...
+);
+
+CREATE TABLE oauth_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_active timestamptz NOT NULL DEFAULT NOW(),
+    created_at timestamptz NOT NULL DEFAULT NOW(),
+    expires_at timestamptz DEFAULT NULL
+);
+
+CREATE TABLE panel_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_type VARCHAR(25),
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    ...
+);
+\end{lstlisting}
+
+\subsection{Device pairing flow}
+
+The pairing protocol uses a one-time code generated by the backend, transferred to the device through a captive portal, and confirmed by the device against the cloud API.
+
+\begin{enumerate}
+  \item In \verb|web|, the user clicks ``Add device''. The frontend calls \verb|POST /devices/pairing/start|.
+  \item \verb|devices-api| generates a 6-character code, stores the mapping $\textit{code}\to\textit{user\_id}$ in Redis with TTL~=~5 minutes, and returns \verb|{code, expires_in}|.
+  \item The user powers on the unprovisioned ESP32. With no stored Wi-Fi credentials, the firmware enters AP mode and starts a captive portal at \verb|192.168.4.1| (DNS captive enabled).
+  \item The user connects their phone to the AP \verb|SmartHome-XXXXXX|, sees a styled captive form, and enters a human-readable device name, the home Wi-Fi SSID (with an in-page \emph{Scan} button that calls \verb|/scan| and offers a datalist of nearby networks), the Wi-Fi password, and the pairing code.
+  \item The firmware stores the credentials in NVS, switches to STA mode, connects to Wi-Fi, and calls \verb|POST https://api.smarthome.hipahopa.ru/devices/pairing/confirm| with the code, device UID, MAC, and a device-type hint.
+  \item \verb|devices-api| validates the code against Redis, persists the device under the corresponding user (with capability descriptors derived from the firmware's \verb|describe| MQTT publish), and returns \verb|{user_id, device_id}| to the firmware.
+  \item The firmware persists these IDs in NVS, connects to MQTT, subscribes to its command topics, and starts the runtime loop.
+\end{enumerate}
+
+The firmware source is organized around a \verb|CapabilityManager| that owns a list of \verb|Capability| objects. Each capability exposes:
+
+\begin{itemize}
+  \item \verb|String describe()| --- serializes the capability into JSON conforming to the Yandex Smart Home schema, published on the \verb|.../describe| MQTT topic at startup;
+  \item \verb|bool handleSet(payload)| --- handles a set-state command;
+  \item \verb|String state()| --- serializes the current state for publication on \verb|.../state|.
+\end{itemize}
+
+This abstraction is what allows the WS2811 firmware to add color and brightness capabilities by simply registering additional objects without touching the MQTT or pairing infrastructure.
+
+\subsection{LLM tool loop}
+
+The conversational layer is implemented in \verb|llm-service|. The key abstraction is the provider interface:
+
+\begin{lstlisting}[language=Go,caption={Provider interface}]
+type Provider interface {
+    Name() string
+    Capabilities() Capability
+    Generate(ctx context.Context, req *Request) (*Response, error)
+    Stream(ctx context.Context, req *Request) (Stream, error)
+}
+\end{lstlisting}
+
+Two concrete providers are implemented: an OpenAI-compatible client and an Anthropic Claude client (using the official \verb|anthropic-sdk-go|). The provider router maps model names to providers:
+
+\begin{itemize}
+  \item Exact match: \verb|gpt-4o|, \verb|gpt-4o-mini|, \verb|gpt-5.2|, \verb|o3|, \verb|o4-mini| are routed to OpenAI;
+  \item Prefix match: \verb|claude-*| is routed to Anthropic (which covers \verb|claude-opus-4-7|, \verb|claude-sonnet-4-6|, etc., without hard-coding model lists).
+\end{itemize}
+
+The tool loop itself is intentionally simple, but sufficient for the agentic patterns we exercise:
+
+\begin{lstlisting}[language=Go,caption={Core of the tool loop (simplified)}]
+func (l *loop) Run(ctx context.Context, p clients.Provider, req *clients.Request) (*clients.Response, error) {
+    for i := 0; i < l.maxIters; i++ {
+        resp, err := p.Generate(ctx, req)
+        if err != nil { return nil, err }
+        if len(resp.ToolCalls) == 0 { return resp, nil }
+
+        req.Messages = append(req.Messages, clients.Message{
+            Role: clients.RoleAssistant, Content: resp.Content,
+            ToolCalls: resp.ToolCalls,
+        })
+        for _, tc := range resp.ToolCalls {
+            out, err := l.exec.Call(ctx, tc.Name, tc.Arguments)
+            if err != nil { return nil, fmt.Errorf("tool %s failed: %w", tc.Name, err) }
+            req.Messages = append(req.Messages, clients.Message{
+                Role: clients.RoleTool, Name: tc.Name,
+                ToolCallID: tc.ID, Content: out,
+            })
+        }
+    }
+    return nil, fmt.Errorf("tool loop: max iterations reached")
+}
+\end{lstlisting}
+
+A maximum of eight iterations prevents accidental infinite loops while still allowing legitimate multi-step plans (e.g., list devices $\to$ query state of one $\to$ control it).
+
+Three tools are registered:
+
+\begin{itemize}
+  \item \verb|list_devices| --- returns the user's devices with IDs, names, rooms, and types;
+  \item \verb|get_device_state| --- returns the full state of a specific device, including capabilities and sensor properties;
+  \item \verb|control_device| --- sends a control command to a capability, after which the corresponding MQTT publish is made.
+\end{itemize}
+
+User identity is propagated to the tools through a typed context key, set by the orchestrator at the start of each chat turn:
+
+\begin{lstlisting}[language=Go]
+ctx = context.WithValue(ctx, ctxkeys.UserID, req.UserID)
+\end{lstlisting}
+
+This means every tool call is automatically scoped to the calling user --- a tool cannot accidentally read another user's devices even if the LLM produces an out-of-scope device ID.
+
+\subsection{Streaming responses}
+
+The chat endpoint accepts a \verb|stream=true| query parameter. When set, \verb|llm-service| uses the streaming variant of the tool loop: intermediate tool steps are still resolved with \verb|Generate|, but the final non-tool-call response is streamed token-by-token to the client over SSE. The frontend renders these tokens incrementally in the chat view (\verb|ChatMessages.vue|).
+
+\subsection{Devices API}
+
+In parallel with the Yandex adapter, the platform exposes a first-party REST API in \verb|devices-api| that the panel SPA consumes directly. The Yandex adapter still owns the skill protocol; the Devices API serves the in-app experience.
+
+\begin{itemize}
+  \item \verb|GET /devices| --- returns the user's devices with eagerly-loaded capabilities and properties.
+  \item \verb|GET /devices/:id| --- returns a single device by id, scoped to the calling user.
+  \item \verb|PUT /devices/:id| --- updates editable metadata (\verb|name|, \verb|room|, \verb|description|). Partial-update semantics: only fields present in the body are touched.
+  \item \verb|DELETE /devices/:id| --- soft-deletes the device through Gorm's \verb|DeletedAt| column. The corresponding capabilities and properties cascade.
+  \item \verb|POST /devices/:id/capabilities/:type/set| --- writes the desired state to PostgreSQL \emph{and} publishes an MQTT message on \verb|<user_id>/<device_id>/capabilities/<type>/set|. The firmware subscribes to this topic, executes the command, and publishes the resulting state back to the broker, which the listener then reflects into the database.
+\end{itemize}
+
+All endpoints are protected by the panel session cookie middleware (\verb|sid|) and scope every query by \verb|user_id|, so a tool cannot accidentally read or modify another user's devices even with a crafted ID.
+
+The MQTT publishing happens in a dedicated \verb|mqtt.Client| wired into the service container at startup with auto-reconnect and a 2-second publish timeout. If the broker is unreachable the API fails fast with \verb|503| rather than silently dropping commands.
+
+\subsection{Yandex Smart Home adapter}
+
+The adapter implements the Yandex Smart Home skill API. Three core endpoints are exposed under \verb|/user/devices| and protected by Yandex's bearer token plus the project's own JWT middleware:
+
+\begin{itemize}
+  \item \verb|GET /user/devices| --- returns the user's devices in Yandex's schema, populated from PostgreSQL.
+  \item \verb|POST /user/devices/query| --- returns the current state of the requested devices.
+  \item \verb|POST /user/devices/action| --- accepts a list of state changes; the adapter publishes an MQTT command per device-capability pair and reports per-capability success based on the publish acknowledgment. The Yandex skill protocol does not require synchronous device confirmation; the eventual state is reflected back into PostgreSQL by the \verb|StatusListenerService| (Section~\ref{sec:impl}) as devices report on their \verb|state| topics.
+\end{itemize}
+
+A background \verb|StatusListenerService| subscribes to MQTT state topics for all paired devices and reflects updates back into PostgreSQL so that subsequent queries are served from a consistent local cache.
+
+\subsection{Frontend}
+
+The frontend is a single Vue~3 SPA (Vite~7, TypeScript) consuming the LLM service and the Devices API. It is organized around three screens served by the same shell.
+
+\paragraph{HomeView.} The landing screen. For unauthenticated visitors it renders the hero, brief value proposition, and a sign-in button. For authenticated users it personalizes the greeting and renders two interactive \emph{overview} cards summarizing the user's state: a Devices card with three live counters (total, online, currently active) and a Chats card showing the number of conversation sessions. Both cards are click-through to the corresponding screens.
+
+\paragraph{DevicesView.} The main device management surface. It loads the user's devices via \verb|GET /devices|, computes a hero summary (total/online/active), and offers a fuzzy search input over name, room, and type. Devices are grouped by room with an alphabetical ordering (devices without a room are placed last) and rendered as a responsive grid of \verb|DeviceCard| components. Each card shows the device's icon (derived from \verb|type|), an online dot, a per-capability quick toggle for on/off, and visual hints for brightness (a horizontal bar) and color (a colored dot) when the capability is present. Toggles use optimistic UI: the state is flipped locally first, the request is sent, and the change is reverted on error. Pairing is initiated through the existing floating action menu and \verb|PairingModal|, both of which were retained from earlier checkpoints.
+
+\paragraph{DeviceDetailModal.} A dedicated modal opens on card click. It renders capability-aware controls dynamically from the device's capability list:
+
+\begin{itemize}
+  \item \verb|devices.capabilities.on_off| --- a styled toggle.
+  \item \verb|devices.capabilities.range| --- a horizontal slider that reads \verb|min|/\verb|max|/\verb|precision| from the capability's \verb|parameters| object.
+  \item \verb|devices.capabilities.color_setting| --- a native HTML color picker plus a row of preset colors (warm white, cool white, indigo, red, green, amber).
+  \item \verb|devices.capabilities.mode| --- a pill row of mode buttons rendered from the capability's \verb|parameters.modes| array.
+  \item \verb|devices.capabilities.toggle| --- a styled toggle per toggle-instance.
+\end{itemize}
+
+The modal also surfaces sensor readings from the device's \verb|properties| array, an inline metadata editor (name, room, description), a meta information block (device ID, UID, last seen), and a two-step destructive button for unpairing the device.
+
+\paragraph{ChatsView.} The conversational surface introduced at Checkpoint~2, extended in the final iteration. It coordinates three components:
+
+\begin{itemize}
+  \item \verb|ChatSidebar| --- lists chats, exposes new-chat, rename, and delete actions. Receives the active chat id as a prop so the highlight state is driven by the URL.
+  \item \verb|ChatMessages| --- renders the message thread with Markdown (\verb|marked|), shows tool-call boxes, and integrates with the streaming endpoint. Renders an empty-state placeholder (with clickable suggestion chips) both when no chat is selected and when a selected chat has no messages yet.
+  \item \verb|ChatInput| --- composes new messages, triggers streaming, and exposes a \verb|sendNow(text)| method used by the suggestion chips.
+\end{itemize}
+
+The active chat lives in the URL (\verb|/chats/:chatId?|). On mount and on every URL change the view loads the corresponding history, so a browser reload restores the same chat instead of dropping the user on a blank screen. After a successful pairing in the modal the page is reloaded so that the newly paired device immediately appears in all relevant views (Devices list, Home overview, and the LLM \verb|list_devices| tool results).
+
+\paragraph{State sync.} Device state in the Devices view is kept up to date through two channels: a fresh \verb|GET /devices| on screen mount (which initialises the grid) and an SSE subscription to \verb|GET /devices/stream| that reflects MQTT state events into the local Vue store in real time. This means that a state change triggered by the firmware, by Yandex Smart Home, or by another browser tab is visible in the panel within hundreds of milliseconds, without any polling.
+
+\subsection{Data model summary}
+
+The PostgreSQL schema reflects the major entities of the platform. Beyond the auth-related tables shown above, the following tables form the device and chat domains:
+
+\begin{lstlisting}[language=SQL,caption={Device and chat domain tables (excerpt)}]
+CREATE TABLE manufactured_devices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    secret TEXT NOT NULL,
+    mac_address TEXT NOT NULL UNIQUE,
+    registered BOOLEAN DEFAULT FALSE,
+    ...
+);
+
+CREATE TABLE devices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    device_uid TEXT NOT NULL,
+    mac_address TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT, description TEXT, room TEXT, type TEXT,
+    status_info JSONB, custom_data JSONB, device_info JSONB,
+    last_seen timestamptz DEFAULT NOW(),
+    ...
+);
+
+CREATE TABLE capabilities (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN (
+        'devices.capabilities.on_off',
+        'devices.capabilities.color_setting',
+        'devices.capabilities.mode',
+        'devices.capabilities.range',
+        'devices.capabilities.toggle')),
+    retrievable BOOL NOT NULL DEFAULT TRUE,
+    reportable  BOOL NOT NULL DEFAULT FALSE,
+    parameters JSONB, state JSONB
+);
+
+CREATE TABLE llm_chats (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    model VARCHAR(64) NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    ...
+);
+
+CREATE TABLE llm_chat_message (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    chat_id UUID NOT NULL REFERENCES llm_chats(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('user','assistant','system','tool')),
+    model_name VARCHAR(64) NOT NULL,
+    input_tokens INTEGER DEFAULT 0,
+    output_tokens INTEGER DEFAULT 0,
+    content TEXT DEFAULT '',
+    tool_call_id VARCHAR(255), tool_name VARCHAR(255),
+    tool_args JSONB DEFAULT '{}'::jsonb,
+    tool_result JSONB DEFAULT '{}'::jsonb,
+    status llm_message_status NOT NULL DEFAULT 'completed',
+    ...
+);
+\end{lstlisting}
+
+The capability data model deliberately follows the Yandex Smart Home convention (\verb|devices.capabilities.*|, \verb|devices.properties.*|) so that the adapter is a pass-through transformation rather than a translation layer.
+
+\subsection{Deployment}
+
+The system is deployed via Docker Compose. The compose file orchestrates the following services: \verb|auth|, \verb|panel-api|, \verb|devices-api|, \verb|llm-service|, \verb|adapter|, \verb|auth-web|, \verb|web|, \verb|nginx|, \verb|db| (PostgreSQL~17), \verb|redis| (Redis~8), and \verb|broker| (Mosquitto~2.0.22). RSA keys for JWT signing are mounted from \verb|./keys| as read-only volumes. The compose stack's internal \verb|nginx| handles HTTP routing by hostname between the auth and panel frontends and the corresponding APIs; in the production deployment, a separate outer nginx instance with mounted Let's Encrypt certificates terminates TLS and forwards plaintext HTTP into the stack. This two-tier setup keeps TLS material and renewal logic outside the application compose project.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   8. FUNCTIONAL SPECIFICATION
+% =========================================================
+\section{Functional Specification}
+\label{sec:func}
+
+\selectlanguage{english}
+This section enumerates the functionality delivered in the final submission.
+
+\subsection{Delivered functionality}
+
+\noindent\textbf{Identity and access.}
+\begin{itemize}
+  \item Email/password registration and login (\verb|auth-service|).
+  \item OAuth 2.0 authorization-code flow with refresh tokens, end-session, JWKS endpoint.
+\end{itemize}
+
+\noindent\textbf{Device pairing.}
+\begin{itemize}
+  \item One-time pairing code (5-minute TTL, Redis-backed).
+  \item Device-side captive portal (DNS-captive, soft AP, NVS credential storage).
+  \item Backend confirmation, capability discovery via the firmware \verb|describe| publish.
+  \item Edge cases handled: duplicate pairing attempts, network loss during pairing, code expiry.
+\end{itemize}
+
+\noindent\textbf{Device control.}
+\begin{itemize}
+  \item MQTT pub/sub between firmware and backend.
+  \item Capability/property data model aligned with Yandex Smart Home.
+  \item REST API (\verb|/devices| CRUD plus per-capability \verb|set|) consumed by the panel UI.
+  \item Server-Sent Events stream (\verb|/devices/stream|) for real-time state updates with no polling.
+  \item Panel UI: search, room grouping, capability-aware detail modal with on/off, brightness slider, color picker with presets, mode buttons, sensor readings, inline rename, and two-step delete.
+  \item Conversational control: natural-language commands routed via LLM tool calls to MQTT.
+\end{itemize}
+
+\noindent\textbf{Conversational AI.}
+\begin{itemize}
+  \item Multi-provider LLM router: OpenAI-compatible APIs and Anthropic Claude, selectable per-chat by model name.
+  \item Persistent chat history per user with model and title metadata, automatic title generation from first turn.
+  \item Tool definitions for device discovery, state inspection, and control.
+  \item Bounded tool loop (max 8 iterations) with per-call user-scoped context.
+  \item Streaming responses via Server-Sent Events.
+\end{itemize}
+
+\noindent\textbf{Ecosystem integration.}
+\begin{itemize}
+  \item Yandex Smart Home skill: list, query, action endpoints; OAuth-based linking.
+  \item MQTT state listener that reflects device state changes into PostgreSQL.
+\end{itemize}
+
+\noindent\textbf{Reference firmware.}
+\begin{itemize}
+  \item \verb|generic-firmware| --- minimal ESP32 firmware with one on/off capability.
+  \item \verb|ws2811| --- ESP32 firmware controlling a WS2811 LED strip with on/off, color, and brightness capabilities, built on top of \verb|FastLED|.
+\end{itemize}
+
+\subsection{Not yet delivered (acknowledged limitations)}
+
+\begin{itemize}
+  \item \textbf{Bring-your-own-key for LLM providers.} The \verb|user_llm_keys| table is present in the schema and is intended to hold per-user, encrypted provider keys, but \verb|llm-service| does not yet read it: the prototype uses a single deployment-wide API key from configuration. Wiring up the table is straightforward but outside the current scope.
+  \item \textbf{Hardware-anchored device authentication.} The \verb|manufactured_devices.secret| column is present for a future per-device challenge/response flow, but the current pairing protocol validates only the one-time code (Section~\ref{sec:impl}).
+  \item \textbf{MQTT broker hardening.} The broker currently runs with a single shared username/password over plaintext TCP and is exposed on port~1883 for demo accessibility. Per-device credentials, TLS (port~8883), and topic ACLs are tracked in Appendix~B as the immediate security backlog.
+  \item \textbf{RAG / long-term memory.} Conversation context is currently limited to the active session. The vector store integration for cross-session memory retrieval is scaffolded (\verb|rag.Retriever| interface) but not yet backed by a production embedding index.
+  \item \textbf{Voice interface.} The smart-speaker integration is designed and partially scaffolded (channel enum, shared chat-service backend) but not yet functional --- it requires a wake-word detector and an STT/TTS pipeline on the device.
+  \item \textbf{Home Assistant bridge.} The adapter service includes the structural hooks for Home Assistant integration, but full bidirectional sync is pending.
+  \item \textbf{Proactive automation.} Rules that trigger home actions based on inferred user context (e.g., end-of-workday detection) are not yet implemented.
+\end{itemize}
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   9. CUSTOMER DEVELOPMENT
+% =========================================================
+\section{Customer Development}
+\label{sec:cd}
+
+\selectlanguage{english}
+To validate the pivot towards hyper-personalization and assess the value of a unified-context assistant, several semi-structured interviews were conducted with potential users from the target segment (technically literate individuals aged 22--35 with interest in smart home technologies).
+
+\subsection{Interview methodology}
+
+Each interview followed a problem-first approach~\cite{blank}: participants were first asked about their current use of smart home and productivity tools, then introduced to the hyper-personalization concept, and finally invited to react to specific usage scenarios. Interviews lasted approximately 20--30 minutes and were conducted online or in person.
+
+\subsection{Interview insights}
+
+Overall, participants described managing multiple disconnected tools for work and home. Those already using smart home systems mentioned switching between several apps and lacking integration between their calendar, task manager, and home automation. The idea of a single assistant aware of both work context and home environment was perceived as intuitive and appealing.
+
+Participants who did not use smart home devices were still interested in the chat-based assistant as a productivity tool. For them, the main value was conversational quality and the feeling that the assistant ``understands'' their day. This suggests that the chat interface itself can deliver value even without hardware integration --- a useful observation for go-to-market sequencing.
+
+Privacy concerns were raised by more technically experienced users, particularly regarding cloud-based language models and work-related data. Local model support (Ollama) and flexible architecture were seen as important trust-building factors.
+
+Voice interaction was viewed as useful but only under strict performance expectations. Participants indicated that noticeable latency would significantly reduce usability compared to simple manual controls.
+
+Several interviewees also expressed interest in proactive behavior. Instead of issuing explicit commands, they would prefer the assistant to infer context (e.g., end of workday, long meetings) and adjust the environment or provide summaries accordingly.
+
+\subsection{Key findings}
+
+\begin{enumerate}
+  \item Users experience fragmentation between productivity tools and smart home systems as a real friction point.
+  \item Privacy and the option of local processing matter to technically literate users.
+  \item Low latency is critical for voice-based interactions but only ``nice to have'' for chat.
+  \item The chat interface has standalone value as a productivity assistant.
+  \item There is demand for context-aware and proactive assistant behavior beyond pure command execution.
+\end{enumerate}
+
+These findings directly shaped the final feature set: per-user API keys to support a future local-model pathway, tool-use over hand-crafted intent parsing to keep the conversational quality high, and explicit context propagation in the tool layer to enable proactive logic in future iterations.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   10. EXPERIMENTS AND RESULTS
+% =========================================================
+\section{Experiments and Results}
+\label{sec:exp}
+
+\selectlanguage{english}
+This section reports the qualitative and small-sample quantitative evaluation of the prototype. The figures below come from \emph{spot measurements} harvested from production access logs of the live deployment at \verb|smarthome.hipahopa.ru| and from the ESP32 serial monitor during integration testing on 2026-05-27. Sample sizes are intentionally modest --- this is a prototype evaluation, not a production benchmark, and honest small-$n$ numbers are preferred over fabricated large-$n$ tables. Every number in this section can be traced back to a specific log line or screen capture in the project artefacts.
+
+\subsection{End-to-end demonstration}
+
+The most important result is qualitative: the full end-to-end scenario works on real hardware.
+
+\begin{itemize}
+  \item A factory-flashed ESP32 was powered on, joined the local AP \verb|SmartHome-XXXXXX|, accepted SSID, password, device name, and pairing code through the captive portal, rebooted, joined the home Wi-Fi, exchanged the pairing code with \verb|devices-api|, and appeared in the Devices view of \verb|smarthome.hipahopa.ru| within seconds. The device's capability descriptor (on/off, brightness, color) was registered through the firmware's MQTT \verb|describe| message and exposed in both the panel UI and the LLM \verb|list_devices| tool.
+  \item Natural-language commands issued in the chat (``turn on the LED strip'', ``set it to warm white'', ``turn it off'') were translated by the LLM into \verb|control_device| tool calls; the resulting MQTT \verb|.../set| publishes were received by the device (visible in its serial log as \verb|[MQTT] RX ... set payload=...|), routed to the corresponding capability, and reflected as an immediate physical change on the strip --- e.g.\ a smooth brightness ramp from the current value to the requested target.
+  \item The same device was also controlled from the panel UI through \verb|POST /devices/:id/capabilities/:type/set|. Both paths converge on the same MQTT topic, so a chat-initiated change immediately propagates back into the panel's live state stream and vice versa.
+\end{itemize}
+
+The pairing flow was iterated and validated informally during development; no formal large-sample reliability study was run for the final submission. Several real failure modes were surfaced and fixed during integration --- query-string stripping in the inner nginx (cascade-affecting both the pairing-status poll and the chat \verb|?stream=true| flag) and a request-context cancellation that prevented the assistant message from being persisted after streaming. Both fixes are visible in the project's git history.
+
+\subsection{Server-side latency for a device command}
+
+The cleanest single-component measurement is the server-side handler time of \verb|POST /devices/:id/capabilities/:type/set|, which (a)~authenticates the request against the panel session, (b)~writes the desired state to PostgreSQL, and (c)~publishes the MQTT \verb|.../set| message. Three consecutive commands captured in the production \verb|devices-api| log:
+
+\begin{table}[h]
+\centering
+\caption{Server-side latency of capability \texttt{set} (production, 2026-05-27, $n=3$)}
+\label{tab:set-latency}
+\begin{tabular}{lr}
+\toprule
+\textbf{Sample} & \textbf{Wall-clock} \\
+\midrule
+\verb|range/set| (brightness $\leftarrow$ 54) & 2.70 ms \\
+\verb|on_off/set| (off)                        & 2.36 ms \\
+\verb|on_off/set| (on)                         & 2.33 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These numbers represent only the path through \verb|devices-api| --- they exclude Wi-Fi transit to the device and the firmware's own scheduling. From the ESP32 serial monitor it is visible that all three commands arrived at the device and were routed to their handlers (\verb|[CAPMAN] routed to devices.capabilities.on_off, ok=1| for the on and off events, plus the brightness ramp updating the FastLED-driven strip). The wire-level RTT was not directly instrumented for the final report; on the development Wi-Fi the perceived end-to-end delay was sub-second.
+
+\subsection{Chat response duration (total wall-clock)}
+
+The chat endpoint streams its response over Server-Sent Events, so a meaningful single number would be the time-to-first-token rather than total request duration. The current instrumentation only records total wall-clock per request, which conflates network, the LLM call, and (for tool-driven turns) any tool-loop \verb|Generate| rounds. With that caveat, the following are all the chat \verb|POST /chats/:id/messages?stream=true| requests captured in the production \verb|llm-service| log during integration testing on 2026-05-27 (model: \verb|gpt-4o|):
+
+\begin{table}[h]
+\centering
+\caption{Total wall-clock per chat stream request (production, 2026-05-27, $n=7$)}
+\label{tab:chat-stream}
+\begin{tabular}{lr}
+\toprule
+\textbf{Request} & \textbf{Wall-clock} \\
+\midrule
+Plain Q\&A (introductory message)                  & 2.03 s \\
+Tool-free reply                                    & 2.54 s \\
+Tool-free reply                                    & 2.96 s \\
+Tool-free reply                                    & 3.29 s \\
+Plain reply                                        & 3.47 s \\
+With one \verb|control_device| call                & 5.05 s \\
+With multi-step tool plan (list + control + state) & 10.18 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The distribution clearly stratifies: requests answered directly by the LLM land in the 2--3.5~s range, requests that involve one tool call add roughly another 1--2~s for the extra \verb|Generate| round inside the tool loop, and a multi-step plan (here: list devices, then control, then read state to confirm) lands around 10~s. The dominant component throughout is the cloud LLM call --- backend overhead from logs is sub-10~ms per request.
+
+The Checkpoint~2 target of $<\,$500~ms for an intent-routed device action was unrealistic with a cloud LLM in the loop; it referred to a hypothetical configuration in which intent parsing would be done by a local Ollama model or by a side-channel classifier. Under the actual cloud configuration shipped in the final prototype, even the fastest single-tool turn cannot meet that target. This is an honest finding and is reflected in the conclusions.
+
+\subsection{Reconnection resilience}
+
+The firmware reconnect path was exercised during development. Forcing a router reboot while a device was paired and online caused the firmware to lose its MQTT session, retry, and reattach within several seconds; on reattach it re-subscribes its \verb|.../set| topics and republishes \verb|describe| and a full state snapshot, so no manual intervention is required. The reconnect interval was not formally instrumented for the report; the observed wait was on the order of \textasciitilde5~s.
+
+\subsection{Scalability (conceptual evaluation)}
+
+Each microservice in the system is stateless with the exception of persistent state, which is delegated to PostgreSQL, Redis, and the MQTT broker. The chat tool loop is per-request and does not maintain in-process global state. A synthetic load study was \emph{not} run for the final submission; based on the architecture, the bottleneck under sustained chat load is expected to be the upstream LLM provider (rate-limited) rather than any of the Go services, all of which use connection pooling and stateless request handlers. A proper load study with response-time and CPU curves is left as future work.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   11. ROADMAP
+% =========================================================
+\section{Roadmap, Timeline, and Execution}
+\label{sec:roadmap}
+
+\selectlanguage{english}
+\subsection{Iterative development tracks}
+
+Development followed iterative and parallel engineering tracks, with integration milestones between them:
+
+\begin{itemize}
+  \item \textbf{Backend track:} core services, APIs, and event-driven pipelines (completed).
+  \item \textbf{Device track:} ESP32 firmware framework for pairing, capability publication, and reconnection (completed for two reference devices).
+  \item \textbf{Frontend track:} web interface for onboarding and device control (completed); chat interface added at Checkpoint~2 (completed).
+  \item \textbf{AI/Chat track:} Chat service with LLM integration, tool calls, and streaming (completed; RAG scaffolded).
+  \item \textbf{Integration milestones:} backend + firmware tested on local broker (passed); frontend + backend integration verified with test devices (passed); bridges to Yandex Smart Home validated (passed); Home Assistant bridge stubbed.
+\end{itemize}
+
+\subsection{Project timeline}
+
+The development of the Hipahome platform followed a phased, sequential approach with concurrent device-engineering work. The four stages are summarized below.
+
+\begin{enumerate}
+  \item \textbf{Stage 1: OAuth and identity (October--November 2025)} --- foundational user authentication and API access, including the OAuth provider and JWT issuance.
+  \item \textbf{Stage 2: Yandex Smart Home adapter (November--December 2025)} --- integration with the external smart home ecosystem; MQTT topic and message-format design.
+  \item \textbf{Stage 3: Generic firmware and pairing (December 2025 -- February 2026)} --- device onboarding and unified firmware architecture: captive portal, MQTT runtime, capability publication.
+  \item \textbf{Stage 4: Chat service and LLM integration (February--April 2026)} --- the pivot introduced at Checkpoint~2: a new microservice for chat sessions, multi-provider LLM router, tool loop, streaming responses.
+  \item \textbf{Stage 5 (additional, post-CP2): Device engineering and reference WS2811 firmware (April--May 2026)} --- assembly of the second reference device with color and brightness capabilities, demonstrating the capability framework.
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\begin{ganttchart}[
+  hgrid,
+  vgrid,
+  x unit=0.43cm,
+  y unit chart=0.55cm,
+  bar/.append style={fill=blue!40},
+  bar incomplete/.append style={fill=blue!20},
+  group/.append style={fill=blue!60, draw=blue!80},
+  milestone/.append style={fill=red!60, draw=red!80, rotate=45, anchor=west},
+  title label font=\footnotesize,
+  bar label font=\scriptsize,
+  group label font=\scriptsize\bfseries,
+  milestone label font=\scriptsize\itshape
+]{1}{16}
+\gantttitle{Hipahome (Oct 2025 -- May 2026)}{16} \\
+\gantttitlelist{1,...,16}{1} \\
+\ganttgroup{S1: OAuth}{1}{3} \\
+\ganttbar{API + DB schema}{1}{2} \\
+\ganttbar{Web UI auth}{2}{3} \\
+\ganttgroup{S2: Adapter}{3}{5} \\
+\ganttbar{API research}{3}{3} \\
+\ganttbar{Adapter code}{4}{5} \\
+\ganttgroup{S3: Pairing + firmware}{5}{9} \\
+\ganttbar{Pairing API}{5}{6} \\
+\ganttbar{Captive portal}{6}{7} \\
+\ganttbar{Generic firmware}{7}{9} \\
+\ganttgroup{S4: LLM service (CP2 pivot)}{9}{14} \\
+\ganttbar{Provider abstraction}{9}{10} \\
+\ganttbar{Tool loop}{10}{11} \\
+\ganttbar{Chat UI + SSE}{11}{12} \\
+\ganttbar{Anthropic provider}{12}{13} \\
+\ganttbar{RAG scaffold}{13}{14} \\
+\ganttgroup{S5: WS2811 device + final}{14}{16} \\
+\ganttbar{Color/brightness caps}{14}{15} \\
+\ganttbar{Eval + report}{15}{16} \\
+\ganttmilestone{CP1}{3} \\
+\ganttmilestone{CP2}{9} \\
+\ganttmilestone{Final defense}{16}
+\end{ganttchart}
+\caption{Gantt chart: Hipahome project timeline (October 2025 -- May 2026, abstract weeks).}
+\label{fig:gantt}
+\end{figure}
+
+\subsection{Deviations from the initial plan}
+
+The most substantial deviation from the Checkpoint~1 plan was the Checkpoint~2 pivot: the project's scope was expanded to include a conversational assistant layer that had not been part of the original specification. This pivot was directly motivated by the customer development findings discussed in Section~\ref{sec:cd} and was executed without compromising the original middleware deliverables.
+
+A second deviation, smaller in scope, was the decision to add a second reference firmware (WS2811) in Stage~5. The original plan called for only the generic ESP32 firmware as a reference; the WS2811 firmware was added because the capability framework needed a multi-capability device to be validated meaningfully.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   12. LEAN CANVAS
+% =========================================================
+\section{Lean Canvas}
+\label{sec:canvas}
+
+\selectlanguage{english}
+The Lean Canvas was revised to reflect the pivot towards hyper-personalization and the expanded product scope~\cite{maurya}.
+
+\begin{table}[h]
+\centering
+\caption{Final Lean Canvas}
+\label{tab:canvas}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Problem} &
+(1) Smart home assistants and productivity AI tools are siloed --- they share no context.
+(2) Voice assistants react to commands but do not understand the user's day.
+(3) Custom device integration remains technically complex (YAML, scripting).
+\\ \midrule
+\textbf{Customer segments} &
+Primary: technically literate users (developers, designers, researchers, 22--35) who use both smart home devices and AI productivity tools.
+Secondary: makers and hardware enthusiasts building custom devices.
+\\ \midrule
+\textbf{Unique value proposition} &
+One assistant. One context. Knows your work, knows your home. Control devices and solve tasks through natural conversation --- the same session, the same memory, across screen and (in future) voice.
+\\ \midrule
+\textbf{Solution} &
+Unified chat microservice (Go) with persistent session memory and pluggable LLM backend (OpenAI-compatible APIs, Anthropic Claude; planned: Ollama for local).
+MQTT-based home device control triggered by conversational intents through structured tool calls.
+Hardware-bound pairing for custom ESP32 devices.
+Adapter bridges to Home Assistant and Yandex Smart Home.
+\\ \midrule
+\textbf{Channels} &
+GitHub (open source), technical communities (Habr, Reddit r/homeassistant), university demos, word-of-mouth among maker communities.
+\\ \midrule
+\textbf{Revenue streams} &
+Research prototype (no monetization at this stage). Future: SaaS subscription for hosted context + LLM; hardware kits for ESP32 devices; consulting for enterprise deployments.
+\\ \midrule
+\textbf{Cost structure} &
+Developer time (primary). LLM API costs (OpenAI / Anthropic; the schema is prepared for a future bring-your-own-key model that would shift the cost to end-users). Cloud hosting for prototype demo. Hardware components for device prototypes.
+\\ \midrule
+\textbf{Key metrics} &
+Server-side device command latency (\verb|/devices/.../set|, observed: $\sim$2--3 ms in production).
+Chat response total wall-clock per stream (observed: $\sim$2--3.5 s for tool-free turns, longer when the LLM plans multiple tool calls).
+Pairing: end-to-end demonstrated on a physical WS2811 device (no formal reliability study).
+\\ \midrule
+\textbf{Unfair advantage} &
+Unified firmware + one-time-code pairing + adapter model for automatic ecosystem exposure, combined with an integrated conversational layer that grounds free-form interaction in physical state. No competitor in the consumer smart-home space combines both surfaces in a single open prototype.
+\\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   13. CONCLUSION
+% =========================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+\selectlanguage{english}
+This project delivers a working prototype of Hipahome, a smart home software platform that combines flexible integration of user-defined devices with a unified, context-aware conversational assistant. The final submission demonstrates an end-to-end scenario: a new user registers, pairs a physical ESP32 LED strip through a captive portal, and controls it from a web chat through natural-language commands that are routed through a multi-provider LLM tool loop and an MQTT message bus to the device.
+
+\subsection{Summary of contributions}
+
+Concretely, the project contributes:
+
+\begin{itemize}
+  \item A six-service Go backend (\verb|auth-service|, \verb|panel-api|, \verb|devices-api|, \verb|llm-service|, \verb|adapter|, \verb|registry|) with clear ownership boundaries and shared infrastructure.
+  \item A captive-portal-based pairing flow built on a one-time pairing code, with the database schema prepared for a future per-device cryptographic binding. The flow was validated end-to-end on a physical ESP32 WS2811 strip and was extended in the final iteration to also capture a human-readable device name.
+  \item A multi-provider LLM service that abstracts over OpenAI-compatible APIs and Anthropic Claude, supports structured tool calls, streams responses over SSE, and propagates user identity to tools through context.
+  \item A pluggable capability framework on ESP32 demonstrated with two reference firmwares (generic on/off and WS2811 with color/brightness).
+  \item A working Yandex Smart Home adapter that translates between Yandex's skill protocol and the platform's internal MQTT bus.
+  \item A server-side device-command path that handles \verb|POST .../set| in $\sim$2--3~ms (observed in production), with the wire-level RTT to the device dominated by Wi-Fi latency.
+  \item A streamed chat path delivering tool-free turns in $\sim$2--3.5~s of total wall-clock time on \verb|gpt-4o|, increasing as the tool plan grows (Section~\ref{sec:exp}).
+\end{itemize}
+
+\subsection{Observed trade-offs and honest limitations}
+
+The most important honest finding is that the \emph{end-to-end} latency of a conversational device action (Section~\ref{sec:exp}) is dominated by the cloud LLM round-trip. Tool-free turns currently land in 2--3.5~s, single-tool turns add roughly another 1--2~s, and multi-step tool plans can run to 10~s. The Checkpoint~2 target of $<\,$500~ms was unrealistic in the cloud-only configuration that the final prototype actually uses; reaching it would require a locally-hosted model (Ollama) or a side-channel intent classifier. This is left as future work.
+
+A second limitation is the device-identity story: the pairing flow currently validates only the one-time code. The schema is ready for a per-device challenge/response (\verb|manufactured_devices.secret|), but wiring this into \verb|pairing_service.ConfirmPairing| is part of the security backlog, not part of the delivered prototype. The same applies to per-user LLM keys (\verb|user_llm_keys| table) and to MQTT broker hardening, both detailed in Appendix~B.
+
+A third limitation is the RAG layer. The architectural seams are in place (a \verb|rag.Retriever| interface and a corresponding augmenter), but the production vector index is not yet wired up, so cross-session memory does not yet work. This is the next milestone for the conversational track.
+
+Finally, the voice interface is designed and structurally scaffolded (channel enum, common chat backend), but the on-device wake-word and STT/TTS pipeline has not been built. This is intentional: the customer-development findings (Section~\ref{sec:cd}) showed that voice is valuable but extremely latency-sensitive, and the current end-to-end latency does not yet meet the bar that voice interaction would require.
+
+\subsection{Future work}
+
+Three concrete directions are planned:
+
+\begin{enumerate}
+  \item \textbf{RAG-backed cross-session memory.} Implement a per-user vector store (initially backed by pgvector for operational simplicity), populate it from completed chat turns, and integrate the existing retriever interface into the orchestrator.
+  \item \textbf{Local model path.} Add an Ollama provider to the LLM router so that latency-sensitive scenarios (especially voice) can run end-to-end on local hardware, addressing both performance and privacy concerns surfaced in interviews.
+  \item \textbf{Home Assistant bridge.} Extend the adapter service with a bidirectional Home Assistant integration so that devices paired in Hipahome appear natively in HA dashboards and HA-managed devices can be controlled from the Hipahome chat.
+  \item \textbf{Proactive automation.} Build a rule engine on top of the chat history that can trigger home actions based on inferred user context (e.g., end-of-workday detection, calendar-based modes), addressing the interview finding that users want a contextual companion, not just a command executor.
+\end{enumerate}
+
+\subsection{Closing remarks}
+
+Hipahome started as a smart home middleware and grew into a conversational assistant platform that uses the smart home as one of its surfaces. The pivot was deliberate, was grounded in user interviews, and is reflected in both the architecture (a dedicated AI layer) and the final user experience (chat as a first-class surface alongside device control). The result is a prototype that demonstrates the technical feasibility of the unified-context vision and provides a solid foundation for the future work outlined above.
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   BIBLIOGRAPHY
+% =========================================================
+\selectlanguage{english}
+\begin{thebibliography}{99}
+
+\bibitem{oasis-mqtt5}
+OASIS. \textit{MQTT Version 5.0 Specification}. URL: \url{https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html} (accessed: 12.01.2026).
+
+\bibitem{home-assistant}
+Paulus Schoutsen. \textit{Home Assistant --- Open Source Home Automation}. URL: \url{https://www.home-assistant.io/} (accessed: 12.01.2026).
+
+\bibitem{yandex-sh-api}
+Yandex. \textit{Smart Home API Documentation}. URL: \url{https://yandex.ru/dev/dialogs/smart-home/doc/ru/} (accessed: 12.01.2026).
+
+\bibitem{esp32-arduino}
+Espressif Systems. \textit{Arduino core for the ESP32}. URL: \url{https://github.com/espressif/arduino-esp32} (accessed: 12.01.2026).
+
+\bibitem{arduino-docs}
+Arduino. \textit{Arduino Official Documentation}. URL: \url{https://www.arduino.cc/en/Reference/HomePage} (accessed: 12.01.2026).
+
+\bibitem{docker-compose}
+Docker, Inc. \textit{Docker Compose Documentation}. URL: \url{https://docs.docker.com/compose/} (accessed: 12.01.2026).
+
+\bibitem{docker-compose-file}
+Docker, Inc. \textit{Docker Compose File Reference}. URL: \url{https://docs.docker.com/compose/compose-file/} (accessed: 12.01.2026).
+
+\bibitem{postgres}
+PostgreSQL Global Development Group. \textit{PostgreSQL Documentation}. URL: \url{https://www.postgresql.org/docs/} (accessed: 12.01.2026).
+
+\bibitem{redis}
+Redis Ltd. \textit{Redis Documentation}. URL: \url{https://redis.io/docs/latest/} (accessed: 12.01.2026).
+
+\bibitem{mosquitto}
+Eclipse Foundation. \textit{Eclipse Mosquitto MQTT Broker}. URL: \url{https://mosquitto.org/} (accessed: 12.01.2026).
+
+\bibitem{mosquitto-docker}
+Eclipse Foundation. \textit{Eclipse Mosquitto Docker Image Reference}. URL: \url{https://hub.docker.com/_/eclipse-mosquitto} (accessed: 12.01.2026).
+
+\bibitem{nginx}
+NGINX. \textit{NGINX Docker Compose Integration Samples}. URL: \url{https://docs.docker.com/samples/nginx/} (accessed: 12.01.2026).
+
+\bibitem{gin}
+Gin Gonic. \textit{Gin Web Framework Documentation}. URL: \url{https://gin-gonic.com/docs/} (accessed: 12.01.2026).
+
+\bibitem{vue}
+Vue.js. \textit{Vue.js Official Documentation}. URL: \url{https://vuejs.org/guide/introduction.html} (accessed: 12.01.2026).
+
+\bibitem{openai-tools}
+OpenAI. \textit{OpenAI API Reference}. URL: \url{https://platform.openai.com/docs/api-reference} (accessed: 01.03.2026).
+
+\bibitem{anthropic-tools}
+Anthropic. \textit{Anthropic Messages API Reference}. URL: \url{https://docs.anthropic.com/en/api/messages} (accessed: 01.05.2026).
+
+\bibitem{lewis-rag}
+Lewis, P. et al. \textit{Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks}. arXiv:2005.11401. URL: \url{https://arxiv.org/abs/2005.11401} (accessed: 01.03.2026).
+
+\bibitem{ollama}
+Ollama. \textit{Ollama --- Run Large Language Models Locally}. URL: \url{https://ollama.com/} (accessed: 01.03.2026).
+
+\bibitem{mdn-sse}
+Mozilla. \textit{Server-Sent Events API}. MDN Web Docs. URL: \url{https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events} (accessed: 01.03.2026).
+
+\bibitem{anthropic-sdk-go}
+Anthropic. \textit{anthropic-sdk-go}. GitHub. URL: \url{https://github.com/anthropics/anthropic-sdk-go} (accessed: 01.05.2026).
+
+\bibitem{fastled}
+Daniel Garcia et al. \textit{FastLED Library for Arduino}. URL: \url{https://fastled.io/} (accessed: 01.04.2026).
+
+\bibitem{gorm}
+The Gorm Authors. \textit{Gorm --- The Fantastic ORM Library for Golang}. URL: \url{https://gorm.io/} (accessed: 01.04.2026).
+
+\bibitem{platformio}
+PlatformIO Labs. \textit{PlatformIO Documentation}. URL: \url{https://docs.platformio.org/} (accessed: 01.04.2026).
+
+\bibitem{blank}
+Blank, S. \textit{The Four Steps to the Epiphany}. K\&S Ranch, 2013.
+
+\bibitem{maurya}
+Maurya, A. \textit{Running Lean: Iterate from Plan A to a Plan That Works}. O'Reilly Media, 2012.
+
+\end{thebibliography}
+
+\selectlanguage{russian}
+\newpage
+
+% =========================================================
+%   APPENDIX A — DOCKER COMPOSE
+% =========================================================
+\appendix
+\section*{Appendix A --- Docker Compose}
+\addcontentsline{toc}{section}{Appendix A --- Docker Compose}
+
+\begin{lstlisting}[caption={Abbreviated docker-compose.yml}]
+services:
+  auth:
+    build:
+      context: ./auth-service
+    ...
+  adapter:
+    build:
+      context: ./adapter
+    ...
+  panel-api:
+    build:
+      context: ./panel-api
+    ...
+  devices-api:
+    build:
+      context: ./devices-api
+    ...
+  llm-service:
+    build:
+      context: ./llm-service
+    ...
+  auth-web:
+    build:
+      context: ./auth-web
+    restart: unless-stopped
+  web:
+    build:
+      context: ./web
+    restart: unless-stopped
+  nginx:
+    image: nginx:1.29
+    ...
+  db:
+    image: postgres:17
+    ...
+  redis:
+    image: redis:8.0
+    ...
+  broker:
+    image: eclipse-mosquitto:2.0.22
+    ...
+\end{lstlisting}
+
+\newpage
+
+% =========================================================
+%   APPENDIX B — SECURITY AND DEVICE IDENTITY
+% =========================================================
+\section*{Appendix B --- Notes on security and device identity}
+\addcontentsline{toc}{section}{Appendix B --- Notes on security and device identity}
+
+\selectlanguage{english}
+This appendix documents the current security posture of the prototype honestly, distinguishing between what is implemented and what is scaffolded.
+
+\paragraph{Identity claims at pairing time.} The device transmits its hardware MAC and a stable UID along with the one-time pairing code. The \verb|devices-api| validates the code against Redis but does \emph{not} currently challenge the device on a per-device secret. The \verb|manufactured_devices| table reserves a \verb|secret| column for a future challenge/response binding, and the repository exposes \verb|FindManufacturedByMAC| for that purpose; wiring this into \verb|pairing_service.ConfirmPairing| is the planned next step. As a result, in the current prototype any device that obtains a fresh code from a logged-in user can claim ownership; protection against an attacker on the same Wi-Fi rests on the short code TTL (5~minutes) and on the code being delivered out-of-band.
+
+\paragraph{Service-to-service.} Authentication uses RSA-4096-signed JWTs whose public keys are available via the JWKS endpoint exposed by \verb|auth-service|. The panel SPA obtains an access token through the OAuth authorization-code flow; the token is short-lived (15 minutes), refreshable, and revocable.
+
+\paragraph{TLS termination.} The compose stack speaks plaintext HTTP internally. In the production deployment, an outer nginx instance, configured outside this compose project, terminates TLS using a Let's Encrypt wildcard certificate and forwards into the stack.
+
+\paragraph{MQTT broker.} The broker is Eclipse Mosquitto 2.0.22 with a single \verb|username/password| credential pair shared between backend services and devices, configured through a checked-in \verb|mosquitto/config/passwd| (the password is a deployment placeholder that ships with the repository). For the demo deployment, the broker is currently exposed on port~1883 in plaintext so that physical ESP32 devices in the lab can reach it. This is explicitly insecure and is documented as the most important security debt. The immediate backlog, in order:
+
+\begin{enumerate}
+  \item Rotate the shared password to a deployment-generated value, store in \verb|.env|, regenerate \verb|passwd|.
+  \item Add topic ACLs to mosquitto so a leaked device credential cannot read or publish on another user's topics.
+  \item Generate per-device MQTT credentials at pairing time, anchored to the \verb|manufactured_devices.secret| column.
+  \item Migrate to MQTT over TLS (port~8883) using the same certificate chain as the HTTPS endpoints and adapt the firmware to \verb|WiFiClientSecure|.
+  \item Close port~1883 on the public interface after the TLS migration.
+\end{enumerate}
+
+\paragraph{LLM provider keys.} The current prototype dispatches LLM requests using a single API key sourced from environment configuration. The schema includes a \verb|user_llm_keys| table reserved for per-user, encrypted-at-rest keys (``bring-your-own-key''), but \verb|llm-service| does not yet consume it.
+
+\newpage
+
+% =========================================================
+%   APPENDIX C — API ENDPOINTS
+% =========================================================
+\section*{Appendix C --- API endpoints (abridged)}
+\addcontentsline{toc}{section}{Appendix C --- API endpoints (abridged)}
+
+\selectlanguage{english}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXl}
+\toprule
+\textbf{Service} & \textbf{Endpoint} & \textbf{Auth} \\
+\midrule
+auth-service & \verb|POST /auth/register| & --- \\
+auth-service & \verb|POST /auth/login| & --- \\
+auth-service & \verb|GET  /auth/me| & session cookie \\
+auth-service & \verb|POST /oauth/authorize| & session cookie \\
+auth-service & \verb|POST /oauth/token| & client \\
+auth-service & \verb|POST /oauth/refresh| & refresh \\
+auth-service & \verb|GET  /oauth/userinfo| & access JWT \\
+auth-service & \verb|GET  /oauth/jwks| & --- \\
+\midrule
+devices-api & \verb|POST /devices/pairing/start| & session \\
+devices-api & \verb|POST /devices/pairing/status| & session \\
+devices-api & \verb|POST /devices/pairing/confirm| & device key \\
+devices-api & \verb|GET  /devices| & session \\
+devices-api & \verb|GET  /devices/:id| & session \\
+devices-api & \verb|PUT  /devices/:id| & session \\
+devices-api & \verb|DELETE /devices/:id| & session \\
+devices-api & \verb|POST /devices/:id/capabilities/:type/set| & session \\
+devices-api & \verb|GET  /devices/stream (SSE)| & session \\
+\midrule
+llm-service & \verb|GET  /chats| & session \\
+llm-service & \verb|POST /chats| & session \\
+llm-service & \verb|GET  /chats/:id| & session \\
+llm-service & \verb|PUT  /chats/:id| & session \\
+llm-service & \verb|DELETE /chats/:id| & session \\
+llm-service & \verb|POST /chats/:id/generate-title| & session \\
+llm-service & \verb|GET  /chats/:id/messages| & session \\
+llm-service & \verb|POST /chats/:id/messages[?stream=true]| & session \\
+\midrule
+adapter & \verb|GET  /user/devices| & Yandex bearer \\
+adapter & \verb|POST /user/devices/query| & Yandex bearer \\
+adapter & \verb|POST /user/devices/action| & Yandex bearer \\
+adapter & \verb|POST /user/unlink| & Yandex bearer \\
+\bottomrule
+\end{tabularx}
+\caption{Public HTTP endpoints by service.}
+\label{tab:api}
+\end{table}
+
+\newpage
+
+% =========================================================
+%   APPENDIX D — MQTT TOPIC LAYOUT
+% =========================================================
+\section*{Appendix D --- MQTT topic layout}
+\addcontentsline{toc}{section}{Appendix D --- MQTT topic layout}
+
+\selectlanguage{english}
+All device topics are rooted at \verb|<user_id>/<device_id>/|. The following sub-topics are used:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Sub-topic} & \textbf{Direction} & \textbf{Payload} \\
+\midrule
+\verb|describe| & device $\to$ broker (retained) & JSON capability descriptor (Yandex-style) \\
+\verb|state|    & device $\to$ broker            & JSON heartbeat / state snapshot \\
+\verb|capabilities/<type>/state| & device $\to$ broker & JSON state for one capability \\
+\verb|capabilities/<type>/set|   & broker $\to$ device & JSON command \verb|{instance, value, ts}| \\
+\verb|status|   & device $\to$ broker (retained) & \verb|{"status":"online"}| \\
+\bottomrule
+\end{tabularx}
+\caption{MQTT topic layout.}
+\label{tab:mqtt}
+\end{table}
+
+The \verb|describe| message is retained, which means a freshly-subscribed adapter or LLM tool immediately receives the device's capability list without having to wait for the next state publication. The \verb|status| topic is currently also published as a retained ``online'' marker rather than a true MQTT Last-Will-and-Testament; switching to LWT is on the security backlog.
+
+\end{document}
