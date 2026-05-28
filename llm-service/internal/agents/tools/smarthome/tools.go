@@ -214,7 +214,7 @@ func controlDeviceHandler(repo *deviceRepo) tools.Handler {
 
 		device, err := repo.getDevice(ctx, req.DeviceID, uid.String())
 		if err != nil {
-			return "", fmt.Errorf("device not found: %w", err)
+			return "", fmt.Errorf("device %q not found — call list_devices to refresh the device list", req.DeviceID)
 		}
 		// Use the resolved UUID for downstream DB and MQTT operations — req.DeviceID
 		// may have been passed as the device name/UID by the LLM.

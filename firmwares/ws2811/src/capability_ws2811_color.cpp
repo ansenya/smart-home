@@ -4,10 +4,11 @@
 #include <ArduinoJson.h>
 
 WS2811HSVCapability::WS2811HSVCapability() {
+  curInstance = "hsv";
   curHue = hue;
   curSaturation = saturation;
-  curValue = value;
-  transitioning = false;
+  curValue = 0;
+  transitioning = true;
   lastUpdate = 0;
 }
 

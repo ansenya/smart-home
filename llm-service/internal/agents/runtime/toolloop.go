@@ -64,7 +64,7 @@ func (l *loop) Run(ctx context.Context, provider clients.Provider, req *clients.
 		for _, tc := range resp.ToolCalls {
 			out, err := l.exec.Call(ctx, tc.Name, tc.Arguments)
 			if err != nil {
-				return nil, fmt.Errorf("tool %s failed: %w", tc.Name, err)
+				out = fmt.Sprintf(`{"error":%q}`, err.Error())
 			}
 
 			req.Messages = append(req.Messages, clients.Message{
@@ -108,7 +108,7 @@ func (l *loop) RunStream(ctx context.Context, provider clients.Provider, req *cl
 		for _, tc := range resp.ToolCalls {
 			out, err := l.exec.Call(ctx, tc.Name, tc.Arguments)
 			if err != nil {
-				return nil, fmt.Errorf("tool %s failed: %w", tc.Name, err)
+				out = fmt.Sprintf(`{"error":%q}`, err.Error())
 			}
 
 			req.Messages = append(req.Messages, clients.Message{
